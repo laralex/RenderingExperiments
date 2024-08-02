@@ -3,13 +3,15 @@
 #include <cstdint>
 
 #ifdef XDEBUG
-    #define SPDLOG_COMPILED_LIB 1
-    #include "spdlog/spdlog.h"
-    #define XLOG(format, ...) { SPDLOG_INFO(format, __VA_ARGS__); }
-    #define XLOGE(format, ...) { SPDLOG_ERROR(format, __VA_ARGS__); }
+#define SPDLOG_COMPILED_LIB 1
+#include "spdlog/spdlog.h"
+#define XLOG(format, ...)                                                                                              \
+    { SPDLOG_INFO(format, __VA_ARGS__); }
+#define XLOGE(format, ...)                                                                                             \
+    { SPDLOG_ERROR(format, __VA_ARGS__); }
 #else
-    #define XLOG(format, ...)
-    #define XLOGE(format, ...)
+#define XLOG(format, ...)
+#define XLOGE(format, ...)
 #endif // XDEBUG
 
 namespace engine {
@@ -26,4 +28,5 @@ using isize = std::ptrdiff_t;
 
 using f32 = float;
 using f64 = double;
+
 } // namespace engine

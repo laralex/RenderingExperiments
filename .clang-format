@@ -1,0 +1,12 @@
+Language: Cpp
+Standard: c++20
+IndentWidth: 4
+ColumnLimit: 120
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+BreakBeforeBinaryOperators: NonAssignment
+AlignOperands: false
+AlignAfterOpenBracket: AlwaysBreak
+PointerAlignment: Left
+AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: WithoutElse

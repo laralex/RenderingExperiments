@@ -1,6 +1,7 @@
 *
 !.gitignore
 !.gitmodules
+!.clang-format
 !README.md
 !Makefile
 !third_party/

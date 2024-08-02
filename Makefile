@@ -24,6 +24,10 @@ run: ${BUILD_DIR}/run_app
 	@echo "====== RUN ======"
 	@${BUILD_DIR}/run_app
 
+.PHONY: prettify
+prettify:
+	find src include -regex '.*\.\(cpp\|hpp\|cu\|cuh\|c\|h\)' -exec clang-format --verbose -style=file -i {} \;
+
 .PHONY: clean
 clean:
 	rm -r ${BUILD_DIR}

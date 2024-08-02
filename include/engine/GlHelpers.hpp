@@ -4,6 +4,6 @@
 
 namespace engine {
 
-auto Add[[nodiscard]](float a, float b) -> float;
+auto Add [[nodiscard]] (float a, float b) -> float;
 
 } // namespace engine
