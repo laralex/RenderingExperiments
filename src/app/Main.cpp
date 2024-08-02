@@ -8,15 +8,10 @@
 #include <vector>
 #include <unordered_map>
 
-auto SetFullscreen = [](){
-   GLFWwindow* window = nullptr;
-   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-   glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-};
 
-using ButtonCallback = void(*)(bool pressed, bool released);
-using AxisCallback = void(*)(engine::f32 axis);
+
+using ButtonCallback = std::function<void(bool, bool)>;
+using AxisCallback = std::function<void(engine::f32)>;
 
 // forward declaration required to preserve internal linkage
 static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -66,9 +61,9 @@ auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback
 
 void WindowCtx::SetResolution(engine::isize width, engine::isize height) {
    width_ = width;
-   if (width_ < 0) width_ = 0;
+   if (width_ < 0) { width_ = 0; }
    height_ = height;
-   if (height_ < 0) height_ = 0;
+   if (height_ < 0) { height_ = 0; }
 }
 
 struct RenderCtx final {
@@ -186,8 +181,23 @@ auto main() -> int {
    WindowCtx windowCtx(window);
    glfwSetWindowUserPointer(window, &windowCtx);
 
-   windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [](bool pressed, bool released){
-      XLOG("Q {}", 0 + pressed - released);
+   windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released){
+      glfwSetWindowShouldClose(window, true);
+   });
+
+   windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released){
+      static bool setToFullscreen = true;
+      if (!pressed) { return; }
+
+      GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+      const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+      if (setToFullscreen) {
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+      } else {
+        // TODO: avoid hardcoding resolution
+        glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
+      }
+      setToFullscreen = !setToFullscreen;
    });
 
    std::vector<RenderCtx> frameHistory(256);
@@ -204,6 +214,7 @@ auto main() -> int {
       ++frameIdx;
    }
 
+   XLOG("Window is closed gracefully", 0);
    Terminate();
    return 0;
 }
