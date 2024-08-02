@@ -2,7 +2,7 @@ BUILD_TYPE=debug
 
 BUILD_DIR=build
 CC=ccache clang++
-COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-DXDEBUG,)
+COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
 INCLUDE_DIR+=-Iinclude
 INCLUDE_DIR+=-Ithird_party/spdlog/include
 INCLUDE_DIR+=-Ithird_party/glad/include

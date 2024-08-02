@@ -13,6 +13,25 @@ static void Terminate() {
    glfwTerminate();
 }
 
+struct RenderCtx {
+   engine::isize width{};
+   engine::isize height{};
+   engine::i64 timeNs{};
+   engine::f32 timeSec{};
+
+   void Update() {
+      timeSec = static_cast<engine::f32>(timeNs / 1000) * 0.000001;
+   }
+};
+
+static void Render(RenderCtx const& ctx) {
+   glViewport(0, 0, ctx.width, ctx.height);
+   engine::f32 red = 0.5f * (std::sin(ctx.timeSec) + 1.0f);
+   XLOG("{} {}", red, ctx.timeSec);
+   glClearColor(red, 0.5f, 0.5f, 0.0f);
+   glClear(GL_COLOR_BUFFER_BIT);
+}
+
 int main() {
 #ifdef XDEBUG
    std::cout << "!Compiled in DEBUG mode\n";
@@ -30,18 +49,39 @@ int main() {
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-   GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+   engine::isize winWidth = 800, winHeight = 600;
+   GLFWwindow* window = glfwCreateWindow(winWidth, winHeight, "LearnOpenGL", NULL, NULL);
    if (window == nullptr) {
       XLOG("Failed to create GLFW window", 0)
       Terminate();
       return -1;
    }
    glfwMakeContextCurrent(window);
+   glfwSwapInterval(1);
 
    if (!gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress))){
       XLOG("Failed to initialize GLAD", 0);
       Terminate();
       return -1;
+   }
+
+   RenderCtx renderCtx{};
+   {
+      int width, height;
+      glfwGetFramebufferSize(window, &width, &height);
+      renderCtx.width = width;
+      renderCtx.height = height;
+   }
+
+   renderCtx.timeNs = 0;
+   while (!glfwWindowShouldClose(window))
+   {
+      renderCtx.timeNs = glfwGetTimerValue();
+      renderCtx.Update();
+      Render(renderCtx);
+
+      glfwSwapBuffers(window);
+      glfwPollEvents();
    }
 
    Terminate();
