@@ -1,0 +1,16 @@
+*
+!.gitignore
+!.gitmodules
+!README.md
+!Makefile
+!third_party/
+!third_party/**
+!src/
+!src/app/
+!src/engine/
+!include/
+!include/app
+!include/engine
+
+!src/**/*.cpp
+!include/**/*.hpp
