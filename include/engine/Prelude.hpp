@@ -1,19 +1,6 @@
 #pragma once
 
-#if defined(_MSC_VER)
-    //  Microsoft 
-    #define EXPORT __declspec(dllexport)
-    #define IMPORT __declspec(dllimport)
-#elif defined(__GNUC__)
-    //  GCC
-    #define EXPORT __attribute__((visibility("default")))
-    #define IMPORT
-#else
-    //  do nothing and hope for the best?
-    #define EXPORT
-    #define IMPORT
-    #pragma warning Unknown dynamic link import/export semantics.
-#endif
+#include <cstdint>
 
 #ifdef XDEBUG
     #define SPDLOG_COMPILED_LIB 1
@@ -21,4 +8,15 @@
     #define XLOG(format, ...) { SPDLOG_INFO(format, __VA_ARGS__); }
 #else
     #define XLOG(format, ...)
-#endif // NDEBUG
+#endif // XDEBUG
+
+namespace engine {
+
+using u8 = uint8_t;
+using u32 = uint32_t;
+using usize = std::size_t;
+using i8 = int8_t;
+using i32 = int32_t;
+using isize = std::ptrdiff_t;
+
+} // namespace engine

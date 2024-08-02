@@ -17,7 +17,7 @@ int main() {
 #ifdef XDEBUG
    std::cout << "!Compiled in DEBUG mode\n";
 #endif
-   XLOG("Hello world {}\n", 42);
+   XLOG("Hello world {}\n", engine::Add(20.00022f, 22.00021f));
 
    glfwSetErrorCallback(GlfwErrorCallback);
    if (!glfwInit()) {
@@ -26,8 +26,8 @@ int main() {
       return -1;
    }
 
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
