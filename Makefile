@@ -2,7 +2,7 @@ BUILD_TYPE=debug
 
 BUILD_DIR=build
 CC=ccache clang++
-COMPILE_FLAGS=-std=c++20 $(if $(eq ${BUILD_TYPE},debug),-g,)
+COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
 INCLUDE_DIR+=-Iinclude
 INCLUDE_DIR+=-Ithird_party/spdlog/include
 LDFLAGS=${BUILD_DIR}/third_party/spdlog/libspdlog.a -pthread
@@ -16,12 +16,10 @@ obj_engine = GlHelpers.o
 $(obj_app): %.o: src/app/%.cpp
 	$(info "Compiling $^")
 	@mkdir -p ${BUILD_DIR}/app
-	@$(CC) \
+	$(CC) \
 		${COMPILE_FLAGS} \
 		${INCLUDE_DIR} \
 		-c $^ \
-		-DENFER_DEBUG \
-		-DENFER_VERBOSE \
 		-o $(addprefix ${BUILD_DIR}/app/,$@)
 
 $(obj_engine): %.o: src/engine/%.cpp
@@ -35,6 +33,7 @@ $(obj_engine): %.o: src/engine/%.cpp
 
 .PHONY: build_app
 build_app: $(obj_app)
+	$(info "Finishing $@")
 	${CC} \
 		$(addprefix ${BUILD_DIR}/app/,$^) \
 		${LDFLAGS} \
@@ -45,6 +44,7 @@ build_app: $(obj_app)
 
 .PHONY: build_app
 build_engine: $(obj_engine)
+	$(info "Finishing $@")
 	ar r ${BUILD_DIR}/engine/libengine.a $(addprefix ${BUILD_DIR}/engine/,$^)
 	@echo "BUILD ENGINE OK"
 	@echo "========"

@@ -15,10 +15,10 @@
     #pragma warning Unknown dynamic link import/export semantics.
 #endif
 
-#ifdef NDEBUG
-    #define XLOG(format, ...)
-#else
+#ifdef XDEBUG
     #define SPDLOG_COMPILED_LIB 1
     #include "spdlog/spdlog.h"
     #define XLOG(format, ...) { SPDLOG_INFO(format, __VA_ARGS__); }
+#else
+    #define XLOG(format, ...)
 #endif // NDEBUG

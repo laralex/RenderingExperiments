@@ -3,8 +3,8 @@
 #include <spdlog/spdlog.h>
 
 int main() {
-#ifdef NDEBUG
-   std::cout << "!Compiled with NDEBUG\n";
+#ifdef XDEBUG
+   std::cout << "!Compiled in DEBUG mode\n";
 #endif
    XLOG("Hello world {}\n", 42);
    return 0;
