@@ -1,5 +1,6 @@
 #include <engine/GlHelpers.hpp>
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 #include <spdlog/spdlog.h>
@@ -13,6 +14,7 @@ using AxisCallback = std::function<void(engine::f32)>;
 
 // forward declaration required to preserve internal linkage
 static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 class WindowCtx final {
 
@@ -27,40 +29,62 @@ class WindowCtx final {
 #undef Self
 
     using GlfwKey = int;
+    using GlfwMouseButton = int;
     auto SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback;
-    void SetResolution(engine::isize width, engine::isize height);
-
+    auto SetMouseButtonCallback(GlfwMouseButton mouseButton, ButtonCallback callback) -> ButtonCallback;
+    void UpdateResolution(engine::isize width, engine::isize height);
+    void UpdateCursorPosition(engine::f64 xpos, engine::f64 ypos);
+    void UpdateCursorEntered(bool entered);
+    auto WindowSize() const -> engine::ivec2 { return windowSize_; }
+    auto MousePosition() const -> engine::vec2 { return mousePos_; }
+    auto MouseInsideWindow() const -> bool { return mouseInsideWindow_; }
   private:
-    engine::isize width_{0};
-    engine::isize height_{0};
+    engine::ivec2 windowSize_{0, 0};
+    engine::vec2 mousePos_{0.0f, 0.0f};
+    bool mouseInsideWindow_{false};
 
-    std::unordered_map<GlfwKey, ButtonCallback> buttons_;
+    std::unordered_map<GlfwKey, ButtonCallback> keys_{};
+    std::unordered_map<GlfwKey, ButtonCallback> mouseButtons_{};
 
-    friend void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    friend void GlfwKeyCallback(GLFWwindow* window, GlfwKey key, int scancode, int action, int mods);
+    friend void GlfwMouseButtonCallback(GLFWwindow* window, GlfwMouseButton button, int action, int mods);
 };
 
 WindowCtx::WindowCtx(GLFWwindow* window)
-    : buttons_() {
+    : keys_(), mouseButtons_() {
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
-    width_ = w;
-    height_ = h;
+    windowSize_ = {w, h};
 }
 
 auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
-    auto found = buttons_.find(keyboardKey);
+    auto found = keys_.find(keyboardKey);
     ButtonCallback oldCallback = nullptr;
-    if (found != buttons_.end()) { oldCallback = found->second; }
-    buttons_[keyboardKey] = callback;
+    if (found != keys_.end()) { oldCallback = found->second; }
+    keys_[keyboardKey] = callback;
     return oldCallback;
 }
 
-void WindowCtx::SetResolution(engine::isize width, engine::isize height) {
-    width_ = width;
-    if (width_ < 0) { width_ = 0; }
+auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback) -> ButtonCallback {
+    auto found = mouseButtons_.find(button);
+    ButtonCallback oldCallback = nullptr;
+    if (found != mouseButtons_.end()) { oldCallback = found->second; }
+    mouseButtons_[button] = callback;
+    return oldCallback;
+}
 
-    height_ = height;
-    if (height_ < 0) { height_ = 0; }
+void WindowCtx::UpdateResolution(engine::isize width, engine::isize height) {
+    if (width < 0) { width = 0; }
+    if (height < 0) { height = 0; }
+    windowSize_ = {static_cast<engine::i32>(width), static_cast<engine::i32>(height)};
+}
+
+void WindowCtx::UpdateCursorPosition(engine::f64 xpos, engine::f64 ypos) {
+    mousePos_ = {static_cast<engine::f32>(xpos), static_cast<engine::f32>(ypos)};
+}
+
+void WindowCtx::UpdateCursorEntered(bool entered) {
+    mouseInsideWindow_ = entered;
 }
 
 struct RenderCtx final {
@@ -85,16 +109,36 @@ static void GlfwErrorCallback(int errCode, char const* message) { XLOGE("GLFW_ER
 static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
-    if (auto const found = ctx->buttons_.find(key); found != ctx->buttons_.end()) {
+    if (auto const found = ctx->keys_.find(key); found != ctx->keys_.end()) {
         found->second(action == GLFW_PRESS, action == GLFW_RELEASE);
     }
+}
+
+static void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
+    if (ctx == nullptr) { return; }
+    if (auto const found = ctx->mouseButtons_.find(button); found != ctx->mouseButtons_.end()) {
+        found->second(action == GLFW_PRESS, action == GLFW_RELEASE);
+    }
+}
+
+static void GlfwCursorEnterCallback(GLFWwindow* window, int entered) {
+    auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
+    if (ctx == nullptr) { return; }
+    ctx->UpdateCursorEntered(entered);
+}
+
+static void GlfwCursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
+    auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
+    if (ctx == nullptr) { return; }
+    ctx->UpdateCursorPosition(xpos, ypos);
 }
 
 static void GlfwResizeCallback(GLFWwindow* window, int width, int height) {
     auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     glViewport(0, 0, width, height);
-    ctx->SetResolution(width, height);
+    ctx->UpdateResolution(width, height);
 }
 
 static void Terminate() { glfwTerminate(); }
@@ -140,6 +184,9 @@ static auto CreateWindow(int width, int height) -> GLFWwindow* {
 
     glfwSetFramebufferSizeCallback(window, GlfwResizeCallback);
     glfwSetKeyCallback(window, GlfwKeyCallback);
+    glfwSetMouseButtonCallback(window, GlfwMouseButtonCallback);
+    glfwSetCursorEnterCallback(window, GlfwCursorEnterCallback);
+    glfwSetCursorPosCallback(window, GlfwCursorPositionCallback);
     glfwSwapInterval(1);
     glfwSetTime(0.0);
 
@@ -188,6 +235,13 @@ auto main() -> int {
             glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
         }
         setToFullscreen = !setToFullscreen;
+    });
+
+    windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
+        if (released) {
+            auto mousePosition = windowCtx.MousePosition();
+            XLOG("LMB {} pos: {},{}", windowCtx.MouseInsideWindow(), mousePosition.x, mousePosition.y);
+        }
     });
 
     std::vector<RenderCtx> frameHistory(256);
