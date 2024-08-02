@@ -37,7 +37,7 @@ struct RenderCtx final {
 };
 
 static void GlfwErrorCallback(int errCode, char const* message) {
-   XLOG("GLFW_ERROR({}): {}", errCode, message);
+   XLOGE("GLFW_ERROR({}): {}", errCode, message);
 }
 
 static void GlfwResizeCallback(GLFWwindow* window, int width, int height) {
@@ -57,28 +57,21 @@ static void Render(RenderCtx const& ctx) {
    glClear(GL_COLOR_BUFFER_BIT);
 }
 
-int main() {
-#ifdef XDEBUG
-   std::cout << "!Compiled in DEBUG mode\n";
-#endif
-   XLOG("Hello world {}\n", engine::Add(20.00022f, 22.00021f));
-
+static std::optional<std::pair<GLFWwindow*, WindowCtx>> CreateWindow(int width, int height) {
    glfwSetErrorCallback(GlfwErrorCallback);
    if (!glfwInit()) {
-      XLOG("Failed to initialize GLFW", 0)
-      Terminate();
-      return -1;
+      XLOGE("Failed to initialize GLFW", 0)
+      return std::nullopt;
    }
 
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-   GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+   GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
    if (window == nullptr) {
-      XLOG("Failed to create GLFW window", 0)
-      Terminate();
-      return -1;
+      XLOGE("Failed to create GLFW window", 0)
+      return std::nullopt;
    }
    glfwMakeContextCurrent(window);
    glfwSetFramebufferSizeCallback(window, GlfwResizeCallback);
@@ -86,33 +79,52 @@ int main() {
    glfwSetTime(0.0);
 
    if (!gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress))){
-      XLOG("Failed to initialize GLAD", 0);
-      Terminate();
-      return -1;
+      XLOGE("Failed to initialize GLAD", 0);
+      return std::nullopt;
    }
 
    WindowCtx windowCtx(window);
    glfwSetWindowUserPointer(window, &windowCtx);
+   return std::optional{std::pair{window, windowCtx}};
+}
+
+static RenderCtx& UpdateRenderLoop(std::vector<RenderCtx>& frameHistory, size_t frameIdx) {
+   size_t const frameHistoryIdx = frameIdx % frameHistory.size();
+   size_t const prevFrameHistoryIdx = (frameIdx - 1) % frameHistory.size();
+   
+   RenderCtx& renderCtx = frameHistory[frameHistoryIdx];
+   RenderCtx const& prevRenderCtx = frameHistory[prevFrameHistoryIdx];
+   prevRenderCtx.Update(glfwGetTimerValue(), renderCtx);
+
+   if (frameHistoryIdx == 0) {
+      XLOG("{} FPS, {} ms", renderCtx.prevFPS, renderCtx.prevFrametimeMs);
+   }
+   return renderCtx;
+}
+
+int main() {
+#ifdef XDEBUG
+   std::cout << "! Compiled in DEBUG mode\n";
+#endif
+
+   auto creationResult = CreateWindow(800, 600);
+   if (!creationResult) {
+      Terminate();
+      return -1;
+   }
+   auto& [window, windowCtx] = *creationResult;
+
    std::vector<RenderCtx> frameHistory(256);
-   size_t frameIdx = 0, prevFrameHistoryIdx = 0;
+   size_t frameIdx = 0;
 
    while (!glfwWindowShouldClose(window))
    {
-      size_t const frameHistoryIdx = (prevFrameHistoryIdx + 1) % frameHistory.size();
-      RenderCtx& renderCtx = frameHistory[frameHistoryIdx];
-      RenderCtx const& prevRenderCtx = frameHistory[prevFrameHistoryIdx];
-      prevRenderCtx.Update(glfwGetTimerValue(), renderCtx);
-
+      RenderCtx& renderCtx = UpdateRenderLoop(frameHistory, frameIdx);
       Render(renderCtx);
-
-      if (frameHistoryIdx == 0) {
-         XLOG("{} FPS, {} ms", renderCtx.prevFPS, renderCtx.prevFrametimeMs);
-      }
 
       glfwSwapBuffers(window);
       glfwPollEvents();
 
-      prevFrameHistoryIdx = frameHistoryIdx;
       ++frameIdx;
    }
 
