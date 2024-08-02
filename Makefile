@@ -61,4 +61,4 @@ run:
 
 .PHONY: init_repo
 init_repo:
-	git submodule update --init
+	git submodule update --init --remote
