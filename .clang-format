@@ -1,12 +1,25 @@
+# Requires clang-format 13+
+
 Language: Cpp
 Standard: c++20
 IndentWidth: 4
 ColumnLimit: 120
+
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakBeforeBinaryOperators: NonAssignment
+
 AlignOperands: false
 AlignAfterOpenBracket: AlwaysBreak
 PointerAlignment: Left
+AlignConsecutiveAssignments:
+  Enabled: true
+
 AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: WithoutElse
+
+EmptyLineBeforeAccessModifier: LogicalBlock
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+IndentCaseBlocks: false
+IndentCaseLabels: false

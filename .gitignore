@@ -1,4 +1,4 @@
-*
+/*
 !.gitignore
 !.gitmodules
 !.clang-format
@@ -6,12 +6,14 @@
 !Makefile
 !third_party/
 !third_party/**
+!data/
+!data/app/shaders/
+!data/engine/shaders/
+!data/**/*.vert
+!data/**/*.frag
 !src/
-!src/app/
-!src/engine/
-!include/
-!include/app
-!include/engine
+!src/engine/include/engine/*
+!src/engine/include_private/engine_private/*
 
 !src/**/*.cpp
-!include/**/*.hpp
+!src/**/*.hpp

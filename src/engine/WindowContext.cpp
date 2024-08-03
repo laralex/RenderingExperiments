@@ -2,20 +2,24 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <glad/gl.h>
 
 using namespace engine;
 
 WindowCtx::WindowCtx(GLFWwindow* window)
-    : keys_()
-    , mouseButtons_() {
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
+    : window_(window)
+    , keys_()
+    , mouseButtons_()
+    , mousePos_{0, 0}
+    , mouseInsideWindow_(false) {
+    int w = 0, h = 0;
+    if (window != nullptr) {
+        glfwGetFramebufferSize(window, &w, &h);
+    }
     windowSize_ = {w, h};
 }
 
 auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
-    auto found = keys_.find(keyboardKey);
+    auto found                 = keys_.find(keyboardKey);
     ButtonCallback oldCallback = nullptr;
     if (found != keys_.end()) { oldCallback = found->second; }
     keys_[keyboardKey] = callback;
@@ -23,7 +27,7 @@ auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback
 }
 
 auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback) -> ButtonCallback {
-    auto found = mouseButtons_.find(button);
+    auto found                 = mouseButtons_.find(button);
     ButtonCallback oldCallback = nullptr;
     if (found != mouseButtons_.end()) { oldCallback = found->second; }
     mouseButtons_[button] = callback;

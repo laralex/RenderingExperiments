@@ -1,15 +1,20 @@
 BUILD_TYPE=debug
 
 BUILD_DIR=build
+INSTALL_DIR=${BUILD_DIR}/install
+APP_EXE=${BUILD_DIR}/run_app
+
 CC=ccache clang++
 COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
 INCLUDE_DIR+=-I src/engine/include
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
+INCLUDE_DIR+=-I data
 LDFLAGS+=${BUILD_DIR}/third_party/spdlog/libspdlog.a
 LDFLAGS+=${BUILD_DIR}/third_party/glfw/src/libglfw3.a
 LDFLAGS+=${BUILD_DIR}/third_party/glad/gl.o
 LDFLAGS+=-pthread -ldl
+CLANG_FORMAT=clang-format-17
 
 .PHONY: all
 all: ${BUILD_DIR}/third_party/spdlog
@@ -17,16 +22,17 @@ all: ${BUILD_DIR}/third_party/glad
 all: ${BUILD_DIR}/third_party/glfw
 all: build_engine
 all: build_app
+all: install
 all: run
 
 .PHONY: run
-run: ${BUILD_DIR}/run_app
+run: ${APP_EXE}
 	@echo "====== RUN ======"
-	@${BUILD_DIR}/run_app
+	@${APP_EXE}
 
 .PHONY: prettify
 prettify:
-	find src -regex '.*\.\(cpp\|hpp\|cu\|cuh\|c\|h\)' -exec clang-format --verbose -style=file -i {} \;
+	find src -regex '.*\.\(cpp\|hpp\|cu\|cuh\|c\|h\)' -exec ${CLANG_FORMAT} --verbose -style=file -i {} \;
 
 .PHONY: clean
 clean:
@@ -34,29 +40,36 @@ clean:
 
 .PHONY: clean_own
 clean_own:
-	rm -r ${BUILD_DIR}/run_app ${BUILD_DIR}/app ${BUILD_DIR}/engine
+	rm -r ${APP_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine
 
 obj_app = $(addprefix ${BUILD_DIR}/app/,\
 	Main.o \
 )
-obj_engine = $(addprefix ${BUILD_DIR}/engine/,\
-	GlHelpers.o RenderLoop.o WindowContext.o \
-)
-hpp_engine = $(addprefix src/engine/include/engine/,\
-	Prelude.hpp GlHelpers.hpp RenderContext.hpp WindowContext.hpp \
-)
+obj_engine_ = \
+	Assets.o GlHelpers.o GlProgram.o Prelude.o RenderLoop.o WindowContext.o
+obj_engine = $(addprefix ${BUILD_DIR}/engine/, ${obj_engine_})
+
+hpp_engine_ = \
+	Assets.hpp GlHelpers.hpp GlProgram.hpp Prelude.hpp RenderContext.hpp \
+	RenderLoop.hpp WindowContext.hpp
+hpp_engine = $(addprefix src/engine/include/engine/, ${hpp_engine_})
+
 hpp_engine_private = $(addprefix src/engine/include_private/engine_private/, \
 	Prelude.hpp \
 )
 
 .PHONY: build_app
-build_app: ${BUILD_DIR}/app ${BUILD_DIR}/run_app
+build_app: ${BUILD_DIR}/app ${APP_EXE}
 
 .PHONY: build_engine
 build_engine: ${BUILD_DIR}/engine ${BUILD_DIR}/engine/libengine.a
 
-# linking main executable
-${BUILD_DIR}/run_app: ${obj_app} ${BUILD_DIR}/engine/libengine.a
+.PHONY: install
+install: ${INSTALL_DIR}
+	find data -regex '.*\.\(vert\|frag\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
+	cp ${APP_EXE} ${INSTALL_DIR}
+
+${APP_EXE}: ${obj_app} ${BUILD_DIR}/engine/libengine.a
 	$(info > Linking $@)
 	@${CC} $^ ${LDFLAGS} -o $@
 
@@ -88,7 +101,7 @@ ${BUILD_DIR}/third_party/glad:
 	mkdir -p $@
 	$(CC) ${COMPILE_FLAGS} -I third_party/glad/include -c third_party/glad/src/gl.c -o $@/gl.o
 
-${BUILD_DIR}/app ${BUILD_DIR}/engine:
+${BUILD_DIR}/app ${BUILD_DIR}/engine ${INSTALL_DIR}:
 	mkdir -p $@
 
 .PHONY: init_repo

@@ -3,7 +3,6 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <glad/gl.h>
 
 #include <vector>
 
@@ -14,9 +13,11 @@ void engine::GlfwMouseButtonCallback(GLFWwindow* window, int button, int action,
 
 namespace {
 
+WindowCtx g_windowCtx{nullptr};
+void* g_applicationData = nullptr; // user-provided external data
 std::vector<RenderCtx> g_frameHistory(256);
-size_t g_frameIdx = 0;
-RenderCallback g_renderCallback = [](RenderCtx const&, WindowCtx const&) {};
+size_t g_frameIdx               = 0;
+RenderCallback g_renderCallback = [](RenderCtx const&, WindowCtx const&, void*) {};
 
 void GlfwErrorCallback(int errCode, char const* message) { XLOGE("GLFW_ERROR({}): {}", errCode, message); }
 
@@ -52,7 +53,7 @@ auto CreateWindow(int width, int height) -> GLFWwindow* {
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
     GLFWvidmode const* mode = glfwGetVideoMode(monitor);
 
     glfwWindowHint(GLFW_RED_BITS, mode->redBits);
@@ -84,10 +85,10 @@ auto CreateWindow(int width, int height) -> GLFWwindow* {
 }
 
 auto UpdateRenderLoop(std::vector<RenderCtx>& frameHistory, size_t frameIdx) -> RenderCtx& {
-    size_t const frameHistoryIdx = frameIdx % frameHistory.size();
+    size_t const frameHistoryIdx     = frameIdx % frameHistory.size();
     size_t const prevFrameHistoryIdx = (frameIdx - 1) % frameHistory.size();
 
-    RenderCtx& renderCtx = frameHistory[frameHistoryIdx];
+    RenderCtx& renderCtx           = frameHistory[frameHistoryIdx];
     RenderCtx const& prevRenderCtx = frameHistory[prevFrameHistoryIdx];
     prevRenderCtx.Update(glfwGetTimerValue(), renderCtx);
 
@@ -115,13 +116,14 @@ void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mod
     }
 }
 
-ENGINE_EXPORT auto Initialize() -> GLFWwindow* {
+ENGINE_EXPORT auto Initialize() -> WindowCtx& {
     GLFWwindow* window = CreateWindow(800, 600);
+    g_windowCtx        = WindowCtx{window};
     if (window == nullptr) {
         Terminate();
-        return nullptr;
+        return g_windowCtx;
     }
-    return window;
+    return g_windowCtx;
 }
 
 ENGINE_EXPORT void Terminate() { glfwTerminate(); }
@@ -132,12 +134,15 @@ ENGINE_EXPORT auto SetRenderCallback(RenderCallback newCallback) -> RenderCallba
     return oldCallback;
 }
 
-ENGINE_EXPORT void BlockOnGameLoop(GLFWwindow* window, WindowCtx& windowCtx) {
+ENGINE_EXPORT void SetApplicationData(void* applicationData) { g_applicationData = applicationData; }
+
+ENGINE_EXPORT void BlockOnGameLoop(WindowCtx& windowCtx) {
+    GLFWwindow* window = windowCtx.Window();
     glfwSetWindowUserPointer(window, &windowCtx);
 
     while (!glfwWindowShouldClose(window)) {
         RenderCtx& renderCtx = UpdateRenderLoop(g_frameHistory, g_frameIdx);
-        g_renderCallback(renderCtx, windowCtx);
+        g_renderCallback(renderCtx, windowCtx, g_applicationData);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
