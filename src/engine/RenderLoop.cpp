@@ -126,7 +126,12 @@ ENGINE_EXPORT auto Initialize() -> WindowCtx& {
     return g_windowCtx;
 }
 
-ENGINE_EXPORT void Terminate() { glfwTerminate(); }
+ENGINE_EXPORT void Terminate() {
+    glfwTerminate();
+    g_windowCtx = WindowCtx{nullptr};
+    g_applicationData = nullptr;
+    g_renderCallback = nullptr;
+}
 
 ENGINE_EXPORT auto SetRenderCallback(RenderCallback newCallback) -> RenderCallback {
     auto oldCallback = g_renderCallback;
@@ -150,7 +155,8 @@ ENGINE_EXPORT void BlockOnGameLoop(WindowCtx& windowCtx) {
         ++g_frameIdx;
     }
 
-    Terminate();
+    // NOTE: can't Terminate() by ourselves, because application has to free
+    // their GL resources while the context is alive
 }
 
 } // namespace engine

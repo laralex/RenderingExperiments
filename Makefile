@@ -27,7 +27,7 @@ obj_app_ = Main.o
 obj_engine_ = Assets.o GlHelpers.o GlProgram.o Prelude.o RenderLoop.o \
 	WindowContext.o
 
-hpp_engine_ = Assets.hpp GlHelpers.hpp GlProgram.hpp Prelude.hpp \
+hpp_engine_ = Assets.hpp GlBuffer.hpp GlHelpers.hpp GlProgram.hpp Prelude.hpp \
 	RenderContext.hpp RenderLoop.hpp WindowContext.hpp
 
 hpp_engine_private_ = Prelude.hpp
@@ -52,7 +52,7 @@ clean:
 
 .PHONY: clean_own
 clean_own:
-	rm -r ${APP_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine
+	rm -r ${APP_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
 
 .PHONY: build_app
 build_app: ${BUILD_DIR}/engine/libengine.a ${BUILD_DIR}/app ${APP_EXE}
