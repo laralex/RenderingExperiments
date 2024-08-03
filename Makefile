@@ -3,9 +3,9 @@ BUILD_TYPE=debug
 BUILD_DIR=build
 CC=ccache clang++
 COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
-INCLUDE_DIR+=-Iinclude
-INCLUDE_DIR+=-Ithird_party/spdlog/include
-INCLUDE_DIR+=-Ithird_party/glad/include
+INCLUDE_DIR+=-I src/engine/include
+INCLUDE_DIR+=-I third_party/spdlog/include
+INCLUDE_DIR+=-I third_party/glad/include
 LDFLAGS+=${BUILD_DIR}/third_party/spdlog/libspdlog.a
 LDFLAGS+=${BUILD_DIR}/third_party/glfw/src/libglfw3.a
 LDFLAGS+=${BUILD_DIR}/third_party/glad/gl.o
@@ -26,7 +26,7 @@ run: ${BUILD_DIR}/run_app
 
 .PHONY: prettify
 prettify:
-	find src include -regex '.*\.\(cpp\|hpp\|cu\|cuh\|c\|h\)' -exec clang-format --verbose -style=file -i {} \;
+	find src -regex '.*\.\(cpp\|hpp\|cu\|cuh\|c\|h\)' -exec clang-format --verbose -style=file -i {} \;
 
 .PHONY: clean
 clean:
@@ -40,12 +40,12 @@ obj_app = $(addprefix ${BUILD_DIR}/app/,\
 	Main.o \
 )
 obj_engine = $(addprefix ${BUILD_DIR}/engine/,\
-	GlHelpers.o \
+	GlHelpers.o RenderLoop.o WindowContext.o \
 )
-hpp_engine = $(addprefix include/engine/,\
-	Prelude.hpp GlHelpers.hpp \
+hpp_engine = $(addprefix src/engine/include/engine/,\
+	Prelude.hpp GlHelpers.hpp RenderContext.hpp WindowContext.hpp \
 )
-hpp_engine_private = $(addprefix src/engine/details/, \
+hpp_engine_private = $(addprefix src/engine/include_private/engine_private/, \
 	Prelude.hpp \
 )
 
@@ -73,7 +73,7 @@ ${BUILD_DIR}/app/%.o: src/app/%.cpp ${hpp_engine}
 # compiling engine sources
 ${BUILD_DIR}/engine/%.o: src/engine/%.cpp ${hpp_engine} ${hpp_engine_private}
 	$(info > Compiling $@)
-	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -Isrc/engine -c $(filter %.cpp,$^) -o $@
+	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private -c $(filter %.cpp,$^) -o $@
 
 # compiling third party
 ${BUILD_DIR}/third_party/spdlog:

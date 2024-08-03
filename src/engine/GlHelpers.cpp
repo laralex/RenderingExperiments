@@ -1,5 +1,5 @@
 #include "engine/GlHelpers.hpp"
-#include "details/Prelude.hpp"
+#include "engine_private/Prelude.hpp"
 
 namespace engine {
 
