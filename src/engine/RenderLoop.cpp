@@ -128,9 +128,9 @@ ENGINE_EXPORT auto Initialize() -> WindowCtx& {
 
 ENGINE_EXPORT void Terminate() {
     glfwTerminate();
-    g_windowCtx = WindowCtx{nullptr};
+    g_windowCtx       = WindowCtx{nullptr};
     g_applicationData = nullptr;
-    g_renderCallback = nullptr;
+    g_renderCallback  = nullptr;
 }
 
 ENGINE_EXPORT auto SetRenderCallback(RenderCallback newCallback) -> RenderCallback {

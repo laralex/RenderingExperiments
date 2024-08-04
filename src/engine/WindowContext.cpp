@@ -12,9 +12,7 @@ WindowCtx::WindowCtx(GLFWwindow* window)
     , mousePos_{0, 0}
     , mouseInsideWindow_(false) {
     int w = 0, h = 0;
-    if (window != nullptr) {
-        glfwGetFramebufferSize(window, &w, &h);
-    }
+    if (window != nullptr) { glfwGetFramebufferSize(window, &w, &h); }
     windowSize_ = {w, h};
 }
 

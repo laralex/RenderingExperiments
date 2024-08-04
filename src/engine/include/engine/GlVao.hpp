@@ -1,16 +1,15 @@
 #pragma once
 
-#include "engine/Prelude.hpp"
 #include "engine/GlBuffer.hpp"
+#include "engine/Prelude.hpp"
 
-namespace engine::gl
-{
+namespace engine::gl {
 
 class Vao final {
 
 public:
 #define Self Vao
-    explicit Self()              = default;
+    explicit Self() = default;
     ~Self();
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
@@ -19,15 +18,15 @@ public:
 #undef Self
 
     struct AttributeInfo {
-        GLuint index = 0U;
- 	    GLint valuesPerVertex = 0U;
- 	    GLenum datatype = GL_FLOAT;
- 	    GLboolean normalized = GL_FALSE;
- 	    GLsizei stride = 0U;
- 	    GLsizei offset = 0U;
+        GLuint index          = 0U;
+        GLint valuesPerVertex = 0U;
+        GLenum datatype       = GL_FLOAT;
+        GLboolean normalized  = GL_FALSE;
+        GLsizei stride        = 0U;
+        GLsizei offset        = 0U;
     };
 
-    auto Id[[nodiscard]]() const -> GLuint { return vaoId; }
+    auto Id [[nodiscard]] () const -> GLuint { return vaoId; }
     void Initialize();
     void DefineVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info);
     void DefineIndices(GpuBuffer const& indexBuffer);
@@ -37,9 +36,7 @@ private:
     GLuint vaoId = GL_NONE;
 };
 
-Vao::~Vao() {
-    Dispose();
-}
+Vao::~Vao() { Dispose(); }
 
 void Vao::Dispose() {
     if (vaoId == GL_NONE) { return; }
@@ -62,8 +59,9 @@ void Vao::DefineVertexAttribute(GpuBuffer const& attributeBuffer, Vao::Attribute
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
-    GLCALL(glVertexAttribPointer(info.index, info.valuesPerVertex, info.datatype,
-        info.normalized, info.stride, reinterpret_cast<GLsizei*>(info.offset)));
+    GLCALL(glVertexAttribPointer(
+        info.index, info.valuesPerVertex, info.datatype, info.normalized, info.stride,
+        reinterpret_cast<GLsizei*>(info.offset)));
     GLCALL(glEnableVertexAttribArray(info.index));
 
     GLCALL(glBindVertexArray(0));

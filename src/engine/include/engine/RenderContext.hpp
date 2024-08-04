@@ -25,6 +25,7 @@ public:
     void Update(engine::i64 currentTimeNs, RenderCtx& destination) const;
 };
 
+// TODO: remove inline, move to cpp
 inline void RenderCtx::Update(engine::i64 currentTimeNs, RenderCtx& destination) const {
     destination.timeNs          = currentTimeNs;
     destination.timeSec         = static_cast<engine::f32>(currentTimeNs / 1000) * 0.000001;

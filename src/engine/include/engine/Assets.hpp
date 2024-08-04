@@ -3,11 +3,11 @@
 #include "engine/Prelude.hpp"
 
 #include <fstream>
-#include <string_view>
 #include <sstream>
+#include <string_view>
 
 namespace engine {
 
-auto LoadTextFile[[nodiscard]](std::string_view const filepath) -> std::string;
+auto LoadTextFile [[nodiscard]] (std::string_view const filepath) -> std::string;
 
 } // namespace engine

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string_view>
 #include <cstdint>
 #include <glad/gl.h>
+#include <string_view>
 
 #ifdef XDEBUG
 #define SPDLOG_COMPILED_LIB 1
@@ -107,10 +107,10 @@ struct vec4 {
 void CheckOpenGLError(const char* stmt, const char* fname, int line, bool fatal);
 
 #ifdef XDEBUG
-#define GLCALL(stmt) \
-    do { \
-        stmt; \
-        engine::CheckOpenGLError(#stmt, __FILE__, __LINE__, /* fatal */ false); \
+#define GLCALL(stmt)                                                                                                   \
+    do {                                                                                                               \
+        stmt;                                                                                                          \
+        engine::CheckOpenGLError(#stmt, __FILE__, __LINE__, /* fatal */ false);                                        \
     } while (0)
 #else
 #define GLCALL(stmt) stmt

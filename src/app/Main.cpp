@@ -1,9 +1,10 @@
+#include <engine/Assets.hpp>
+#include <engine/GlCapabilities.hpp>
+#include <engine/GlBuffer.hpp>
 #include <engine/GlHelpers.hpp>
 #include <engine/GlProgram.hpp>
-#include <engine/RenderLoop.hpp>
-#include <engine/Assets.hpp>
-#include <engine/GlBuffer.hpp>
 #include <engine/GlVao.hpp>
+#include <engine/RenderLoop.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -17,35 +18,42 @@ struct Application final {
 };
 
 constexpr engine::f32 vertexData[] = {
-    0.5f, 0.5f, 0.0f, // top right
-    0.5f, -0.5f, 0.0f, // bottom right
+    0.5f,  0.5f,  0.0f, // top right
+    0.5f,  -0.5f, 0.0f, // bottom right
     -0.5f, -0.5f, 0.0f, // bottom left
-    -0.5f, 0.5f, 0.0f // top left
+    -0.5f, 0.5f,  0.0f  // top left
 };
 
 constexpr engine::u32 indices[] = {
     0, 1, 3, // first triangle
-    1, 2, 3 // second triangle
+    1, 2, 3  // second triangle
 };
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
+    using namespace engine;
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
-        std::string vertexShaderCode = engine::LoadTextFile("data/app/shaders/triangle.vert");
-        std::string fragmentShaderCode = engine::LoadTextFile("data/app/shaders/constant.frag");
-        GLuint vertexShader   = engine::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-        GLuint fragmentShader = engine::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-        app->program = engine::CompileGraphicsProgram(vertexShader, fragmentShader);
+        gl::GlCapabilities::Initialize();
+
+        std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
+        std::string fragmentShaderCode = LoadTextFile("data/app/shaders/constant.frag");
+        GLuint vertexShader            = CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
+        GLuint fragmentShader          = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
+        app->program                   = CompileGraphicsProgram(vertexShader, fragmentShader);
         GLCALL(glDeleteShader(vertexShader));
         GLCALL(glDeleteShader(fragmentShader));
 
         app->attributeBuffer.Initialize(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData));
         app->indexBuffer.Initialize(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
         app->vao.Initialize();
-        app->vao.DefineVertexAttribute(app->attributeBuffer, {
-            .index = 0, .valuesPerVertex = 3, .datatype = GL_FLOAT,
-            .normalized = GL_FALSE, .stride = 3*sizeof(engine::f32), .offset = 0
-        });
+        app->vao.DefineVertexAttribute(
+            app->attributeBuffer,
+            {.index           = 0,
+             .valuesPerVertex = 3,
+             .datatype        = GL_FLOAT,
+             .normalized      = GL_FALSE,
+             .stride          = 3 * sizeof(engine::f32),
+             .offset          = 0});
         app->vao.DefineIndices(app->indexBuffer);
 
         app->isInitialized = true;
@@ -79,6 +87,19 @@ static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
         }
         XLOG("Fullscreen mode: {}", setToFullscreen);
         setToFullscreen = !setToFullscreen;
+    });
+
+    windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
+        static bool setToWireframe = true;
+        if (!pressed) { return; }
+
+        if (setToWireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        XLOG("Wireframe mode: {}", setToWireframe);
+        setToWireframe = !setToWireframe;
     });
 
     windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {

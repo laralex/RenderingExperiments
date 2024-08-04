@@ -7,7 +7,7 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     GLenum shader;
     GLCALL(shader = glCreateShader(shaderType));
 
-    char const* codeRaw = code.data();
+    char const* codeRaw  = code.data();
     GLint const codeSize = code.size();
     GLCALL(glShaderSource(shader, 1, &codeRaw, &codeSize));
 
