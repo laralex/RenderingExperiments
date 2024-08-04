@@ -61,12 +61,14 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     }
 
     engine::f32 const red = 0.5f * (std::sin(ctx.timeSec) + 1.0f);
-    gl::GlGuardBindings guard1;
-    gl::GlGuardFlags guard2;
-    gl::GlGuardFlagsRare guard22;
-    gl::GlGuardDepth guardD;
+    gl::GlGuardBindings guardBind;
+    gl::GlGuardVertex guardVert(true);
+    gl::GlGuardFlags guardF;
+    gl::GlGuardDepth guardD(true);
     gl::GlGuardStencil guardS;
-    gl::GlGuardRender guard3;
+    gl::GlGuardBlend guardB(true);
+    gl::GlGuardViewport guardV(true);
+    gl::GlGuardColor guardR;
     GLCALL(glClearColor(red, 0.5f, 0.5f, 0.0f));
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
