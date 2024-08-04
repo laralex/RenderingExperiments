@@ -25,11 +25,11 @@ CLANG_FORMAT=clang-format-17
 obj_app_ = Main.o
 
 obj_engine_ = Assets.o GlCapabilities.o GlHelpers.o GlProgram.o \
-	GlGuard.o Prelude.o RenderLoop.o WindowContext.o
+	GlTextureUnits.o GlGuard.o Prelude.o RenderLoop.o WindowContext.o
 
 hpp_engine_ = Assets.hpp GlBuffer.hpp GlCapabilities.hpp GlHelpers.hpp \
-	GlProgram.hpp GlGuard.hpp Prelude.hpp RenderContext.hpp \
-	RenderLoop.hpp WindowContext.hpp
+	GlProgram.hpp GlTextureUnits.hpp GlGuard.hpp Prelude.hpp \
+	RenderContext.hpp RenderLoop.hpp WindowContext.hpp
 
 hpp_engine_private_ = Prelude.hpp
 

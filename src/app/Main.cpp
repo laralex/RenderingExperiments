@@ -4,6 +4,7 @@
 #include <engine/GlHelpers.hpp>
 #include <engine/GlProgram.hpp>
 #include <engine/GlGuard.hpp>
+#include <engine/GlTextureUnits.hpp>
 #include <engine/GlVao.hpp>
 #include <engine/RenderLoop.hpp>
 
@@ -35,6 +36,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
         gl::GlCapabilities::Initialize();
+        gl::GlTextureUnits::Initialize();
 
         std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
         std::string fragmentShaderCode = LoadTextFile("data/app/shaders/constant.frag");
@@ -69,12 +71,23 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlGuardBlend guardB(true);
     gl::GlGuardViewport guardV(true);
     gl::GlGuardColor guardR;
+
+    gl::GlTextureUnits::BeginStateSnapshot();
+    gl::GlTextureUnits::Bind2D(0U, 0U);
+    gl::GlTextureUnits::Bind2D(1U, 0U);
+    gl::GlTextureUnits::Bind2D(2U, 0U);
+    gl::GlTextureUnits::BindCubemap(0U, 0U);
+    gl::GlTextureUnits::BindCubemap(1U, 0U);
+    gl::GlTextureUnits::BindCubemap(2U, 0U);
+    gl::GlTextureUnits::EndStateSnapshot();
+
     GLCALL(glClearColor(red, 0.5f, 0.5f, 0.0f));
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     GLCALL(glBindVertexArray(app->vao.Id()));
     GLCALL(glUseProgram(app->program));
     GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    gl::GlTextureUnits::RestoreState();
 }
 
 static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
