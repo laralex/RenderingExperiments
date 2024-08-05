@@ -14,7 +14,7 @@ void RestoreFlag(GLenum option, GLboolean shouldEnable) {
 
 namespace engine::gl {
 
-GlGuardBindings::GlGuardBindings() {
+GlGuardAux::GlGuardAux() {
     GLCALL(glGetIntegerv(GL_ACTIVE_TEXTURE, reinterpret_cast<GLint*>(&activeTexture_)));
     GLCALL(glGetIntegerv(GL_CURRENT_PROGRAM, reinterpret_cast<GLint*>(&program_)));
     // NOTE: probably a bad idea to store/restore glDrawBuffers, as it's state of framebuffer
@@ -23,38 +23,48 @@ GlGuardBindings::GlGuardBindings() {
     // }
     GLCALL(glGetIntegerv(GL_DISPATCH_INDIRECT_BUFFER_BINDING, reinterpret_cast<GLint*>(&dispatchIndirectBuffer_)));
     GLCALL(glGetIntegerv(GL_DRAW_INDIRECT_BUFFER_BINDING, reinterpret_cast<GLint*>(&drawIndirectBuffer_)));
-    GLCALL(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&drawFramebuffer_)));
-    GLCALL(glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&readFramebuffer_)));
-    GLCALL(glGetBooleanv(GL_FRAMEBUFFER_SRGB, &framebufferSrgb_));
-    GLCALL(glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&pixelPackBuffer_)));
-    GLCALL(glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&pixelUnpackBuffer_)));
     GLCALL(glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, reinterpret_cast<GLint*>(&programPipeline_)));
-    GLCALL(glGetIntegerv(GL_RENDERBUFFER_BINDING, reinterpret_cast<GLint*>(&renderBuffer_)));
+
     GLCALL(glGetIntegerv(GL_TEXTURE_BUFFER_BINDING, reinterpret_cast<GLint*>(&textureBuffer_)));
     GLCALL(glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&transformFeedbackBuffer_)));
 
 }
 
-GlGuardBindings::~GlGuardBindings() {
+GlGuardAux::~GlGuardAux() {
     GLCALL(glActiveTexture(activeTexture_));
 
     GLCALL(glUseProgram(program_));
     GLCALL(glBindProgramPipeline(programPipeline_));
     GLCALL(glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, dispatchIndirectBuffer_));
     GLCALL(glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer_));
-    RestoreFlag(GL_FRAMEBUFFER_SRGB, framebufferSrgb_);
-    GLCALL(glBindBuffer(GL_PIXEL_PACK_BUFFER, pixelPackBuffer_));
-    GLCALL(glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pixelUnpackBuffer_));
     GLCALL(glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, transformFeedbackBuffer_));
     GLCALL(glBindBuffer(GL_TEXTURE_BUFFER, textureBuffer_));
     // GLCALL(glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer));
-
-    GLCALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFramebuffer_));
-    GLCALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, readFramebuffer_));
-    GLCALL(glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer_));
     
     // GLCALL(glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers));
-    // XLOG("~GlGuardBindings", 0);
+    // XLOG("~GlGuardAux", 0);
+}
+
+GlGuardFramebuffer::GlGuardFramebuffer(bool restoreRare) : restoreRare_(restoreRare) {
+    GLCALL(glGetIntegerv(GL_RENDERBUFFER_BINDING, reinterpret_cast<GLint*>(&renderBuffer_)));
+    GLCALL(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&drawFramebuffer_)));
+    if (restoreRare_) {
+        GLCALL(glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&readFramebuffer_)));
+        GLCALL(glGetBooleanv(GL_FRAMEBUFFER_SRGB, &framebufferSrgb_));
+        GLCALL(glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&pixelPackBuffer_)));
+        GLCALL(glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&pixelUnpackBuffer_)));
+    }
+}
+
+GlGuardFramebuffer::~GlGuardFramebuffer() {
+    GLCALL(glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer_));
+    GLCALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFramebuffer_));
+    if (restoreRare_) {
+        GLCALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, readFramebuffer_));
+        RestoreFlag(GL_FRAMEBUFFER_SRGB, framebufferSrgb_);
+        GLCALL(glBindBuffer(GL_PIXEL_PACK_BUFFER, pixelPackBuffer_));
+        GLCALL(glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pixelUnpackBuffer_));
+    }
 }
 
 GlGuardVertex::GlGuardVertex(bool restoreRare) : restoreRare_(restoreRare) {

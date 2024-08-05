@@ -63,7 +63,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     }
 
     engine::f32 const red = 0.5f * (std::sin(ctx.timeSec) + 1.0f);
-    gl::GlGuardBindings guardBind;
+    gl::GlGuardAux guardBind;
     gl::GlGuardVertex guardVert(true);
     gl::GlGuardFlags guardF;
     gl::GlGuardDepth guardD(true);

@@ -4,10 +4,10 @@
 
 namespace engine::gl {
 
-class GlGuardBindings final {
+class GlGuardAux final {
 
 public:
-#define Self GlGuardBindings
+#define Self GlGuardAux
     // NOTE: must only be created on rendering thread, with GL context present
     explicit Self();
     ~Self();
@@ -22,16 +22,33 @@ private:
     GLuint program_                 = 0xDEAD;
     GLuint dispatchIndirectBuffer_  = 0xDEAD;
     GLuint drawIndirectBuffer_      = 0xDEAD;
+    GLuint programPipeline_         = 0xDEAD;
+    GLuint textureBuffer_           = 0xDEAD;
+    GLuint transformFeedbackBuffer_ = 0xDEAD;
+};
+
+class GlGuardFramebuffer final {
+
+public:
+#define Self GlGuardFramebuffer
+    // NOTE: must only be created on rendering thread, with GL context present
+    explicit Self(bool restoreRare);
+    ~Self();
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = delete;
+    Self& operator=(Self&&)      = delete;
+#undef Self
+
+private:
     GLuint drawFramebuffer_         = 0xDEAD;
     GLuint readFramebuffer_         = 0xDEAD;
     GLboolean framebufferSrgb_    = GL_FALSE;
     GLuint pixelPackBuffer_         = 0xDEAD;
     GLuint pixelUnpackBuffer_       = 0xDEAD;
-    GLuint programPipeline_         = 0xDEAD;
     GLuint renderBuffer_            = 0xDEAD;
-    
-    GLuint textureBuffer_           = 0xDEAD;
-    GLuint transformFeedbackBuffer_ = 0xDEAD;
+
+    bool restoreRare_ = false;
 };
 
 class GlGuardVertex final {
