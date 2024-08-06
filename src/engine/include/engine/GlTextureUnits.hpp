@@ -34,10 +34,10 @@ public:
 private:
     enum class SnapshotObjectType { TEXTURE, SAMPLER };
     struct TextureUnitSnapshot final {
-        size_t slotIdx = 0xDEADDEAD;
-        GLenum textureType = 0xDEADDEAD;
+        size_t slotIdx                = 0xDEADDEAD;
+        GLenum textureType            = 0xDEADDEAD;
         SnapshotObjectType objectType = SnapshotObjectType::TEXTURE;
-        GLuint oldObject = 0xDEADDEAD;
+        GLuint oldObject              = 0xDEADDEAD;
     };
 
     static void BindTexture(size_t slotIdx, GLenum textureType, GLuint texture);

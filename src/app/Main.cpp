@@ -1,9 +1,8 @@
 #include <engine/Assets.hpp>
+#include <engine/Prelude.hpp>
 #include <engine/GlBuffer.hpp>
-#include <engine/GlCapabilities.hpp>
-#include <engine/GlHelpers.hpp>
-#include <engine/GlProgram.hpp>
 #include <engine/GlGuard.hpp>
+#include <engine/GlProgram.hpp>
 #include <engine/GlTextureUnits.hpp>
 #include <engine/GlVao.hpp>
 #include <engine/RenderLoop.hpp>
@@ -19,14 +18,14 @@ struct Application final {
     bool isInitialized = false;
 };
 
-constexpr engine::f32 vertexData[] = {
+constexpr float vertexData[] = {
     0.5f,  0.5f,  0.0f, // top right
     0.5f,  -0.5f, 0.0f, // bottom right
     -0.5f, -0.5f, 0.0f, // bottom left
     -0.5f, 0.5f,  0.0f  // top left
 };
 
-constexpr engine::u32 indices[] = {
+constexpr uint32_t indices[] = {
     0, 1, 3, // first triangle
     1, 2, 3  // second triangle
 };
@@ -35,8 +34,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
-        gl::GlCapabilities::Initialize();
-        gl::GlTextureUnits::Initialize();
+        gl::InitializeGl();
+        gl::GlExtensions::Supports(gl::GlExtensions::KHR_debug);
 
         std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
         std::string fragmentShaderCode = LoadTextFile("data/app/shaders/constant.frag");
@@ -47,7 +46,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDeleteShader(fragmentShader));
 
         app->attributeBuffer.Initialize(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData));
+        engine::gl::DebugLabel(app->attributeBuffer, "Test VBO");
         app->indexBuffer.Initialize(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
+        engine::gl::DebugLabel(app->indexBuffer, "Test EBO");
         app->vao.Initialize();
         app->vao.DefineVertexAttribute(
             app->attributeBuffer,
@@ -55,14 +56,15 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .normalized      = GL_FALSE,
-             .stride          = 3 * sizeof(engine::f32),
+             .stride          = 3 * sizeof(float),
              .offset          = 0});
         app->vao.DefineIndices(app->indexBuffer);
+        engine::gl::DebugLabel(app->vao, "Test VAO");
 
         app->isInitialized = true;
     }
 
-    engine::f32 const red = 0.5f * (std::sin(ctx.timeSec) + 1.0f);
+    float const red = 0.5f * (std::sin(ctx.timeSec) + 1.0f);
     gl::GlGuardAux guardBind;
     gl::GlGuardVertex guardVert(true);
     gl::GlGuardFlags guardF;

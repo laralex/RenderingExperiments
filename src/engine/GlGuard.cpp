@@ -27,7 +27,6 @@ GlGuardAux::GlGuardAux() {
 
     GLCALL(glGetIntegerv(GL_TEXTURE_BUFFER_BINDING, reinterpret_cast<GLint*>(&textureBuffer_)));
     GLCALL(glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&transformFeedbackBuffer_)));
-
 }
 
 GlGuardAux::~GlGuardAux() {
@@ -40,12 +39,13 @@ GlGuardAux::~GlGuardAux() {
     GLCALL(glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, transformFeedbackBuffer_));
     GLCALL(glBindBuffer(GL_TEXTURE_BUFFER, textureBuffer_));
     // GLCALL(glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer));
-    
+
     // GLCALL(glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers));
     // XLOG("~GlGuardAux", 0);
 }
 
-GlGuardFramebuffer::GlGuardFramebuffer(bool restoreRare) : restoreRare_(restoreRare) {
+GlGuardFramebuffer::GlGuardFramebuffer(bool restoreRare)
+    : restoreRare_(restoreRare) {
     GLCALL(glGetIntegerv(GL_RENDERBUFFER_BINDING, reinterpret_cast<GLint*>(&renderBuffer_)));
     GLCALL(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&drawFramebuffer_)));
     if (restoreRare_) {
@@ -67,7 +67,8 @@ GlGuardFramebuffer::~GlGuardFramebuffer() {
     }
 }
 
-GlGuardVertex::GlGuardVertex(bool restoreRare) : restoreRare_(restoreRare) {
+GlGuardVertex::GlGuardVertex(bool restoreRare)
+    : restoreRare_(restoreRare) {
     GLCALL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, reinterpret_cast<GLint*>(&vao_)));
     if (restoreRare_) {
         // NOTE: vbo and ebo are rare to restore, because they should be just once bound to vao
@@ -111,7 +112,8 @@ GlGuardFlags::~GlGuardFlags() {
     // XLOG("~GlGuardFlags", 0);
 }
 
-GlGuardDepth::GlGuardDepth(bool restoreRare) : restoreRare_(restoreRare) {
+GlGuardDepth::GlGuardDepth(bool restoreRare)
+    : restoreRare_(restoreRare) {
     GLCALL(glGetBooleanv(GL_DEPTH_TEST, &depthTest_));
     GLCALL(glGetFloatv(GL_DEPTH_CLEAR_VALUE, &depthClearValue_));
     GLCALL(glGetIntegerv(GL_DEPTH_FUNC, reinterpret_cast<GLint*>(&depthFunc_)));
@@ -178,7 +180,8 @@ GlGuardStencil::~GlGuardStencil() {
     // XLOG("~GlGuardStencil", 0);
 }
 
-GlGuardBlend::GlGuardBlend(bool restoreRare) : restoreRare_(restoreRare) {
+GlGuardBlend::GlGuardBlend(bool restoreRare)
+    : restoreRare_(restoreRare) {
     GLCALL(glGetIntegerv(GL_BLEND_DST_ALPHA, reinterpret_cast<GLint*>(&blendDstAlpha_)));
     GLCALL(glGetIntegerv(GL_BLEND_DST_RGB, reinterpret_cast<GLint*>(&blendDstRgb_)));
     GLCALL(glGetIntegerv(GL_BLEND_SRC_ALPHA, reinterpret_cast<GLint*>(&blendSrcAlpha_)));
@@ -203,7 +206,8 @@ GlGuardBlend::~GlGuardBlend() {
     // XLOG("~GlGuardBlend", 0);
 }
 
-GlGuardViewport::GlGuardViewport(bool restoreRare) : restoreRare_(restoreRare) {
+GlGuardViewport::GlGuardViewport(bool restoreRare)
+    : restoreRare_(restoreRare) {
     GLCALL(glGetInteger64v(GL_VIEWPORT, viewport_));
     if (restoreRare_) {
         GLCALL(glGetBooleanv(GL_SCISSOR_TEST, &scissorTest_));
@@ -223,7 +227,6 @@ GlGuardViewport::~GlGuardViewport() {
 GlGuardColor::GlGuardColor() {
     GLCALL(glGetFloatv(GL_COLOR_CLEAR_VALUE, colorClearValue_));
     GLCALL(glGetBooleanv(GL_COLOR_WRITEMASK, colorWriteMask_));
-
 }
 
 GlGuardColor::~GlGuardColor() {

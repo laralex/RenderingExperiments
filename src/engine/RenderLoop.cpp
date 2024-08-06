@@ -52,6 +52,12 @@ auto CreateWindow(int width, int height) -> GLFWwindow* {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+    int isDebugContext = GLFW_FALSE;
+    if constexpr (engine::DEBUG_BUILD) {
+        isDebugContext = GLFW_TRUE;
+        XLOG("! GLFW - making debug-context for OpenGL", 0);
+    }
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, isDebugContext);
 
     GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
     GLFWvidmode const* mode = glfwGetVideoMode(monitor);

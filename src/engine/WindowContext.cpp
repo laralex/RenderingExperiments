@@ -32,14 +32,14 @@ auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback ca
     return oldCallback;
 }
 
-void WindowCtx::UpdateResolution(engine::isize width, engine::isize height) {
+void WindowCtx::UpdateResolution(int64_t width, int64_t height) {
     if (width < 0) { width = 0; }
     if (height < 0) { height = 0; }
-    windowSize_ = {static_cast<engine::i32>(width), static_cast<engine::i32>(height)};
+    windowSize_ = {static_cast<int32_t>(width), static_cast<int32_t>(height)};
 }
 
-void WindowCtx::UpdateCursorPosition(engine::f64 xpos, engine::f64 ypos) {
-    mousePos_ = {static_cast<engine::f32>(xpos), static_cast<engine::f32>(ypos)};
+void WindowCtx::UpdateCursorPosition(double xpos, double ypos) {
+    mousePos_ = {static_cast<float>(xpos), static_cast<float>(ypos)};
 }
 
 void WindowCtx::UpdateCursorEntered(bool entered) { mouseInsideWindow_ = entered; }

@@ -24,19 +24,17 @@ CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
 
-obj_engine_ = Assets.o GlCapabilities.o GlHelpers.o GlProgram.o \
-	GlTextureUnits.o GlGuard.o Prelude.o RenderLoop.o WindowContext.o
-
-hpp_engine_ = Assets.hpp GlBuffer.hpp GlCapabilities.hpp GlHelpers.hpp \
-	GlProgram.hpp GlTextureUnits.hpp GlGuard.hpp Prelude.hpp \
-	RenderContext.hpp RenderLoop.hpp WindowContext.hpp
-
-hpp_engine_private_ = Prelude.hpp
+obj_engine_ = Assets.o GlBuffer.o \
+	GlCapabilities.o GlExtensions.o \
+	GlHelpers.o GlProgram.o \
+	GlTextureUnits.o GlVao.o \
+	GlGuard.o Prelude.o \
+	RenderLoop.o WindowContext.o
 
 obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
 obj_engine = $(addprefix ${BUILD_DIR}/engine/, ${obj_engine_})
-hpp_engine = $(addprefix src/engine/include/engine/, ${hpp_engine_})
-hpp_engine_private = $(addprefix src/engine/include_private/engine_private/, ${hpp_engine_private_})
+hpp_engine = $(wildcard src/engine/include/engine/*)
+hpp_engine_private = $(wildcard src/engine/include_private/engine_private/*)
 
 .PHONY: run
 run: ${INSTALL_DIR}/run_app

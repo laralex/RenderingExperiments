@@ -41,12 +41,12 @@ public:
 #undef Self
 
 private:
-    GLuint drawFramebuffer_         = 0xDEAD;
-    GLuint readFramebuffer_         = 0xDEAD;
-    GLboolean framebufferSrgb_    = GL_FALSE;
-    GLuint pixelPackBuffer_         = 0xDEAD;
-    GLuint pixelUnpackBuffer_       = 0xDEAD;
-    GLuint renderBuffer_            = 0xDEAD;
+    GLuint drawFramebuffer_    = 0xDEAD;
+    GLuint readFramebuffer_    = 0xDEAD;
+    GLboolean framebufferSrgb_ = GL_FALSE;
+    GLuint pixelPackBuffer_    = 0xDEAD;
+    GLuint pixelUnpackBuffer_  = 0xDEAD;
+    GLuint renderBuffer_       = 0xDEAD;
 
     bool restoreRare_ = false;
 };
@@ -65,14 +65,14 @@ public:
 #undef Self
 
 private:
-    GLuint vao_                     = 0xDEAD;
-    GLuint vbo_                     = 0xDEAD;
-    GLuint ebo_                     = 0xDEAD;
+    GLuint vao_                   = 0xDEAD;
+    GLuint vbo_                   = 0xDEAD;
+    GLuint ebo_                   = 0xDEAD;
     GLboolean primitiveRestart_   = GL_FALSE;
-    GLuint primitiveRestartIndex_   = 0xDEAD;
+    GLuint primitiveRestartIndex_ = 0xDEAD;
     GLboolean cullFace_           = GL_FALSE;
-    GLenum cullFaceMode_       = 0xDEAD;
-    GLenum provokingVertex_    = 0xDEAD;
+    GLenum cullFaceMode_          = 0xDEAD;
+    GLenum provokingVertex_       = 0xDEAD;
 
     bool restoreRare_ = false;
 };
@@ -111,8 +111,8 @@ public:
 #undef Self
 
 private:
-    GLfloat colorClearValue_[4]     = {42.42f, 42.42f, 42.42f, 42.42f};
-    GLboolean colorWriteMask_[4]    = {GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE};
+    GLfloat colorClearValue_[4]  = {42.42f, 42.42f, 42.42f, 42.42f};
+    GLboolean colorWriteMask_[4] = {GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE};
 };
 
 class GlGuardDepth final {
@@ -129,17 +129,17 @@ public:
 #undef Self
 
 private:
-    GLboolean depthTest_         = GL_FALSE;
-    GLfloat depthClearValue_     = 0.424242f;
-    GLenum depthFunc_            = 0xDEAD;
-    GLboolean depthWriteMask_         = GL_FALSE;
+    GLboolean depthTest_          = GL_FALSE;
+    GLfloat depthClearValue_      = 0.424242f;
+    GLenum depthFunc_             = 0xDEAD;
+    GLboolean depthWriteMask_     = GL_FALSE;
     GLboolean depthClamp_         = GL_FALSE;
-    GLfloat depthRange_[2]       = {42.42f, 42.42f};
+    GLfloat depthRange_[2]        = {42.42f, 42.42f};
     GLboolean polygonOffsetFill_  = GL_FALSE;
     GLboolean polygonOffsetLine_  = GL_FALSE;
     GLboolean polygonOffsetPoint_ = GL_FALSE;
-    GLfloat polygonOffsetFactor_ = 0.f;
-    GLfloat polygonOffsetUnits_  = 0.f;
+    GLfloat polygonOffsetFactor_  = 0.f;
+    GLfloat polygonOffsetUnits_   = 0.f;
 
     bool restoreRare_ = false;
 };
@@ -198,8 +198,8 @@ private:
     GLenum blendSrcAlpha_      = 0xDEAD;
     GLenum blendSrcRgb_        = 0xDEAD;
     // NOTE: GL_LOGIC_OP_MODE and GL_COLOR_LOGIC_OP may go there, but they're very rare features
-    GLboolean colorLogicOp_       = GL_FALSE;
-    GLenum colorLogicOpMode_        = 0xDEAD;
+    GLboolean colorLogicOp_  = GL_FALSE;
+    GLenum colorLogicOpMode_ = 0xDEAD;
 
     bool restoreRare_ = false;
 };
@@ -218,9 +218,9 @@ public:
 #undef Self
 
 private:
-    GLboolean scissorTest_        = GL_FALSE;
-    GLint64 scissor_[4]        = {0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD};
-    GLint64 viewport_[4]       = {0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD};
+    GLboolean scissorTest_ = GL_FALSE;
+    GLint64 scissor_[4]    = {0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD};
+    GLint64 viewport_[4]   = {0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD, 0xDEADDEAD};
 
     bool restoreRare_ = false;
 };

@@ -10,15 +10,17 @@ GLint GlCapabilities::minorVersion    = 0xDEAD;
 
 void GlCapabilities::Initialize() {
     if (isInitialized) { return; }
-#define GET_GL_CAP(cap, variable)                                                                                      \
-    GLCALL(glGetIntegerv(cap, &variable));                                                                             \
-    XLOG("GlCapabilities::" #cap " = {}", variable);
 
-    GET_GL_CAP(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, maxTextureUnits);
-    GET_GL_CAP(GL_NUM_EXTENSIONS, numExtensions);
-    GET_GL_CAP(GL_MAJOR_VERSION, majorVersion);
-    GET_GL_CAP(GL_MINOR_VERSION, minorVersion);
-#undef GET_GL_CAP
+    auto getCapability = [](GLenum cap, char const* capStr, GLint& destination) {
+        GLCALL(glGetIntegerv(cap, &destination));
+        XLOG("GlCapabilities::{} = {}", capStr, destination);
+    };
+
+    getCapability(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS", maxTextureUnits);
+    getCapability(GL_NUM_EXTENSIONS, "GL_NUM_EXTENSIONS", numExtensions);
+    getCapability(GL_MAJOR_VERSION, "GL_MAJOR_VERSION", majorVersion);
+    getCapability(GL_MINOR_VERSION, "GL_MINOR_VERSION", minorVersion);
+
     isInitialized = true;
 }
 

@@ -1,5 +1,6 @@
 * debug group
 * debug label
+* ARB_debug_output
 * shader macros
 * texture
 * uniform

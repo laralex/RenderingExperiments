@@ -23,3 +23,6 @@ IndentAccessModifiers: false
 AccessModifierOffset: -4
 IndentCaseBlocks: false
 IndentCaseLabels: false
+
+# clang-format 18+
+#SkipMacroDefinitionBody: true

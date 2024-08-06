@@ -4,15 +4,23 @@
 #include <glad/gl.h>
 #include <string_view>
 
+#include "engine/GlCapabilities.hpp"
+#include "engine/GlExtensions.hpp"
+#include <engine/GlHelpers.hpp>
+
 #ifdef XDEBUG
 #define SPDLOG_COMPILED_LIB 1
 #include "spdlog/spdlog.h"
-#define XLOG(format, ...)                                                                                              \
-    { SPDLOG_INFO(format, __VA_ARGS__); }
-#define XLOGE(format, ...)                                                                                             \
-    { SPDLOG_ERROR(format, __VA_ARGS__); }
+// clang-format off
+#define XLOG_LVL(lvl, format, ...) { spdlog::log(lvl, format, __VA_ARGS__); }
+#define XLOG(format, ...) { spdlog::info(format, __VA_ARGS__); }
+#define XLOGW(format, ...) { spdlog::warning(format, __VA_ARGS__); }
+#define XLOGE(format, ...) { spdlog::error(format, __VA_ARGS__); }
+// clang-format on
 #else
+#define XLOG_LVL(lvl, format, ...)
 #define XLOG(format, ...)
+#define XLOGW(format, ...)
 #define XLOGE(format, ...)
 #endif // XDEBUG
 
@@ -20,100 +28,81 @@ struct GLFWwindow;
 
 namespace engine {
 
-using u8    = uint8_t;
-using u32   = uint32_t;
-using u64   = uint64_t;
-using usize = std::size_t;
-
-using i8    = int8_t;
-using i32   = int32_t;
-using i64   = int64_t;
-using isize = std::ptrdiff_t;
-
-using f32 = float;
-using f64 = double;
+#ifdef XDEBUG
+constexpr bool DEBUG_BUILD = true;
+#else
+constexpr bool DEBUG_BUILD = false;
+#endif // XDEBUG
 
 struct vec2 {
     union {
-        f32 x;
-        f32 width;
+        float x;
+        float width;
     };
     union {
-        f32 y;
-        f32 height;
+        float y;
+        float height;
     };
 };
 
 struct ivec2 {
     union {
-        i32 x;
-        i32 width;
+        int32_t x;
+        int32_t width;
     };
     union {
-        i32 y;
-        i32 height;
+        int32_t y;
+        int32_t height;
     };
 };
 
 struct vec3 {
     union {
-        f32 x;
-        f32 width;
+        float x;
+        float width;
     };
     union {
-        f32 y;
-        f32 height;
+        float y;
+        float height;
     };
     union {
-        f32 z;
-        f32 depth;
+        float z;
+        float depth;
     };
 };
 
 struct ivec3 {
     union {
-        i32 x;
-        i32 width;
+        int32_t x;
+        int32_t width;
     };
     union {
-        i32 y;
-        i32 height;
+        int32_t y;
+        int32_t height;
     };
     union {
-        i32 z;
-        i32 depth;
+        int32_t z;
+        int32_t depth;
     };
 };
 
 struct vec4 {
     union {
-        f32 x;
-        f32 r;
+        float x;
+        float r;
     };
     union {
-        f32 y;
-        f32 g;
+        float y;
+        float g;
     };
     union {
-        f32 z;
-        f32 b;
+        float z;
+        float b;
     };
     union {
-        f32 w;
-        f32 a;
+        float w;
+        float a;
     };
 };
-
-void CheckOpenGLError(const char* stmt, const char* fname, int line, bool fatal);
-
-#ifdef XDEBUG
-#define GLCALL(stmt)                                                                                                   \
-    do {                                                                                                               \
-        stmt;                                                                                                          \
-        engine::CheckOpenGLError(#stmt, __FILE__, __LINE__, /* fatal */ false);                                        \
-    } while (0)
-#else
-#define GLCALL(stmt) stmt
-#endif
 
 } // namespace engine

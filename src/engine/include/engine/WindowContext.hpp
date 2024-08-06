@@ -7,7 +7,7 @@
 namespace engine {
 
 using ButtonCallback = std::function<void(bool, bool)>;
-using AxisCallback   = std::function<void(engine::f32)>;
+using AxisCallback   = std::function<void(float)>;
 
 class WindowCtx final {
 
@@ -32,8 +32,8 @@ public:
     auto SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback;
     auto SetMouseButtonCallback(GlfwMouseButton mouseButton, ButtonCallback callback) -> ButtonCallback;
 
-    void UpdateResolution(engine::isize width, engine::isize height);
-    void UpdateCursorPosition(engine::f64 xpos, engine::f64 ypos);
+    void UpdateResolution(int64_t width, int64_t height);
+    void UpdateCursorPosition(double xpos, double ypos);
     void UpdateCursorEntered(bool entered);
 
 private:

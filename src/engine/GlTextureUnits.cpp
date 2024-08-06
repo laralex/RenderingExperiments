@@ -74,7 +74,7 @@ void GlTextureUnits::BindTexture(size_t slotIdx, GLenum textureType, GLuint text
     size_t bindingOffset = slotIdx * NUM_TEXTURE_TYPES + TextureTypeToOffset(textureType);
     if (isRecordingSnapshot) {
         stateSnapshot.push(TextureUnitSnapshot{
-            .slotIdx        = slotIdx,
+            .slotIdx     = slotIdx,
             .textureType = textureType,
             .objectType  = SnapshotObjectType::TEXTURE,
             .oldObject   = currentBindings[bindingOffset]});
@@ -87,7 +87,7 @@ void GlTextureUnits::BindTexture(size_t slotIdx, GLenum textureType, GLuint text
 void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
     if (isRecordingSnapshot) {
         stateSnapshot.push(TextureUnitSnapshot{
-            .slotIdx        = slotIdx,
+            .slotIdx     = slotIdx,
             .textureType = GL_NONE,
             .objectType  = SnapshotObjectType::SAMPLER,
             .oldObject   = currentSamplerBindings[slotIdx]});
