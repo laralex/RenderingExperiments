@@ -6,7 +6,7 @@
 namespace {
 
 constexpr bool ENABLE_KHR_DEBUG_CALLBACK = false;
-constexpr bool ENABLE_DEBUG_GROUP_LOGS = false;
+constexpr bool ENABLE_DEBUG_GROUP_LOGS   = false;
 
 } // namespace
 
@@ -83,9 +83,7 @@ auto GetDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, 
 namespace engine::gl {
 
 void InitializeDebug() {
-    if constexpr(!ENABLE_KHR_DEBUG_CALLBACK) {
-        return;
-    }
+    if constexpr (!ENABLE_KHR_DEBUG_CALLBACK) { return; }
     if (GlExtensions::Supports(GlExtensions::KHR_debug)) {
         GLCALL(glEnable(GL_DEBUG_OUTPUT));
         void const* userParam = nullptr;

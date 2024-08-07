@@ -24,12 +24,12 @@ CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
 
-obj_engine_ = Assets.o GlBuffer.o \
+obj_engine_ = Assets.o EngineLoop.o GlBuffer.o \
 	GlCapabilities.o GlDebug.o GlExtensions.o \
 	GlHelpers.o GlProgram.o \
 	GlTextureUnits.o GlVao.o \
 	GlGuard.o Prelude.o \
-	RenderLoop.o WindowContext.o
+	WindowContext.o
 
 obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
 obj_engine = $(addprefix ${BUILD_DIR}/engine/, ${obj_engine_})

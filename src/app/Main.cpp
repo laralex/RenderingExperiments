@@ -1,11 +1,11 @@
 #include <engine/Assets.hpp>
+#include <engine/EngineLoop.hpp>
 #include <engine/GlBuffer.hpp>
 #include <engine/GlGuard.hpp>
 #include <engine/GlProgram.hpp>
 #include <engine/GlTextureUnits.hpp>
 #include <engine/GlVao.hpp>
 #include <engine/Prelude.hpp>
-#include <engine/RenderLoop.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -93,38 +93,47 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlTextureUnits::RestoreState();
 }
 
-static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
+static auto ConfigureWindow(engine::EngineHandle engine) {
+    auto& windowCtx = engine::GetWindowContext(engine);
     GLFWwindow* window  = windowCtx.Window();
     auto oldCallbackEsc = windowCtx.SetKeyboardCallback(
-        GLFW_KEY_ESCAPE, [=](bool pressed, bool released) { glfwSetWindowShouldClose(window, true); });
+        GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
+            engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*){
+                glfwSetWindowShouldClose(window, true);
+            });
+        });
 
     auto oldCallbackF = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
-        static bool setToFullscreen = true;
-        if (!pressed) { return; }
+        engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {
+            static bool setToFullscreen = true;
+            if (!pressed) { return; }
 
-        GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        if (setToFullscreen) {
-            glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-        } else {
-            // TODO: avoid hardcoding resolution
-            glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
-        }
-        XLOG("Fullscreen mode: {}", setToFullscreen);
-        setToFullscreen = !setToFullscreen;
+            GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+            if (setToFullscreen) {
+                glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+            } else {
+                // TODO: avoid hardcoding resolution
+                glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
+            }
+            XLOG("Fullscreen mode: {}", setToFullscreen);
+            setToFullscreen = !setToFullscreen;
+        });
     });
 
     auto oldCallbackP = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
-        static bool setToWireframe = true;
-        if (!pressed) { return; }
+        engine::QueueForNextFrame(engine, engine::UserActionType::RENDER, [=](void*) {
+            static bool setToWireframe = true;
+            if (!pressed) { return; }
 
-        if (setToWireframe) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-        XLOG("Wireframe mode: {}", setToWireframe);
-        setToWireframe = !setToWireframe;
+            if (setToWireframe) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            XLOG("Wireframe mode: {}", setToWireframe);
+            setToWireframe = !setToWireframe;
+        });
     });
 
     auto oldCallbackLeft = windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
@@ -138,22 +147,24 @@ static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
 auto main() -> int {
     XLOG("! Compiled in DEBUG mode", 0);
 
-    auto& windowCtx = engine::Initialize();
-    if (!windowCtx.IsInitialized()) {
+    auto maybeEngine = engine::CreateEngine();
+    if (maybeEngine == std::nullopt) {
         XLOGE("App failed to initialize the engine", 0);
         return -1;
     }
-    ConfigureWindow(windowCtx);
+
+    auto* engine = *maybeEngine;
+    ConfigureWindow(engine);
 
     {
         Application app;
-        engine::SetApplicationData(&app);
+        engine::SetApplicationData(engine, &app);
 
-        auto _ = engine::SetRenderCallback(Render);
-        engine::BlockOnGameLoop(windowCtx);
+        auto _ = engine::SetRenderCallback(engine, Render);
+        engine::BlockOnLoop(engine);
     }
 
-    engine::Terminate();
+    engine::DestroyEngine(engine);
 
     XLOG("App closed gracefully", 0);
     return 0;
