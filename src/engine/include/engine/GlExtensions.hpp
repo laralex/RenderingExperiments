@@ -20,13 +20,19 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
+    // A bunch of hardcoded extensions for faster runtime checking if they are supported
     enum Name {
         KHR_debug = 0,
-        ARB_framebuffer_sRGB,
+        KHR_no_error,
+        KHR_shader_subgroup,
         KHR_texture_compression_astc_hdr,
         KHR_texture_compression_astc_ldr,
         KHR_texture_compression_astc_sliced_3d,
-        KHR_shader_subgroup,
+        ARB_debug_output,
+        ARB_ES3_2_compatibility,
+        ARB_framebuffer_sRGB,
+        EXT_debug_label,
+        EXT_debug_marker,
         NUM_HARDCODED_EXTENSIONS
     };
 

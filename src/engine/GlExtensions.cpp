@@ -24,11 +24,16 @@ void GlExtensions::Initialize() {
         return supported;
     };
     hardcodedExtensions[KHR_debug]                              = supports("GL_KHR_debug");
-    hardcodedExtensions[ARB_framebuffer_sRGB]                   = supports("GL_ARB_framebuffer_sRGB");
+    hardcodedExtensions[KHR_no_error]                           = supports("GL_KHR_no_error");
+    hardcodedExtensions[KHR_shader_subgroup]                    = supports("GL_KHR_shader_subgroup");
     hardcodedExtensions[KHR_texture_compression_astc_hdr]       = supports("GL_KHR_texture_compression_astc_hdr");
     hardcodedExtensions[KHR_texture_compression_astc_ldr]       = supports("GL_KHR_texture_compression_astc_ldr");
     hardcodedExtensions[KHR_texture_compression_astc_sliced_3d] = supports("GL_KHR_texture_compression_astc_sliced_3d");
-    hardcodedExtensions[KHR_shader_subgroup]                    = supports("GL_KHR_shader_subgroup");
+    hardcodedExtensions[ARB_debug_output]                       = supports("GL_ARB_debug_output");
+    hardcodedExtensions[ARB_ES3_2_compatibility]                = supports("GL_ARB_ES3_2_compatibility");
+    hardcodedExtensions[ARB_framebuffer_sRGB]                   = supports("GL_ARB_framebuffer_sRGB");
+    hardcodedExtensions[EXT_debug_label]                        = supports("GL_EXT_debug_label");
+    hardcodedExtensions[EXT_debug_marker]                       = supports("GL_EXT_debug_marker");
     isInitialized                                               = true;
 }
 

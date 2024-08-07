@@ -1,7 +1,6 @@
 #include <engine/GlVao.hpp>
 
-namespace engine::gl
-{
+namespace engine::gl {
 
 Vao::~Vao() { Dispose(); }
 

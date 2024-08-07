@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/Prelude.hpp"
 #include "engine/GlBuffer.hpp"
+#include "engine/Prelude.hpp"
 
 namespace engine::gl {
 

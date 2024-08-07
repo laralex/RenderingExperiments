@@ -1,10 +1,10 @@
 #include <engine/Assets.hpp>
-#include <engine/Prelude.hpp>
 #include <engine/GlBuffer.hpp>
 #include <engine/GlGuard.hpp>
 #include <engine/GlProgram.hpp>
 #include <engine/GlTextureUnits.hpp>
 #include <engine/GlVao.hpp>
+#include <engine/Prelude.hpp>
 #include <engine/RenderLoop.hpp>
 
 #define GLFW_INCLUDE_NONE
@@ -34,7 +34,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
-        gl::InitializeGl();
+        gl::InitializeOpenGl();
         gl::GlExtensions::Supports(gl::GlExtensions::KHR_debug);
 
         std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
