@@ -111,6 +111,30 @@ void CheckOpenGlError(const char* stmt, const char* fname, int line, bool fatal)
     if (fatal) { std::terminate(); }
 }
 
+void PushDebugGroup(std::string_view label, GLuint userData) {
+    assert(GlExtensions::IsInitialized());
+    if (GlExtensions::Supports(GlExtensions::KHR_debug)) {
+        GLCALL(glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, userData, label.size(), label.data()));
+        return;
+    }
+    if (GlExtensions::Supports(GlExtensions::EXT_debug_marker)) {
+        GLCALL(glPushGroupMarkerEXT(label.size(), label.data()));
+        return;
+    }
+}
+
+void PopDebugGroup() {
+    assert(GlExtensions::IsInitialized());
+    if (GlExtensions::Supports(GlExtensions::KHR_debug)) {
+        GLCALL(glPopDebugGroup());
+        return;
+    }
+    if (GlExtensions::Supports(GlExtensions::EXT_debug_marker)) {
+        GLCALL(glPopGroupMarkerEXT());
+        return;
+    }
+}
+
 void DebugLabel(GpuBuffer const& buffer, std::string_view label) {
     ::DebugLabel(GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), label);
 }

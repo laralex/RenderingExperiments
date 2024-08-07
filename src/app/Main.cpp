@@ -83,12 +83,14 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlTextureUnits::BindCubemap(2U, 0U);
     gl::GlTextureUnits::EndStateSnapshot();
 
+    gl::PushDebugGroup("Main pass");
     GLCALL(glClearColor(red, 0.5f, 0.5f, 0.0f));
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     GLCALL(glBindVertexArray(app->vao.Id()));
     GLCALL(glUseProgram(app->program));
     GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    gl::PopDebugGroup();
     gl::GlTextureUnits::RestoreState();
 }
 
