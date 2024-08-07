@@ -20,7 +20,7 @@ enum TextureTypeOffset : size_t {
     NUM_TEXTURE_TYPES,
 };
 
-constexpr auto TextureTypeToOffset(GLenum textureType) -> size_t {
+constexpr auto TextureTypeToOffset [[nodiscard]] (GLenum textureType) -> size_t {
     // clang-format off
     switch (textureType) {
     case GL_TEXTURE_2D: return TEXTURE_2D;

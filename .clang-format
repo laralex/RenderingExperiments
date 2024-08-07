@@ -24,5 +24,8 @@ AccessModifierOffset: -4
 IndentCaseBlocks: false
 IndentCaseLabels: false
 
+SpaceInEmptyBlock: true
+SpaceBeforeAssignmentOperators: true
+
 # clang-format 18+
 #SkipMacroDefinitionBody: true

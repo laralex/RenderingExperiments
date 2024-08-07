@@ -17,7 +17,7 @@ public:
 #undef Self
 
     static void Initialize();
-    static auto IsInitialized() -> bool { return isInitialized; };
+    static auto IsInitialized [[nodiscard]] () -> bool { return isInitialized; };
     static GLint maxTextureUnits;
     static GLint numExtensions;
     static GLint majorVersion;

@@ -40,7 +40,7 @@ void GlfwResizeCallback(GLFWwindow* window, int width, int height) {
     ctx->UpdateResolution(width, height);
 }
 
-auto CreateWindow(int width, int height) -> GLFWwindow* {
+auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
     glfwSetErrorCallback(GlfwErrorCallback);
     if (!glfwInit()) {
         XLOGE("Failed to initialize GLFW", 0)
@@ -90,7 +90,7 @@ auto CreateWindow(int width, int height) -> GLFWwindow* {
     return window;
 }
 
-auto UpdateRenderLoop(std::vector<RenderCtx>& frameHistory, size_t frameIdx) -> RenderCtx& {
+auto UpdateRenderLoop [[nodiscard]] (std::vector<RenderCtx>& frameHistory, size_t frameIdx) -> RenderCtx& {
     size_t const frameHistoryIdx     = frameIdx % frameHistory.size();
     size_t const prevFrameHistoryIdx = (frameIdx - 1) % frameHistory.size();
 

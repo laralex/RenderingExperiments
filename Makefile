@@ -25,7 +25,7 @@ CLANG_FORMAT=clang-format-17
 obj_app_ = Main.o
 
 obj_engine_ = Assets.o GlBuffer.o \
-	GlCapabilities.o GlExtensions.o \
+	GlCapabilities.o GlDebug.o GlExtensions.o \
 	GlHelpers.o GlProgram.o \
 	GlTextureUnits.o GlVao.o \
 	GlGuard.o Prelude.o \

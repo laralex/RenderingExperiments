@@ -37,10 +37,10 @@ public:
     };
 
     static void Initialize();
-    static auto IsInitialized() -> bool { return isInitialized; }
-    static auto NumExtensions() -> int32_t;
-    static auto Supports(char const* extensionName) -> bool;
-    static auto Supports(GlExtensions::Name extensionName) -> bool;
+    static auto IsInitialized [[nodiscard]] () -> bool { return isInitialized; }
+    static auto NumExtensions [[nodiscard]] () -> int32_t;
+    static auto Supports [[nodiscard]] (char const* extensionName) -> bool;
+    static auto Supports [[nodiscard]] (GlExtensions::Name extensionName) -> bool;
 
 private:
     static bool isInitialized;

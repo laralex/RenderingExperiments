@@ -21,16 +21,16 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    auto IsInitialized() const -> bool { return window_ != nullptr; }
-    auto Window() const -> GLFWwindow* { return window_; }
-    auto WindowSize() const -> engine::ivec2 { return windowSize_; }
-    auto MousePosition() const -> engine::vec2 { return mousePos_; }
-    auto MouseInsideWindow() const -> bool { return mouseInsideWindow_; }
+    auto IsInitialized [[nodiscard]] () const -> bool { return window_ != nullptr; }
+    auto Window [[nodiscard]] () const -> GLFWwindow* { return window_; }
+    auto WindowSize [[nodiscard]] () const -> engine::ivec2 { return windowSize_; }
+    auto MousePosition [[nodiscard]] () const -> engine::vec2 { return mousePos_; }
+    auto MouseInsideWindow [[nodiscard]] () const -> bool { return mouseInsideWindow_; }
 
     using GlfwKey         = int;
     using GlfwMouseButton = int;
-    auto SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback;
-    auto SetMouseButtonCallback(GlfwMouseButton mouseButton, ButtonCallback callback) -> ButtonCallback;
+    auto SetKeyboardCallback [[nodiscard]] (GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback;
+    auto SetMouseButtonCallback [[nodiscard]] (GlfwMouseButton mouseButton, ButtonCallback callback) -> ButtonCallback;
 
     void UpdateResolution(int64_t width, int64_t height);
     void UpdateCursorPosition(double xpos, double ypos);

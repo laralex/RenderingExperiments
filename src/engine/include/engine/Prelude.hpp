@@ -6,6 +6,7 @@
 
 #include "engine/GlCapabilities.hpp"
 #include "engine/GlExtensions.hpp"
+#include <engine/GlDebug.hpp>
 #include <engine/GlHelpers.hpp>
 
 #ifdef XDEBUG

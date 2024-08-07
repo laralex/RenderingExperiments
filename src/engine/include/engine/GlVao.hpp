@@ -10,7 +10,7 @@ class Vao final {
 public:
 #define Self Vao
     explicit Self() = default;
-    ~Self();
+    ~Self() { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;

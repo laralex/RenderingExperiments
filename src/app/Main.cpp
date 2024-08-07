@@ -35,7 +35,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
         gl::InitializeOpenGl();
-        gl::GlExtensions::Supports(gl::GlExtensions::KHR_debug);
 
         std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
         std::string fragmentShaderCode = LoadTextFile("data/app/shaders/constant.frag");
@@ -95,11 +94,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 }
 
 static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
-    GLFWwindow* window = windowCtx.Window();
-    windowCtx.SetKeyboardCallback(
+    GLFWwindow* window  = windowCtx.Window();
+    auto oldCallbackEsc = windowCtx.SetKeyboardCallback(
         GLFW_KEY_ESCAPE, [=](bool pressed, bool released) { glfwSetWindowShouldClose(window, true); });
 
-    windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
+    auto oldCallbackF = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
         static bool setToFullscreen = true;
         if (!pressed) { return; }
 
@@ -115,7 +114,7 @@ static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
         setToFullscreen = !setToFullscreen;
     });
 
-    windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
+    auto oldCallbackP = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
         static bool setToWireframe = true;
         if (!pressed) { return; }
 
@@ -128,7 +127,7 @@ static auto ConfigureWindow(engine::WindowCtx& windowCtx) {
         setToWireframe = !setToWireframe;
     });
 
-    windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
+    auto oldCallbackLeft = windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
         if (released) {
             auto mousePosition = windowCtx.MousePosition();
             XLOG("LMB {} pos: {},{}", windowCtx.MouseInsideWindow(), mousePosition.x, mousePosition.y);

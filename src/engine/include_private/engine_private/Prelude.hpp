@@ -18,4 +18,4 @@
 #pragma warning Unknown dynamic link import / export semantics.
 #endif
 
-namespace engine::private_ {} // namespace engine::private_
+namespace engine::private_ { } // namespace engine::private_

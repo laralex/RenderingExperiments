@@ -2,8 +2,6 @@
 
 namespace engine::gl {
 
-Vao::~Vao() { Dispose(); }
-
 void Vao::Dispose() {
     if (vaoId == GL_NONE) { return; }
     GLCALL(glDeleteVertexArrays(1, &vaoId));

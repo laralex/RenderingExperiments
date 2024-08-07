@@ -19,9 +19,9 @@ public:
 #undef Self
 
     static void Initialize();
-    static auto IsInitialized() -> bool { return isInitialized; };
+    static auto IsInitialized [[nodiscard]] () -> bool { return isInitialized; };
 
-    static auto MaxSlot() -> size_t;
+    static auto MaxSlot [[nodiscard]] () -> size_t;
     static void BindSampler(size_t slotIdx, GLuint sampler);
     static void Bind2D(size_t slotIdx, GLuint texture);
     static void Bind2DArray(size_t slotIdx, GLuint texture);

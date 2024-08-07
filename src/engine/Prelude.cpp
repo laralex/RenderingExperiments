@@ -2,4 +2,4 @@
 
 #include <spdlog/spdlog.h>
 
-namespace engine {} // namespace engine
+namespace engine { } // namespace engine
