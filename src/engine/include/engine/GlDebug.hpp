@@ -16,7 +16,7 @@
 #define GLCALL(stmt)                                                                                                   \
     do {                                                                                                               \
         stmt;                                                                                                          \
-        engine::gl::CheckOpenGlError(#stmt, __FILE__, __LINE__, /* fatal */ false);                                    \
+        engine::gl::CheckOpenGlError(#stmt, __FILE__, __LINE__, /* fatal */ true);                                    \
     } while (0)
 
 #else
@@ -33,11 +33,20 @@ void PopDebugGroup();
 class GpuBuffer;
 void DebugLabel(GpuBuffer const& buffer, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (GpuBuffer const& buffer, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(GpuBuffer const& buffer, char const* message);
 
 class Vao;
 void DebugLabel(Vao const& vertexArrayObject, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (Vao const& vertexArrayObject, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(Vao const& vao, char const* message);
+
+class GpuProgram;
+void DebugLabel(GpuProgram const& program, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GpuProgram const& program, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(GpuProgram const& program, char const* message);
 
 void DebugLabel(void const* glSyncObject, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (void* glSyncObject, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(void const* glSyncObject, char const* message);
+
 } // namespace engine::gl

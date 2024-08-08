@@ -3,8 +3,8 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <vector>
 #include <queue>
+#include <vector>
 
 using namespace engine;
 
@@ -36,7 +36,7 @@ struct EngineCtx {
 void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
-}
+} // namespace engine
 
 namespace {
 
@@ -53,9 +53,7 @@ bool InitializeCommonResources() {
     return true;
 }
 
-void DestroyCommonResources() {
-    glfwTerminate();
-}
+void DestroyCommonResources() { glfwTerminate(); }
 
 void GlfwCursorEnterCallback(GLFWwindow* window, int entered) {
     auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
@@ -89,7 +87,7 @@ auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
     }
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, isDebugContext);
 
-    GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     if (monitor != nullptr) {
         GLFWvidmode const* mode = glfwGetVideoMode(monitor);
 
@@ -151,13 +149,13 @@ EngineCtx::EngineCtx(WindowCtx&& windowCtx)
 void EngineCtx::Dispose() {
     if (!isInitialized) return;
 
-    windowCtx = WindowCtx{nullptr};
+    windowCtx       = WindowCtx{nullptr};
     applicationData = nullptr;
     renderCallback  = nullptr;
     frameHistory.clear();
-    frameIdx = 0;
+    frameIdx         = 0;
     size_t numQueues = static_cast<size_t>(UserActionType::NUM_TYPES);
-    for(size_t i = 0; i < numQueues; ++i) {
+    for (size_t i = 0; i < numQueues; ++i) {
         actionQueues[i] = {};
     }
 
@@ -193,31 +191,23 @@ void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mod
 }
 
 ENGINE_EXPORT auto CreateEngine() -> std::optional<EngineHandle> {
-    if (EngineCtx::numEngineInstances == 0 && !InitializeCommonResources()) {
-        return std::nullopt;
-    }
+    if (EngineCtx::numEngineInstances == 0 && !InitializeCommonResources()) { return std::nullopt; }
 
     GLFWwindow* window = CreateWindow(800, 600);
-    if (window == nullptr) {
-        return std::nullopt;
-    }
+    if (window == nullptr) { return std::nullopt; }
 
     g_engineCtx = std::optional{EngineCtx{WindowCtx{window}}};
     return std::optional{&*g_engineCtx};
 }
 
-ENGINE_EXPORT auto GetWindowContext(EngineHandle engine) -> WindowCtx& {
-    return engine->windowCtx;
-}
+ENGINE_EXPORT auto GetWindowContext(EngineHandle engine) -> WindowCtx& { return engine->windowCtx; }
 
 ENGINE_EXPORT void DestroyEngine(EngineHandle engine) {
-    if (engine->numEngineInstances == 0) {
-        DestroyCommonResources();
-    }
+    if (engine->numEngineInstances == 0) { DestroyCommonResources(); }
 }
 
 ENGINE_EXPORT auto SetRenderCallback(EngineHandle engine, RenderCallback newCallback) -> RenderCallback {
-    auto oldCallback = engine->renderCallback;
+    auto oldCallback       = engine->renderCallback;
     engine->renderCallback = newCallback;
     return oldCallback;
 }
@@ -228,7 +218,7 @@ ENGINE_EXPORT void SetApplicationData(EngineHandle engine, void* applicationData
 
 ENGINE_EXPORT void BlockOnLoop(EngineHandle engine) {
     WindowCtx& windowCtx = engine->windowCtx;
-    GLFWwindow* window = windowCtx.Window();
+    GLFWwindow* window   = windowCtx.Window();
     glfwSetWindowUserPointer(window, &windowCtx);
 
     auto& windowQueue = GetEngineQueue(engine, UserActionType::WINDOW);

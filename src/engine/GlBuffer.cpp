@@ -1,28 +1,29 @@
 #include <engine/GlBuffer.hpp>
+#include <engine/GlDebug.hpp>
 
 namespace engine::gl {
 
-GpuBuffer::~GpuBuffer() { Dispose(); }
-
 void GpuBuffer::Dispose() {
     if (bufferId_ == GL_NONE) { return; }
-    glDeleteBuffers(1, &bufferId_);
-    bufferId_ = GL_NONE;
+    LogDebugLabel(*this, "GpuBuffer was disposed");
+    glDeleteBuffers(1, &bufferId_.id);
+    bufferId_.id = GL_NONE;
+
 }
 
-void GpuBuffer::Initialize(GLenum targetType, GLenum usage, GLvoid const* data, GLsizeiptr dataSize) {
-    Dispose();
-    GLCALL(glGenBuffers(1, &bufferId_));
-    GLCALL(glBindBuffer(targetType, bufferId_));
+auto GpuBuffer::Allocate(GLenum targetType, GLenum usage, GLvoid const* data, GLsizeiptr dataSize) -> GpuBuffer {
+    GpuBuffer gpuBuffer{};
+    GLCALL(glGenBuffers(1, &gpuBuffer.bufferId_.id));
+    GLCALL(glBindBuffer(targetType, gpuBuffer.bufferId_));
     GLCALL(glBufferData(targetType, dataSize, data, usage));
     GLCALL(glBindBuffer(targetType, 0));
-    targetType_    = targetType;
-    usage_         = usage;
-    isInitialized_ = true;
+    gpuBuffer.targetType_ = targetType;
+    gpuBuffer.usage_      = usage;
+    return gpuBuffer;
 }
 
-void GpuBuffer::Fill(GLvoid const* data, GLsizeiptr dataSize) {
-    if (!isInitialized_) {
+void GpuBuffer::Fill(GLvoid const* data, GLsizeiptr dataSize) const {
+    if (bufferId_ == GL_NONE) {
         XLOGE("Failed to fill GL buffer, GlBuffer is not initialized", 0);
         return;
     }

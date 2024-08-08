@@ -1,4 +1,5 @@
 #include "engine/GlBuffer.hpp"
+#include "engine/GlProgram.hpp"
 #include "engine/GlVao.hpp"
 #include "engine/Prelude.hpp"
 #include "engine_private/Prelude.hpp"
@@ -37,7 +38,7 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
     // Debug labels support
     // + GL_BUFFER
     // GL_SHADER
-    // GL_PROGRAM
+    // + GL_PROGRAM
     // + GL_VERTEX_ARRAY
     // GL_QUERY
     // GL_PROGRAM_PIPELINE
@@ -76,6 +77,13 @@ auto GetDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, 
         return static_cast<size_t>(bytesWritten);
     }
     return 0U;
+}
+
+void LogDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, char const* message) {
+    constexpr size_t maxDebugLabelSize = 256U;
+    static char debugLabel[maxDebugLabelSize];
+    auto bytesWritten = GetDebugLabel(objectTypeKhr, objectTypeExt, objectId, debugLabel, maxDebugLabelSize);
+    XLOG("{} (name={})", message, debugLabel);
 }
 
 } // namespace
@@ -168,13 +176,32 @@ auto GetDebugLabel(GpuBuffer const& buffer, char* outBuffer, size_t outBufferSiz
     return ::GetDebugLabel(GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), outBuffer, outBufferSize);
 }
 
-void DebugLabel(Vao const& vertexArrayObject, std::string_view label) {
-    ::DebugLabel(GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vertexArrayObject.Id(), label);
+void LogDebugLabel(GpuBuffer const& buffer, char const* message) {
+    ::LogDebugLabel(GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), message);
 }
 
-auto GetDebugLabel(Vao const& vertexArrayObject, char* outBuffer, size_t outBufferSize) -> size_t {
-    return ::GetDebugLabel(
-        GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vertexArrayObject.Id(), outBuffer, outBufferSize);
+void DebugLabel(Vao const& vertexArray, std::string_view label) {
+    ::DebugLabel(GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vertexArray.Id(), label);
+}
+
+auto GetDebugLabel(Vao const& vertexArray, char* outBuffer, size_t outBufferSize) -> size_t {
+    return ::GetDebugLabel(GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vertexArray.Id(), outBuffer, outBufferSize);
+}
+
+void LogDebugLabel(Vao const& vao, char const* message) {
+    ::LogDebugLabel(GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vao.Id(), message);
+}
+
+void DebugLabel(GpuProgram const& program, std::string_view label) {
+    ::DebugLabel(GL_PROGRAM, GL_PROGRAM_OBJECT_EXT, program.Id(), label);
+}
+
+auto GetDebugLabel(GpuProgram const& program, char* outBuffer, size_t outBufferSize) -> size_t {
+    return ::GetDebugLabel(GL_PROGRAM, GL_PROGRAM_OBJECT_EXT, program.Id(), outBuffer, outBufferSize);
+}
+
+void LogDebugLabel(GpuProgram const& program, char const* message) {
+    ::LogDebugLabel(GL_PROGRAM, GL_PROGRAM_OBJECT_EXT, program.Id(), message);
 }
 
 void DebugLabel(void* glSyncObject, std::string_view label) {
@@ -192,6 +219,13 @@ auto GetDebugLabel(void* glSyncObject, char* outBuffer, size_t outBufferSize) ->
         return static_cast<size_t>(bytesWritten);
     }
     return 0U;
+}
+
+void LogDebugLabel(void* glSyncObject, char const* message) {
+    constexpr size_t maxDebugLabelSize = 256U;
+    static char debugLabel[maxDebugLabelSize];
+    auto bytesWritten = GetDebugLabel(glSyncObject, debugLabel, maxDebugLabelSize);
+    XLOG("{} (name={})", message, debugLabel);
 }
 
 } // namespace engine::gl

@@ -1,7 +1,43 @@
 #include "engine/GlProgram.hpp"
 #include "engine_private/Prelude.hpp"
 
-namespace engine {
+namespace engine::gl {
+
+ENGINE_EXPORT void GpuProgram::Dispose() {
+    if (programId_ == GL_NONE) { return; }
+    LogDebugLabel(*this, "GpuProgram was disposed");
+    GLCALL(glDeleteProgram(programId_));
+    programId_.id = GL_NONE;
+}
+
+ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShader, std::string_view name) -> std::optional<GpuProgram> {
+    GLuint programId;
+    GLCALL(programId = glCreateProgram());
+    GLCALL(glAttachShader(programId, vertexShader));
+    GLCALL(glAttachShader(programId, fragmentShader));
+
+    GLCALL(glLinkProgram(programId));
+    GLint isLinked;
+    GLCALL(glGetProgramiv(programId, GL_LINK_STATUS, &isLinked));
+
+    GLCALL(glDetachShader(programId, vertexShader));
+    GLCALL(glDetachShader(programId, fragmentShader));
+
+    if (isLinked == GL_TRUE) {
+        auto program = GpuProgram();
+        program.programId_.id = programId;
+        DebugLabel(program, name);
+        LogDebugLabel(program, "GpuProgram was compiled");
+        return std::optional{std::move(program)}; // success
+    }
+
+    static char infoLog[512];
+    GLCALL(glGetProgramInfoLog(programId, 512, nullptr, infoLog));
+    GLCALL(glDeleteProgram(programId));
+    XLOGE("Failed to link graphics program (name={}):\n{}", name, infoLog);
+
+    return std::nullopt;
+}
 
 ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GLuint {
     GLenum shader;
@@ -29,30 +65,4 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     return GL_NONE;
 }
 
-ENGINE_EXPORT auto CompileGraphicsProgram(GLuint vertexShader, GLuint fragmentShader) -> GLuint {
-    GLenum program;
-    GLCALL(program = glCreateProgram());
-    GLCALL(glAttachShader(program, vertexShader));
-    GLCALL(glAttachShader(program, fragmentShader));
-
-    GLCALL(glLinkProgram(program));
-    GLint isLinked;
-    GLCALL(glGetProgramiv(program, GL_LINK_STATUS, &isLinked));
-
-    GLCALL(glDetachShader(program, vertexShader));
-    GLCALL(glDetachShader(program, fragmentShader));
-
-    if (isLinked == GL_TRUE) {
-        XLOG("Linked graphics program {} (v={}, f={})", program, vertexShader, fragmentShader);
-        return program; // success
-    }
-
-    static char infoLog[512];
-    GLCALL(glGetProgramInfoLog(program, 512, nullptr, infoLog));
-    GLCALL(glDeleteProgram(program));
-    XLOGE("Failed to link graphics program:\n{}", infoLog);
-
-    return GL_NONE;
-}
-
-} // namespace engine
+} // namespace engine::gl

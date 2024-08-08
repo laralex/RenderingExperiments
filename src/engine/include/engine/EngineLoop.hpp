@@ -27,5 +27,4 @@ enum class UserActionType : size_t {
 using UserAction = std::function<void(void* applicationData)>;
 void QueueForNextFrame(EngineHandle, UserActionType type, UserAction action);
 
-
 } // namespace engine

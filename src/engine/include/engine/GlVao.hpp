@@ -13,8 +13,8 @@ public:
     ~Self() { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
-    Self(Self&&)                 = delete;
-    Self& operator=(Self&&)      = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
 #undef Self
 
     struct AttributeInfo {
@@ -26,14 +26,14 @@ public:
         GLsizei offset        = 0U;
     };
 
-    auto Id [[nodiscard]] () const -> GLuint { return vaoId; }
-    void Initialize();
-    void DefineVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info);
-    void DefineIndices(GpuBuffer const& indexBuffer);
+    static auto Allocate [[nodiscard]] () -> Vao;
+    auto Id [[nodiscard]] () const -> GLuint { return vaoId_; }
+    void LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info) const;
+    void LinkIndices(GpuBuffer const& indexBuffer) const;
 
 private:
     void Dispose();
-    GLuint vaoId = GL_NONE;
+    GlHandle vaoId_{GL_NONE};
 };
 
 } // namespace engine::gl

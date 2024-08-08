@@ -11,7 +11,7 @@
 #include <GLFW/glfw3.h>
 
 struct Application final {
-    GLuint program = GL_NONE;
+    engine::gl::GpuProgram program{};
     engine::gl::Vao vao{};
     engine::gl::GpuBuffer attributeBuffer{};
     engine::gl::GpuBuffer indexBuffer{};
@@ -38,18 +38,18 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
         std::string fragmentShaderCode = LoadTextFile("data/app/shaders/constant.frag");
-        GLuint vertexShader            = CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-        GLuint fragmentShader          = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-        app->program                   = CompileGraphicsProgram(vertexShader, fragmentShader);
+        GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
+        GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
+        app->program                   = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
         GLCALL(glDeleteShader(vertexShader));
         GLCALL(glDeleteShader(fragmentShader));
 
-        app->attributeBuffer.Initialize(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData));
+        app->attributeBuffer = gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData));
         engine::gl::DebugLabel(app->attributeBuffer, "Test VBO");
-        app->indexBuffer.Initialize(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
+        app->indexBuffer = gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
         engine::gl::DebugLabel(app->indexBuffer, "Test EBO");
-        app->vao.Initialize();
-        app->vao.DefineVertexAttribute(
+        app->vao = gl::Vao::Allocate();
+        app->vao.LinkVertexAttribute(
             app->attributeBuffer,
             {.index           = 0,
              .valuesPerVertex = 3,
@@ -57,7 +57,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
              .normalized      = GL_FALSE,
              .stride          = 3 * sizeof(float),
              .offset          = 0});
-        app->vao.DefineIndices(app->indexBuffer);
+        app->vao.LinkIndices(app->indexBuffer);
         engine::gl::DebugLabel(app->vao, "Test VAO");
 
         app->isInitialized = true;
@@ -87,21 +87,19 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     GLCALL(glBindVertexArray(app->vao.Id()));
-    GLCALL(glUseProgram(app->program));
+    GLCALL(glUseProgram(app->program.Id()));
     GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
     gl::PopDebugGroup();
     gl::GlTextureUnits::RestoreState();
 }
 
 static auto ConfigureWindow(engine::EngineHandle engine) {
-    auto& windowCtx = engine::GetWindowContext(engine);
+    auto& windowCtx     = engine::GetWindowContext(engine);
     GLFWwindow* window  = windowCtx.Window();
-    auto oldCallbackEsc = windowCtx.SetKeyboardCallback(
-        GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
-            engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*){
-                glfwSetWindowShouldClose(window, true);
-            });
-        });
+    auto oldCallbackEsc = windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
+        engine::QueueForNextFrame(
+            engine, engine::UserActionType::WINDOW, [=](void*) { glfwSetWindowShouldClose(window, true); });
+    });
 
     auto oldCallbackF = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
         engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {

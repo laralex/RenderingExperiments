@@ -3,23 +3,25 @@
 namespace engine::gl {
 
 void Vao::Dispose() {
-    if (vaoId == GL_NONE) { return; }
-    GLCALL(glDeleteVertexArrays(1, &vaoId));
-    vaoId = GL_NONE;
+    if (vaoId_ == GL_NONE) { return; }
+    LogDebugLabel(*this, "VAO object was disposed");
+    GLCALL(glDeleteVertexArrays(1, &vaoId_.id));
+    vaoId_.id = GL_NONE;
 }
 
-void Vao::Initialize() {
-    Dispose();
-    GLCALL(glGenVertexArrays(1, &vaoId));
+auto Vao::Allocate() -> Vao {
+    Vao vao{};
+    GLCALL(glGenVertexArrays(1, &vao.vaoId_.id));
+    return vao;
 }
 
-void Vao::DefineVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info) {
-    if (vaoId == GL_NONE) {
-        XLOGE("Bad call to DefineVertexAttribute, engine::gl::Vao isn't initialized", 0);
+void Vao::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info) const {
+    if (vaoId_ == GL_NONE) {
+        XLOGE("Bad call to LinkVertexAttribute, engine::gl::Vao isn't initialized", 0);
         return;
     }
 
-    GLCALL(glBindVertexArray(vaoId));
+    GLCALL(glBindVertexArray(vaoId_));
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
@@ -32,13 +34,13 @@ void Vao::DefineVertexAttribute(GpuBuffer const& attributeBuffer, Vao::Attribute
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-void Vao::DefineIndices(GpuBuffer const& indexBuffer) {
-    if (vaoId == GL_NONE) {
-        XLOGE("Bad call to DefineIndices, engine::gl::Vao isn't initialized", 0);
+void Vao::LinkIndices(GpuBuffer const& indexBuffer) const {
+    if (vaoId_ == GL_NONE) {
+        XLOGE("Bad call to LinkIndices, engine::gl::Vao isn't initialized", 0);
         return;
     }
 
-    GLCALL(glBindVertexArray(vaoId));
+    GLCALL(glBindVertexArray(vaoId_));
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
     GLCALL(glBindVertexArray(0));
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
