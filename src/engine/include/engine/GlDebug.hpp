@@ -16,7 +16,7 @@
 #define GLCALL(stmt)                                                                                                   \
     do {                                                                                                               \
         stmt;                                                                                                          \
-        engine::gl::CheckOpenGlError(#stmt, __FILE__, __LINE__, /* fatal */ true);                                    \
+        engine::gl::CheckOpenGlError(#stmt, __FILE__, __LINE__, /* fatal */ true);                                     \
     } while (0)
 
 #else

@@ -10,7 +10,8 @@ ENGINE_EXPORT void GpuProgram::Dispose() {
     programId_.id = GL_NONE;
 }
 
-ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShader, std::string_view name) -> std::optional<GpuProgram> {
+ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShader, std::string_view name)
+    -> std::optional<GpuProgram> {
     GLuint programId;
     GLCALL(programId = glCreateProgram());
     GLCALL(glAttachShader(programId, vertexShader));
@@ -24,10 +25,12 @@ ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShad
     GLCALL(glDetachShader(programId, fragmentShader));
 
     if (isLinked == GL_TRUE) {
-        auto program = GpuProgram();
+        auto program          = GpuProgram();
         program.programId_.id = programId;
-        DebugLabel(program, name);
-        LogDebugLabel(program, "GpuProgram was compiled");
+        if (!name.empty()) {
+            DebugLabel(program, name);
+            LogDebugLabel(program, "GpuProgram was compiled");
+        }
         return std::optional{std::move(program)}; // success
     }
 

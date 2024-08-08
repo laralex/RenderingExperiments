@@ -44,11 +44,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDeleteShader(vertexShader));
         GLCALL(glDeleteShader(fragmentShader));
 
-        app->attributeBuffer = gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData));
-        engine::gl::DebugLabel(app->attributeBuffer, "Test VBO");
-        app->indexBuffer = gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
-        engine::gl::DebugLabel(app->indexBuffer, "Test EBO");
-        app->vao = gl::Vao::Allocate();
+        app->attributeBuffer =
+            gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test VBO");
+        app->indexBuffer =
+            gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
+        app->vao = gl::Vao::Allocate("Test VAO");
         app->vao.LinkVertexAttribute(
             app->attributeBuffer,
             {.index           = 0,
@@ -58,7 +58,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
              .stride          = 3 * sizeof(float),
              .offset          = 0});
         app->vao.LinkIndices(app->indexBuffer);
-        engine::gl::DebugLabel(app->vao, "Test VAO");
 
         app->isInitialized = true;
     }

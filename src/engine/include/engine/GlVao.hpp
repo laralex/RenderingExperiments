@@ -26,7 +26,7 @@ public:
         GLsizei offset        = 0U;
     };
 
-    static auto Allocate [[nodiscard]] () -> Vao;
+    static auto Allocate [[nodiscard]] (std::string_view name = {}) -> Vao;
     auto Id [[nodiscard]] () const -> GLuint { return vaoId_; }
     void LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info) const;
     void LinkIndices(GpuBuffer const& indexBuffer) const;

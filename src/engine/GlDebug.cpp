@@ -6,7 +6,7 @@
 
 namespace {
 
-constexpr bool ENABLE_KHR_DEBUG_CALLBACK = false;
+constexpr bool ENABLE_KHR_DEBUG_CALLBACK = true;
 constexpr bool ENABLE_DEBUG_GROUP_LOGS   = false;
 
 } // namespace
@@ -54,12 +54,13 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
     }
     // + BUFFER_OBJECT_EXT                              0x9151
     // SHADER_OBJECT_EXT                              0x8B48
-    // PROGRAM_OBJECT_EXT                             0x8B40
+    // + PROGRAM_OBJECT_EXT                             0x8B40
     // + VERTEX_ARRAY_OBJECT_EXT                        0x9154
     // QUERY_OBJECT_EXT                               0x9153
     // PROGRAM_PIPELINE_OBJECT_EXT                    0x8A4F
     if (GlExtensions::Supports(GlExtensions::EXT_debug_label) && objectTypeExt != GL_NONE) {
         GLCALL(glLabelObjectEXT(objectTypeExt, objectId, label.size(), label.data()));
+        return;
     }
 }
 

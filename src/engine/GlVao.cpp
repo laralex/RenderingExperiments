@@ -9,9 +9,15 @@ void Vao::Dispose() {
     vaoId_.id = GL_NONE;
 }
 
-auto Vao::Allocate() -> Vao {
+auto Vao::Allocate(std::string_view name) -> Vao {
     Vao vao{};
     GLCALL(glGenVertexArrays(1, &vao.vaoId_.id));
+    GLCALL(glBindVertexArray(vao.vaoId_));
+    GLCALL(glBindVertexArray(0U));
+    if (!name.empty()) {
+        DebugLabel(vao, name);
+        LogDebugLabel(vao, "VAO was allocated");
+    }
     return vao;
 }
 

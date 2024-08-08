@@ -8,10 +8,10 @@ void GpuBuffer::Dispose() {
     LogDebugLabel(*this, "GpuBuffer was disposed");
     glDeleteBuffers(1, &bufferId_.id);
     bufferId_.id = GL_NONE;
-
 }
 
-auto GpuBuffer::Allocate(GLenum targetType, GLenum usage, GLvoid const* data, GLsizeiptr dataSize) -> GpuBuffer {
+auto GpuBuffer::Allocate(
+    GLenum targetType, GLenum usage, GLvoid const* data, GLsizeiptr dataSize, std::string_view name) -> GpuBuffer {
     GpuBuffer gpuBuffer{};
     GLCALL(glGenBuffers(1, &gpuBuffer.bufferId_.id));
     GLCALL(glBindBuffer(targetType, gpuBuffer.bufferId_));
@@ -19,6 +19,10 @@ auto GpuBuffer::Allocate(GLenum targetType, GLenum usage, GLvoid const* data, GL
     GLCALL(glBindBuffer(targetType, 0));
     gpuBuffer.targetType_ = targetType;
     gpuBuffer.usage_      = usage;
+    if (!name.empty()) {
+        DebugLabel(gpuBuffer, name);
+        LogDebugLabel(gpuBuffer, "GpuBuffer was allocated");
+    }
     return gpuBuffer;
 }
 
