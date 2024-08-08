@@ -1,6 +1,5 @@
 * shader macros
 * texture
-* uniform
 * sampler
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * framebuffer

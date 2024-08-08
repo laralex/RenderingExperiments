@@ -2,12 +2,14 @@ BUILD_TYPE=debug
 
 BUILD_DIR=build
 INSTALL_DIR=${BUILD_DIR}/install
+MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 APP_EXE=${BUILD_DIR}/run_app
 
 THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
-	${BUILD_DIR}/third_party/glfw/libglfw3.a \
-	${BUILD_DIR}/third_party/glad/gl.o
+	${BUILD_DIR}/third_party/glfw/src/libglfw3.a \
+	${BUILD_DIR}/third_party/glad/gl.o \
+	${BUILD_DIR}/third_party/glm_install/glm/libglm.a
 
 .PHONY: all
 all: build_engine
@@ -18,6 +20,7 @@ COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
 INCLUDE_DIR+=-I src/engine/include
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
+INCLUDE_DIR+=-I third_party/glm/
 INCLUDE_DIR+=-I data
 LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
@@ -27,7 +30,7 @@ obj_app_ = Main.o
 obj_engine_ = Assets.o EngineLoop.o GlBuffer.o \
 	GlCapabilities.o GlDebug.o GlExtensions.o \
 	GlHelpers.o GlProgram.o \
-	GlTextureUnits.o GlVao.o \
+	GlTextureUnits.o GlUniform.o GlVao.o \
 	GlGuard.o Prelude.o \
 	WindowContext.o
 
@@ -86,13 +89,22 @@ ${BUILD_DIR}/engine/%.o: src/engine/%.cpp ${hpp_engine} ${hpp_engine_private}
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
 
-${BUILD_DIR}/third_party/glfw/libglfw3.a:
+${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
 	cmake -S third_party/glfw -B $(dir $@) && cmake --build $(dir $@)
-	cp $(dir $@)/src/libglfw3.a $(dir $@)
+#cp $(dir $@)/src/libglfw3.a $(dir $@)
 
 ${BUILD_DIR}/third_party/glad/gl.o:
 	mkdir -p $(dir $@)
 	$(CC) ${COMPILE_FLAGS} -I third_party/glad/include -c third_party/glad/src/gl.c -o $@
+
+${BUILD_DIR}/third_party/glm_install/glm/libglm.a:
+	cmake -S third_party/glm \
+		-DCMAKE_INSTALL_INCLUDEDIR=${MAKEFILE_DIR}/${BUILD_DIR}/third_party/glm_install/include \
+		-DGLM_BUILD_TESTS=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-B ${BUILD_DIR}/third_party/glm .
+	cmake --build ${BUILD_DIR}/third_party/glm -- all
+	cmake --build ${BUILD_DIR}/third_party/glm -- install
 
 ${BUILD_DIR}/app ${BUILD_DIR}/engine ${INSTALL_DIR}:
 	mkdir -p $@

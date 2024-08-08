@@ -4,8 +4,11 @@
 #include <engine/GlGuard.hpp>
 #include <engine/GlProgram.hpp>
 #include <engine/GlTextureUnits.hpp>
+#include <engine/GlUniform.hpp>
 #include <engine/GlVao.hpp>
 #include <engine/Prelude.hpp>
+
+#include <glm/mat4x4.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -62,7 +65,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    float const red = 0.5f * (std::sin(ctx.timeSec) + 1.0f);
+    GLfloat const color[]{0.5f * (std::sin(ctx.timeSec) + 1.0f), 0.0f, 0.0f, 1.0f};
     gl::GlGuardAux guardBind;
     gl::GlGuardVertex guardVert(true);
     gl::GlGuardFlags guardF;
@@ -82,7 +85,14 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlTextureUnits::EndStateSnapshot();
 
     gl::PushDebugGroup("Main pass");
-    GLCALL(glClearColor(red, 0.5f, 0.5f, 0.0f));
+    GLCALL(glClearColor(0.3f, 0.5f, 0.5f, 0.0f));
+    {
+        auto guard = gl::UniformCtx(app->program);
+        glm::mat4 mvp = glm::mat4(1.0);
+        gl::UniformMatrix4(/*location*/ 10, &mvp[0][0]);
+        gl::UniformArray<4U>(/*location*/ 0, color, /*numValues*/ 1);
+        gl::UniformValue(/*location*/ 0, color[0], color[1], color[2], color[3]);
+    }
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     GLCALL(glBindVertexArray(app->vao.Id()));
