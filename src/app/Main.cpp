@@ -3,6 +3,7 @@
 #include <engine/GlBuffer.hpp>
 #include <engine/GlGuard.hpp>
 #include <engine/GlProgram.hpp>
+#include <engine/GlShader.hpp>
 #include <engine/GlTextureUnits.hpp>
 #include <engine/GlUniform.hpp>
 #include <engine/GlVao.hpp>
@@ -39,8 +40,18 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     if (!app->isInitialized) {
         gl::InitializeOpenGl();
 
-        std::string vertexShaderCode   = LoadTextFile("data/app/shaders/triangle.vert");
-        std::string fragmentShaderCode = LoadTextFile("data/app/shaders/constant.frag");
+        constexpr static int32_t NUM_VDEFINES = 2;
+        gl::ShaderDefine vdefines[NUM_VDEFINES] = {
+            {.name="ATTRIB_POSITION_LOCATION", .value=0, .type=gl::ShaderDefine::INT32},
+            {.name="UNIFORM_MVP_LOCATION", .value=10, .type=gl::ShaderDefine::INT32},
+        };
+        std::string vertexShaderCode = gl::LoadShaderCode("data/app/shaders/triangle.vert", vdefines, NUM_VDEFINES);
+
+        constexpr static int32_t NUM_FDEFINES = 1;
+        gl::ShaderDefine fdefines[NUM_FDEFINES] = {
+            {.name="UNIFORM_COLOR_LOCATION", .value=0, .type=gl::ShaderDefine::INT32},
+        };
+        std::string fragmentShaderCode =  gl::LoadShaderCode("data/app/shaders/constant.frag", fdefines, NUM_FDEFINES);
         GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
         GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
         app->program                   = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");

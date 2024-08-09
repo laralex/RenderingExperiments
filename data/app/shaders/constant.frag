@@ -3,7 +3,7 @@
 
 layout(location=0) out vec4 out_FragColor;
 
-layout(location=0) uniform highp vec4 u_ConstantColor;
+layout(location=UNIFORM_COLOR_LOCATION) uniform highp vec4 u_ConstantColor;
 
 void main() {
     out_FragColor = u_ConstantColor;

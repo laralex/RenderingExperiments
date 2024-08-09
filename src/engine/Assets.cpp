@@ -17,3 +17,14 @@ ENGINE_EXPORT auto LoadTextFile(std::string_view const filepath) -> std::string 
 }
 
 } // namespace engine
+
+namespace engine::gl {
+
+auto LoadShaderCode(std::string_view const filepath, ShaderDefine const* defines, int32_t limit, int32_t stride) -> std::string {
+    std::string code = LoadTextFile(filepath);
+    code = AddShaderDefines(code, defines, limit, stride);
+    return code;
+}
+
+} // namespace engine::gl
+
