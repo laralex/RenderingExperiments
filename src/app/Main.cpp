@@ -40,18 +40,18 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     if (!app->isInitialized) {
         gl::InitializeOpenGl();
 
-        constexpr static int32_t NUM_VDEFINES = 2;
+        constexpr static int32_t NUM_VDEFINES   = 2;
         gl::ShaderDefine vdefines[NUM_VDEFINES] = {
-            {.name="ATTRIB_POSITION_LOCATION", .value=0, .type=gl::ShaderDefine::INT32},
-            {.name="UNIFORM_MVP_LOCATION", .value=10, .type=gl::ShaderDefine::INT32},
+            {.name = "ATTRIB_POSITION_LOCATION", .value = 0, .type = gl::ShaderDefine::INT32},
+            {.name = "UNIFORM_MVP_LOCATION", .value = 10, .type = gl::ShaderDefine::INT32},
         };
         std::string vertexShaderCode = gl::LoadShaderCode("data/app/shaders/triangle.vert", vdefines, NUM_VDEFINES);
 
-        constexpr static int32_t NUM_FDEFINES = 1;
+        constexpr static int32_t NUM_FDEFINES   = 1;
         gl::ShaderDefine fdefines[NUM_FDEFINES] = {
-            {.name="UNIFORM_COLOR_LOCATION", .value=0, .type=gl::ShaderDefine::INT32},
+            {.name = "UNIFORM_COLOR_LOCATION", .value = 0, .type = gl::ShaderDefine::INT32},
         };
-        std::string fragmentShaderCode =  gl::LoadShaderCode("data/app/shaders/constant.frag", fdefines, NUM_FDEFINES);
+        std::string fragmentShaderCode = gl::LoadShaderCode("data/app/shaders/constant.frag", fdefines, NUM_FDEFINES);
         GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
         GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
         app->program                   = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
@@ -98,7 +98,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::PushDebugGroup("Main pass");
     GLCALL(glClearColor(0.3f, 0.5f, 0.5f, 0.0f));
     {
-        auto guard = gl::UniformCtx(app->program);
+        auto guard    = gl::UniformCtx(app->program);
         glm::mat4 mvp = glm::mat4(1.0);
         gl::UniformMatrix4(/*location*/ 10, &mvp[0][0]);
         gl::UniformArray<4U>(/*location*/ 0, color, /*numValues*/ 1);

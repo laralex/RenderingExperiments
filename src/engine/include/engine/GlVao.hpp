@@ -23,7 +23,7 @@ public:
         GLenum datatype       = GL_FLOAT;
         GLboolean normalized  = GL_FALSE;
         GLsizei stride        = 0U;
-        GLsizei offset        = 0U;
+        intptr_t offset        = 0U;
     };
 
     static auto Allocate [[nodiscard]] (std::string_view name = {}) -> Vao;

@@ -14,7 +14,9 @@ void GlExtensions::Initialize() {
     GLCALL(glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions));
     for (GLint i = 0; i < numExtensions; ++i) {
         GLubyte const* ext = glGetStringi(GL_EXTENSIONS, i);
-        auto extensionName = std::string{reinterpret_cast<char const*>(ext)};
+        // NOTE: reinterpret_cast to char const* would compile and work, but it is UB
+        size_t extSize = std::char_traits<GLubyte>::length(ext);
+        auto extensionName = std::string{ext, ext+extSize};
         // XLOG("Extension {}", extensionName);
         allExtensions.insert(extensionName);
     }

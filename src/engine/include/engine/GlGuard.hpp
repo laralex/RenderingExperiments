@@ -18,13 +18,13 @@ public:
 #undef Self
 
 private:
-    GLenum activeTexture_           = 0xDEAD;
-    GLuint program_                 = 0xDEAD;
-    GLuint dispatchIndirectBuffer_  = 0xDEAD;
-    GLuint drawIndirectBuffer_      = 0xDEAD;
-    GLuint programPipeline_         = 0xDEAD;
-    GLuint textureBuffer_           = 0xDEAD;
-    GLuint transformFeedbackBuffer_ = 0xDEAD;
+    GLint activeTexture_           = 0xDEAD; // GLenum
+    GLint program_                 = 0xDEAD; // GLuint
+    GLint dispatchIndirectBuffer_  = 0xDEAD; // GLuint
+    GLint drawIndirectBuffer_      = 0xDEAD; // GLuint
+    GLint programPipeline_         = 0xDEAD; // GLuint
+    GLint textureBuffer_           = 0xDEAD; // GLuint
+    GLint transformFeedbackBuffer_ = 0xDEAD; // GLuint
 };
 
 class GlGuardFramebuffer final {
@@ -41,12 +41,12 @@ public:
 #undef Self
 
 private:
-    GLuint drawFramebuffer_    = 0xDEAD;
-    GLuint readFramebuffer_    = 0xDEAD;
+    GLint drawFramebuffer_    = 0xDEAD; // GLuint
+    GLint readFramebuffer_    = 0xDEAD; // GLuint
     GLboolean framebufferSrgb_ = GL_FALSE;
-    GLuint pixelPackBuffer_    = 0xDEAD;
-    GLuint pixelUnpackBuffer_  = 0xDEAD;
-    GLuint renderBuffer_       = 0xDEAD;
+    GLint pixelPackBuffer_    = 0xDEAD; // GLuint
+    GLint pixelUnpackBuffer_  = 0xDEAD; // GLuint
+    GLint renderBuffer_       = 0xDEAD; // GLuint
 
     bool restoreRare_ = false;
 };
@@ -65,14 +65,14 @@ public:
 #undef Self
 
 private:
-    GLuint vao_                   = 0xDEAD;
-    GLuint vbo_                   = 0xDEAD;
-    GLuint ebo_                   = 0xDEAD;
+    GLint vao_                   = 0xDEAD; // GLuint
+    GLint vbo_                   = 0xDEAD; // GLuint
+    GLint ebo_                   = 0xDEAD; // GLuint
     GLboolean primitiveRestart_   = GL_FALSE;
-    GLuint primitiveRestartIndex_ = 0xDEAD;
+    GLint primitiveRestartIndex_ = 0xDEAD; // GLuint
     GLboolean cullFace_           = GL_FALSE;
-    GLenum cullFaceMode_          = 0xDEAD;
-    GLenum provokingVertex_       = 0xDEAD;
+    GLint cullFaceMode_          = 0xDEAD; // GLenum
+    GLint provokingVertex_       = 0xDEAD; // GLenum
 
     bool restoreRare_ = false;
 };
@@ -131,7 +131,7 @@ public:
 private:
     GLboolean depthTest_          = GL_FALSE;
     GLfloat depthClearValue_      = 0.424242f;
-    GLenum depthFunc_             = 0xDEAD;
+    GLint depthFunc_              = 0xDEAD; // GLenum
     GLboolean depthWriteMask_     = GL_FALSE;
     GLboolean depthClamp_         = GL_FALSE;
     GLfloat depthRange_[2]        = {42.42f, 42.42f};
@@ -160,20 +160,20 @@ public:
 private:
     GLboolean stencilTest_            = GL_FALSE;
     GLint stencilClearValue_          = 0xDEAD;
-    GLenum stencilBackFail_           = 0xDEAD;
-    GLenum stencilBackFunc_           = 0xDEAD;
-    GLenum stencilBackPassDepthFail_  = 0xDEAD;
-    GLenum stencilBackPassDepthPass_  = 0xDEAD;
+    GLint stencilBackFail_           = 0xDEAD; // GLenum
+    GLint stencilBackFunc_           = 0xDEAD; // GLenum
+    GLint stencilBackPassDepthFail_  = 0xDEAD; // GLenum
+    GLint stencilBackPassDepthPass_  = 0xDEAD; // GLenum
     GLint stencilBackRef_             = 0xDEAD;
-    GLuint stencilBackValueMask_      = 0xDEAD;
-    GLuint stencilBackWriteMask_      = 0xDEAD;
-    GLenum stencilFrontFail_          = 0xDEAD;
-    GLenum stencilFrontFunc_          = 0xDEAD;
-    GLenum stencilFrontPassDepthFail_ = 0xDEAD;
-    GLenum stencilFrontPassDepthPass_ = 0xDEAD;
+    GLint stencilBackValueMask_      = 0xDEAD; // GLuint
+    GLint stencilBackWriteMask_      = 0xDEAD; // GLuint
+    GLint stencilFrontFail_          = 0xDEAD; // GLenum
+    GLint stencilFrontFunc_          = 0xDEAD; // GLenum
+    GLint stencilFrontPassDepthFail_ = 0xDEAD; // GLenum
+    GLint stencilFrontPassDepthPass_ = 0xDEAD; // GLenum
     GLint stencilFrontRef_            = 0xDEAD;
-    GLuint stencilFrontValueMask_     = 0xDEAD;
-    GLuint stencilFrontWriteMask_     = 0xDEAD;
+    GLint stencilFrontValueMask_     = 0xDEAD; // GLenum
+    GLint stencilFrontWriteMask_     = 0xDEAD; // GLenum
 };
 
 class GlGuardBlend final {
@@ -191,15 +191,15 @@ public:
 
 private:
     GLfloat blendColor_[4]     = {0.0f, 0.0f, 0.0f, 0.0f};
-    GLenum blendDstAlpha_      = 0xDEAD;
-    GLenum blendDstRgb_        = 0xDEAD;
-    GLenum blendEquationAlpha_ = 0xDEAD;
-    GLenum blendEquationRgb_   = 0xDEAD;
-    GLenum blendSrcAlpha_      = 0xDEAD;
-    GLenum blendSrcRgb_        = 0xDEAD;
+    GLint blendDstAlpha_      = 0xDEAD; // GLenum
+    GLint blendDstRgb_        = 0xDEAD; // GLenum
+    GLint blendEquationAlpha_ = 0xDEAD; // GLenum
+    GLint blendEquationRgb_   = 0xDEAD; // GLenum
+    GLint blendSrcAlpha_      = 0xDEAD; // GLenum
+    GLint blendSrcRgb_        = 0xDEAD; // GLenum
     // NOTE: GL_LOGIC_OP_MODE and GL_COLOR_LOGIC_OP may go there, but they're very rare features
     GLboolean colorLogicOp_  = GL_FALSE;
-    GLenum colorLogicOpMode_ = 0xDEAD;
+    GLint colorLogicOpMode_ = 0xDEAD; // GLenum
 
     bool restoreRare_ = false;
 };

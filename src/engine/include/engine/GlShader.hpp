@@ -14,11 +14,17 @@ struct ShaderDefine {
         bool b8;
     } value;
     enum {
-        INT32, UINT32, FLOAT32, FLOAT64, BOOLEAN8,
+        INT32,
+        UINT32,
+        FLOAT32,
+        FLOAT64,
+        BOOLEAN8,
     } type;
     bool highPrecision = true;
 };
 
-auto AddShaderDefines[[nodiscard]](std::string_view code, ShaderDefine const* defines, int32_t limit, int32_t stride = 1) -> std::string;
+auto AddShaderDefines
+    [[nodiscard]] (std::string_view code, ShaderDefine const* defines, int32_t limit, int32_t stride = 1)
+    -> std::string;
 
 } // namespace engine::gl

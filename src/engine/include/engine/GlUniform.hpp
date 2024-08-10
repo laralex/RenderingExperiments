@@ -63,7 +63,8 @@ template <typename T> void UniformValue(GLint location, T const value0, T const 
     }
 }
 
-template <typename T> void UniformValue(GLint location, T const value0, T const value1, T const value2, T const value3) {
+template <typename T>
+void UniformValue(GLint location, T const value0, T const value1, T const value2, T const value3) {
     if constexpr (std::is_same_v<T, GLint>) {
         GLCALL(glUniform4i(location, value0, value1, value2, value3));
     } else if constexpr (std::is_same_v<T, GLuint>) {

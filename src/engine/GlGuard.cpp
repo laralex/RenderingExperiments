@@ -15,18 +15,18 @@ void RestoreFlag(GLenum option, GLboolean shouldEnable) {
 namespace engine::gl {
 
 GlGuardAux::GlGuardAux() {
-    GLCALL(glGetIntegerv(GL_ACTIVE_TEXTURE, reinterpret_cast<GLint*>(&activeTexture_)));
-    GLCALL(glGetIntegerv(GL_CURRENT_PROGRAM, reinterpret_cast<GLint*>(&program_)));
+    GLCALL(glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture_));
+    GLCALL(glGetIntegerv(GL_CURRENT_PROGRAM, &program_));
     // NOTE: probably a bad idea to store/restore glDrawBuffers, as it's state of framebuffer
     // for (size_t i = 0; i < sizeof(drawBuffers) / sizeof(drawBuffers[0]); ++i) {
-    //     GLCALL(glGetIntegerv(GL_DRAW_BUFFER0 + i, reinterpret_cast<GLint*>(drawBuffers + i)));
+    //     GLCALL(glGetIntegerv(GL_DRAW_BUFFER0 + i, drawBuffers + i)));
     // }
-    GLCALL(glGetIntegerv(GL_DISPATCH_INDIRECT_BUFFER_BINDING, reinterpret_cast<GLint*>(&dispatchIndirectBuffer_)));
-    GLCALL(glGetIntegerv(GL_DRAW_INDIRECT_BUFFER_BINDING, reinterpret_cast<GLint*>(&drawIndirectBuffer_)));
-    GLCALL(glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, reinterpret_cast<GLint*>(&programPipeline_)));
+    GLCALL(glGetIntegerv(GL_DISPATCH_INDIRECT_BUFFER_BINDING, &dispatchIndirectBuffer_));
+    GLCALL(glGetIntegerv(GL_DRAW_INDIRECT_BUFFER_BINDING, &drawIndirectBuffer_));
+    GLCALL(glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &programPipeline_));
 
-    GLCALL(glGetIntegerv(GL_TEXTURE_BUFFER_BINDING, reinterpret_cast<GLint*>(&textureBuffer_)));
-    GLCALL(glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&transformFeedbackBuffer_)));
+    GLCALL(glGetIntegerv(GL_TEXTURE_BUFFER_BINDING, &textureBuffer_));
+    GLCALL(glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, &transformFeedbackBuffer_));
 }
 
 GlGuardAux::~GlGuardAux() {
@@ -46,13 +46,13 @@ GlGuardAux::~GlGuardAux() {
 
 GlGuardFramebuffer::GlGuardFramebuffer(bool restoreRare)
     : restoreRare_(restoreRare) {
-    GLCALL(glGetIntegerv(GL_RENDERBUFFER_BINDING, reinterpret_cast<GLint*>(&renderBuffer_)));
-    GLCALL(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&drawFramebuffer_)));
+    GLCALL(glGetIntegerv(GL_RENDERBUFFER_BINDING, &renderBuffer_));
+    GLCALL(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFramebuffer_));
     if (restoreRare_) {
-        GLCALL(glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, reinterpret_cast<GLint*>(&readFramebuffer_)));
+        GLCALL(glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFramebuffer_));
         GLCALL(glGetBooleanv(GL_FRAMEBUFFER_SRGB, &framebufferSrgb_));
-        GLCALL(glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&pixelPackBuffer_)));
-        GLCALL(glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, reinterpret_cast<GLint*>(&pixelUnpackBuffer_)));
+        GLCALL(glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pixelPackBuffer_));
+        GLCALL(glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &pixelUnpackBuffer_));
     }
 }
 
@@ -69,16 +69,16 @@ GlGuardFramebuffer::~GlGuardFramebuffer() {
 
 GlGuardVertex::GlGuardVertex(bool restoreRare)
     : restoreRare_(restoreRare) {
-    GLCALL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, reinterpret_cast<GLint*>(&vao_)));
+    GLCALL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao_));
     if (restoreRare_) {
         // NOTE: vbo and ebo are rare to restore, because they should be just once bound to vao
-        GLCALL(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, reinterpret_cast<GLint*>(&vbo_)));
-        GLCALL(glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, reinterpret_cast<GLint*>(&ebo_)));
+        GLCALL(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo_));
+        GLCALL(glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &ebo_));
         GLCALL(glGetBooleanv(GL_PRIMITIVE_RESTART, &primitiveRestart_));
-        GLCALL(glGetIntegerv(GL_PRIMITIVE_RESTART_INDEX, reinterpret_cast<GLint*>(&primitiveRestartIndex_)));
+        GLCALL(glGetIntegerv(GL_PRIMITIVE_RESTART_INDEX, &primitiveRestartIndex_));
         GLCALL(glGetBooleanv(GL_CULL_FACE, &cullFace_));
-        GLCALL(glGetIntegerv(GL_CULL_FACE_MODE, reinterpret_cast<GLint*>(&cullFaceMode_)));
-        GLCALL(glGetIntegerv(GL_PROVOKING_VERTEX, reinterpret_cast<GLint*>(&provokingVertex_)));
+        GLCALL(glGetIntegerv(GL_CULL_FACE_MODE, &cullFaceMode_));
+        GLCALL(glGetIntegerv(GL_PROVOKING_VERTEX, &provokingVertex_));
     }
 }
 
@@ -116,7 +116,7 @@ GlGuardDepth::GlGuardDepth(bool restoreRare)
     : restoreRare_(restoreRare) {
     GLCALL(glGetBooleanv(GL_DEPTH_TEST, &depthTest_));
     GLCALL(glGetFloatv(GL_DEPTH_CLEAR_VALUE, &depthClearValue_));
-    GLCALL(glGetIntegerv(GL_DEPTH_FUNC, reinterpret_cast<GLint*>(&depthFunc_)));
+    GLCALL(glGetIntegerv(GL_DEPTH_FUNC, &depthFunc_));
     GLCALL(glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteMask_));
 
     if (restoreRare_) {
@@ -151,21 +151,21 @@ GlGuardStencil::GlGuardStencil() {
     GLCALL(glGetBooleanv(GL_DEPTH_TEST, &stencilTest_));
     GLCALL(glGetIntegerv(GL_DEPTH_CLEAR_VALUE, &stencilClearValue_));
 
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_FAIL, reinterpret_cast<GLint*>(&stencilBackFail_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_FUNC, reinterpret_cast<GLint*>(&stencilBackFunc_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_PASS_DEPTH_FAIL, reinterpret_cast<GLint*>(&stencilBackPassDepthFail_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_PASS_DEPTH_PASS, reinterpret_cast<GLint*>(&stencilBackPassDepthPass_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_REF, reinterpret_cast<GLint*>(&stencilBackRef_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_VALUE_MASK, reinterpret_cast<GLint*>(&stencilBackValueMask_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_BACK_WRITEMASK, reinterpret_cast<GLint*>(&stencilBackWriteMask_)));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_FAIL, &stencilBackFail_));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_FUNC, &stencilBackFunc_));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_PASS_DEPTH_FAIL, &stencilBackPassDepthFail_));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_PASS_DEPTH_PASS, &stencilBackPassDepthPass_));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_REF, &stencilBackRef_));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_VALUE_MASK, &stencilBackValueMask_));
+    GLCALL(glGetIntegerv(GL_STENCIL_BACK_WRITEMASK, &stencilBackWriteMask_));
 
-    GLCALL(glGetIntegerv(GL_STENCIL_FAIL, reinterpret_cast<GLint*>(&stencilFrontFail_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_FUNC, reinterpret_cast<GLint*>(&stencilFrontFunc_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, reinterpret_cast<GLint*>(&stencilFrontPassDepthFail_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, reinterpret_cast<GLint*>(&stencilFrontPassDepthPass_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_REF, reinterpret_cast<GLint*>(&stencilFrontRef_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_VALUE_MASK, reinterpret_cast<GLint*>(&stencilFrontValueMask_)));
-    GLCALL(glGetIntegerv(GL_STENCIL_WRITEMASK, reinterpret_cast<GLint*>(&stencilFrontWriteMask_)));
+    GLCALL(glGetIntegerv(GL_STENCIL_FAIL, &stencilFrontFail_));
+    GLCALL(glGetIntegerv(GL_STENCIL_FUNC, &stencilFrontFunc_));
+    GLCALL(glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, &stencilFrontPassDepthFail_));
+    GLCALL(glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, &stencilFrontPassDepthPass_));
+    GLCALL(glGetIntegerv(GL_STENCIL_REF, &stencilFrontRef_));
+    GLCALL(glGetIntegerv(GL_STENCIL_VALUE_MASK, &stencilFrontValueMask_));
+    GLCALL(glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilFrontWriteMask_));
 }
 
 GlGuardStencil::~GlGuardStencil() {
@@ -182,16 +182,16 @@ GlGuardStencil::~GlGuardStencil() {
 
 GlGuardBlend::GlGuardBlend(bool restoreRare)
     : restoreRare_(restoreRare) {
-    GLCALL(glGetIntegerv(GL_BLEND_DST_ALPHA, reinterpret_cast<GLint*>(&blendDstAlpha_)));
-    GLCALL(glGetIntegerv(GL_BLEND_DST_RGB, reinterpret_cast<GLint*>(&blendDstRgb_)));
-    GLCALL(glGetIntegerv(GL_BLEND_SRC_ALPHA, reinterpret_cast<GLint*>(&blendSrcAlpha_)));
-    GLCALL(glGetIntegerv(GL_BLEND_SRC_RGB, reinterpret_cast<GLint*>(&blendSrcRgb_)));
-    GLCALL(glGetIntegerv(GL_BLEND_EQUATION_ALPHA, reinterpret_cast<GLint*>(&blendEquationAlpha_)));
-    GLCALL(glGetIntegerv(GL_BLEND_EQUATION_RGB, reinterpret_cast<GLint*>(&blendEquationRgb_)));
+    GLCALL(glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDstAlpha_));
+    GLCALL(glGetIntegerv(GL_BLEND_DST_RGB, &blendDstRgb_));
+    GLCALL(glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrcAlpha_));
+    GLCALL(glGetIntegerv(GL_BLEND_SRC_RGB, &blendSrcRgb_));
+    GLCALL(glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &blendEquationAlpha_));
+    GLCALL(glGetIntegerv(GL_BLEND_EQUATION_RGB, &blendEquationRgb_));
     if (restoreRare_) {
         GLCALL(glGetFloatv(GL_BLEND_COLOR, blendColor_));
         GLCALL(glGetBooleanv(GL_COLOR_LOGIC_OP, &colorLogicOp_));
-        GLCALL(glGetIntegerv(GL_LOGIC_OP_MODE, reinterpret_cast<GLint*>(&colorLogicOpMode_)));
+        GLCALL(glGetIntegerv(GL_LOGIC_OP_MODE, &colorLogicOpMode_));
     }
 }
 

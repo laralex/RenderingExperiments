@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Prelude.hpp"
-
+#include <glm/vec2.hpp>
 #include <functional>
 
 namespace engine {
@@ -23,8 +23,8 @@ public:
 
     auto IsInitialized [[nodiscard]] () const -> bool { return window_ != nullptr; }
     auto Window [[nodiscard]] () const -> GLFWwindow* { return window_; }
-    auto WindowSize [[nodiscard]] () const -> engine::ivec2 { return windowSize_; }
-    auto MousePosition [[nodiscard]] () const -> engine::vec2 { return mousePos_; }
+    auto WindowSize [[nodiscard]] () const -> glm::ivec2 { return windowSize_; }
+    auto MousePosition [[nodiscard]] () const -> glm::vec2 { return mousePos_; }
     auto MouseInsideWindow [[nodiscard]] () const -> bool { return mouseInsideWindow_; }
 
     using GlfwKey         = int;
@@ -38,8 +38,8 @@ public:
 
 private:
     GLFWwindow* window_;
-    engine::ivec2 windowSize_{0, 0};
-    engine::vec2 mousePos_{0.0f, 0.0f};
+    glm::ivec2 windowSize_{0, 0};
+    glm::vec2 mousePos_{0.0f, 0.0f};
     bool mouseInsideWindow_{false};
 
     std::unordered_map<GlfwKey, ButtonCallback> keys_{};
