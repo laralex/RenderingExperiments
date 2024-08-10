@@ -1,6 +1,7 @@
 #include "engine/GlBuffer.hpp"
 #include "engine/GlProgram.hpp"
 #include "engine/GlVao.hpp"
+#include "engine/GlTexture.hpp"
 #include "engine/Prelude.hpp"
 #include "engine_private/Prelude.hpp"
 
@@ -52,6 +53,11 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
         GLCALL(glObjectLabel(objectTypeKhr, objectId, label.size(), label.data()));
         return;
     }
+    // TEXTURE
+    // FRAMEBUFFER
+    // RENDERBUFFER,
+    // SAMPLER
+    // TRANSFORM_FEEDBACK
     // + BUFFER_OBJECT_EXT                              0x9151
     // SHADER_OBJECT_EXT                              0x8B48
     // + PROGRAM_OBJECT_EXT                             0x8B40
@@ -203,6 +209,18 @@ auto GetDebugLabel(GpuProgram const& program, char* outBuffer, size_t outBufferS
 
 void LogDebugLabel(GpuProgram const& program, char const* message) {
     ::LogDebugLabel(GL_PROGRAM, GL_PROGRAM_OBJECT_EXT, program.Id(), message);
+}
+
+void DebugLabel(Texture const& texture, std::string_view label) {
+    ::DebugLabel(GL_TEXTURE, GL_TEXTURE, texture.Id(), label);
+}
+
+auto GetDebugLabel(Texture const& texture, char* outBuffer, size_t outBufferSize) -> size_t {
+    return ::GetDebugLabel(GL_TEXTURE, GL_TEXTURE, texture.Id(), outBuffer, outBufferSize);
+}
+
+void LogDebugLabel(Texture const& texture, char const* message) {
+    ::LogDebugLabel(GL_TEXTURE, GL_TEXTURE, texture.Id(), message);
 }
 
 void DebugLabel(void* glSyncObject, std::string_view label) {

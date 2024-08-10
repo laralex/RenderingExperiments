@@ -45,6 +45,11 @@ void DebugLabel(GpuProgram const& program, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (GpuProgram const& program, char* outBuffer, size_t outBufferSize) -> size_t;
 void LogDebugLabel(GpuProgram const& program, char const* message);
 
+class Texture;
+void DebugLabel(Texture const& texture, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (Texture const& texture, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(Texture const& texture, char const* message);
+
 void DebugLabel(void const* glSyncObject, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (void* glSyncObject, char* outBuffer, size_t outBufferSize) -> size_t;
 void LogDebugLabel(void const* glSyncObject, char const* message);
