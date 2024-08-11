@@ -92,7 +92,7 @@ void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
             .objectType  = SnapshotObjectType::SAMPLER,
             .oldObject   = currentSamplerBindings[slotIdx]});
     }
-    GLCALL(glBindSampler(GL_TEXTURE0 + slotIdx, sampler));
+    GLCALL(glBindSampler(slotIdx, sampler));
     currentSamplerBindings[slotIdx] = sampler;
 }
 

@@ -3,6 +3,7 @@
 #include <engine/GlBuffer.hpp>
 #include <engine/GlGuard.hpp>
 #include <engine/GlProgram.hpp>
+#include <engine/GlSampler.hpp>
 #include <engine/GlShader.hpp>
 #include <engine/GlTexture.hpp>
 #include <engine/GlTextureUnits.hpp>
@@ -10,7 +11,8 @@
 #include <engine/GlVao.hpp>
 #include <engine/Prelude.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -21,6 +23,8 @@ struct Application final {
     engine::gl::GpuBuffer attributeBuffer{};
     engine::gl::GpuBuffer indexBuffer{};
     engine::gl::Texture texture{};
+    engine::gl::Sampler samplerNearest{};
+    engine::gl::Sampler samplerBilinear{};
     bool isInitialized = false;
 };
 
@@ -104,6 +108,18 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->texture.Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData);
         app->texture.GenerateMipmaps();
 
+        app->samplerNearest = gl::Sampler::Allocate("Sampler nearset")
+                           .WithLinearMagnify(false)
+                           .WithLinearMinify(false)
+                           .WithLinearMinifyOverMips(false, false)
+                           .WithAnisotropicFilter(1.0f)
+                           .WithWrap(GL_CLAMP_TO_EDGE);
+        app->samplerBilinear = gl::Sampler::Allocate("Sampler bilinear")
+                           .WithLinearMagnify(true)
+                           .WithLinearMinify(true)
+                           .WithLinearMinifyOverMips(true, true)
+                           .WithAnisotropicFilter(8.0f)
+                           .WithWrap(GL_CLAMP_TO_EDGE);
         app->isInitialized = true;
     }
 
@@ -130,11 +146,24 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     GLCALL(glClearColor(0.3f, 0.5f, 0.5f, 0.0f));
     {
         auto programGuard            = gl::UniformCtx(app->program);
-        glm::mat4 mvp                = glm::mat4(1.0);
+        glm::vec3 cameraPosition     = glm::vec3(0.0, -2.0, std::sin(ctx.timeSec) - 1.5f);
+        glm::vec3 cameraTarget       = glm::vec3(0.0, 0.0, 0.0f);
+        glm::vec3 cameraUp           = glm::vec3(0.0, 1.0, 0.0f);
+        glm::ivec2 screenSize        = windowCtx.WindowSize();
+        float aspectRatio            = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
+        glm::mat4 proj               = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
+        glm::mat4 view               = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+        glm::mat4 model              = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 mvp                = proj * view * model;
         constexpr GLint TEXTURE_SLOT = 0;
-        gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
+        gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
+        if (windowCtx.MouseInsideWindow()) {
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->samplerNearest.Id());
+        } else {
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->samplerBilinear.Id());
+        }
     }
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));

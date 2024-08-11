@@ -1,5 +1,6 @@
 #include "engine/GlBuffer.hpp"
 #include "engine/GlProgram.hpp"
+#include "engine/GlSampler.hpp"
 #include "engine/GlTexture.hpp"
 #include "engine/GlVao.hpp"
 #include "engine/Prelude.hpp"
@@ -44,8 +45,8 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
     // GL_QUERY
     // GL_PROGRAM_PIPELINE
     // GL_TRANSFORM_FEEDBACK
-    // GL_SAMPLER
-    // GL_TEXTURE
+    // + GL_SAMPLER
+    // + GL_TEXTURE
     // GL_RENDERBUFFER
     // GL_FRAMEBUFFER
     // + sync objects (pointers)
@@ -53,17 +54,17 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
         GLCALL(glObjectLabel(objectTypeKhr, objectId, label.size(), label.data()));
         return;
     }
-    // TEXTURE
+    // + TEXTURE
     // FRAMEBUFFER
     // RENDERBUFFER,
     // SAMPLER
     // TRANSFORM_FEEDBACK
-    // + BUFFER_OBJECT_EXT                              0x9151
-    // SHADER_OBJECT_EXT                              0x8B48
-    // + PROGRAM_OBJECT_EXT                             0x8B40
-    // + VERTEX_ARRAY_OBJECT_EXT                        0x9154
-    // QUERY_OBJECT_EXT                               0x9153
-    // PROGRAM_PIPELINE_OBJECT_EXT                    0x8A4F
+    // + BUFFER_OBJECT_EXT
+    // SHADER_OBJECT_EXT
+    // + PROGRAM_OBJECT_EXT
+    // + VERTEX_ARRAY_OBJECT_EX
+    // QUERY_OBJECT_EXT
+    // PROGRAM_PIPELINE_OBJECT_EX
     if (GlExtensions::Supports(GlExtensions::EXT_debug_label) && objectTypeExt != GL_NONE) {
         GLCALL(glLabelObjectEXT(objectTypeExt, objectId, label.size(), label.data()));
         return;
@@ -221,6 +222,18 @@ auto GetDebugLabel(Texture const& texture, char* outBuffer, size_t outBufferSize
 
 void LogDebugLabel(Texture const& texture, char const* message) {
     ::LogDebugLabel(GL_TEXTURE, GL_TEXTURE, texture.Id(), message);
+}
+
+void DebugLabel(Sampler const& sampler, std::string_view label) {
+    ::DebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), label);
+}
+
+auto GetDebugLabel(Sampler const& sampler, char* outBuffer, size_t outBufferSize) -> size_t {
+    return ::GetDebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), outBuffer, outBufferSize);
+}
+
+void LogDebugLabel(Sampler const& sampler, char const* message) {
+    ::LogDebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), message);
 }
 
 void DebugLabel(void* glSyncObject, std::string_view label) {

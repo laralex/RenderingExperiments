@@ -29,7 +29,7 @@ obj_app_ = Main.o
 
 obj_engine_ = Assets.o EngineLoop.o GlBuffer.o \
 	GlCapabilities.o GlDebug.o GlExtensions.o \
-	GlHelpers.o GlProgram.o \
+	GlHelpers.o GlProgram.o GlSampler.o \
 	GlShader.o GlTexture.o \
 	GlTextureUnits.o GlUniform.o \
 	GlVao.o GlGuard.o \
