@@ -33,6 +33,7 @@ public:
         ARB_framebuffer_sRGB,
         EXT_debug_label,
         EXT_debug_marker,
+        EXT_texture_filter_anisotropic,
         NUM_HARDCODED_EXTENSIONS
     };
 

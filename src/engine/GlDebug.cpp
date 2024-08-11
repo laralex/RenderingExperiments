@@ -1,7 +1,7 @@
 #include "engine/GlBuffer.hpp"
 #include "engine/GlProgram.hpp"
-#include "engine/GlVao.hpp"
 #include "engine/GlTexture.hpp"
+#include "engine/GlVao.hpp"
 #include "engine/Prelude.hpp"
 #include "engine_private/Prelude.hpp"
 

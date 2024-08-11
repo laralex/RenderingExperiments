@@ -33,9 +33,8 @@ void Vao::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeIn
 
     // NOTE: safe int->ptr cast, because info.offset is of type intptr_t
     auto* offset = reinterpret_cast<GLsizei*>(info.offset);
-    GLCALL(glVertexAttribPointer(
-        info.index, info.valuesPerVertex, info.datatype, info.normalized, info.stride,
-        offset));
+    GLCALL(
+        glVertexAttribPointer(info.index, info.valuesPerVertex, info.datatype, info.normalized, info.stride, offset));
     GLCALL(glEnableVertexAttribArray(info.index));
 
     GLCALL(glBindVertexArray(0));

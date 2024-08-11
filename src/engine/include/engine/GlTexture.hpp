@@ -18,8 +18,15 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate2D [[nodiscard]] (GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name = {}) -> Texture;
-    void GenerateMipmaps();
+    static auto Allocate2D
+        [[nodiscard]] (GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name = {})
+        -> Texture;
+    // NOTE: sampleStencilOnly controls GL_DEPTH_STENCIL_TEXTURE_MODE parameter.
+    // when true: stencil value is read in shader (depth value can't be retrieved)
+    // when false: depth value is read in shader (stencil value can't be retrieved)
+    static auto AllocateZS [[nodiscard]] (
+        glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly = false, std::string_view name = {}) -> Texture;
+    void GenerateMipmaps(GLint minLevel = 0, GLint maxLevel = 1000);
     void Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data, GLint miplevel = 0);
     auto Id [[nodiscard]] () const -> GLuint { return textureId_; }
 
@@ -32,4 +39,4 @@ private:
     glm::ivec3 size_{};
 };
 
-}
+} // namespace engine::gl

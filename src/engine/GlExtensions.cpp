@@ -15,8 +15,8 @@ void GlExtensions::Initialize() {
     for (GLint i = 0; i < numExtensions; ++i) {
         GLubyte const* ext = glGetStringi(GL_EXTENSIONS, i);
         // NOTE: reinterpret_cast to char const* would compile and work, but it is UB
-        size_t extSize = std::char_traits<GLubyte>::length(ext);
-        auto extensionName = std::string{ext, ext+extSize};
+        size_t extSize     = std::char_traits<GLubyte>::length(ext);
+        auto extensionName = std::string{ext, ext + extSize};
         // XLOG("Extension {}", extensionName);
         allExtensions.insert(extensionName);
     }
@@ -36,6 +36,7 @@ void GlExtensions::Initialize() {
     hardcodedExtensions[ARB_framebuffer_sRGB]                   = supports("GL_ARB_framebuffer_sRGB");
     hardcodedExtensions[EXT_debug_label]                        = supports("GL_EXT_debug_label");
     hardcodedExtensions[EXT_debug_marker]                       = supports("GL_EXT_debug_marker");
+    hardcodedExtensions[EXT_texture_filter_anisotropic]         = supports("GL_EXT_texture_filter_anisotropic");
     isInitialized                                               = true;
 }
 

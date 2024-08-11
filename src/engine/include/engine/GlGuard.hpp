@@ -41,12 +41,12 @@ public:
 #undef Self
 
 private:
-    GLint drawFramebuffer_    = 0xDEAD; // GLuint
-    GLint readFramebuffer_    = 0xDEAD; // GLuint
+    GLint drawFramebuffer_     = 0xDEAD; // GLuint
+    GLint readFramebuffer_     = 0xDEAD; // GLuint
     GLboolean framebufferSrgb_ = GL_FALSE;
-    GLint pixelPackBuffer_    = 0xDEAD; // GLuint
-    GLint pixelUnpackBuffer_  = 0xDEAD; // GLuint
-    GLint renderBuffer_       = 0xDEAD; // GLuint
+    GLint pixelPackBuffer_     = 0xDEAD; // GLuint
+    GLint pixelUnpackBuffer_   = 0xDEAD; // GLuint
+    GLint renderBuffer_        = 0xDEAD; // GLuint
 
     bool restoreRare_ = false;
 };
@@ -68,9 +68,9 @@ private:
     GLint vao_                   = 0xDEAD; // GLuint
     GLint vbo_                   = 0xDEAD; // GLuint
     GLint ebo_                   = 0xDEAD; // GLuint
-    GLboolean primitiveRestart_   = GL_FALSE;
+    GLboolean primitiveRestart_  = GL_FALSE;
     GLint primitiveRestartIndex_ = 0xDEAD; // GLuint
-    GLboolean cullFace_           = GL_FALSE;
+    GLboolean cullFace_          = GL_FALSE;
     GLint cullFaceMode_          = 0xDEAD; // GLenum
     GLint provokingVertex_       = 0xDEAD; // GLenum
 
@@ -158,20 +158,20 @@ public:
 #undef Self
 
 private:
-    GLboolean stencilTest_            = GL_FALSE;
-    GLint stencilClearValue_          = 0xDEAD;
+    GLboolean stencilTest_           = GL_FALSE;
+    GLint stencilClearValue_         = 0xDEAD;
     GLint stencilBackFail_           = 0xDEAD; // GLenum
     GLint stencilBackFunc_           = 0xDEAD; // GLenum
     GLint stencilBackPassDepthFail_  = 0xDEAD; // GLenum
     GLint stencilBackPassDepthPass_  = 0xDEAD; // GLenum
-    GLint stencilBackRef_             = 0xDEAD;
+    GLint stencilBackRef_            = 0xDEAD;
     GLint stencilBackValueMask_      = 0xDEAD; // GLuint
     GLint stencilBackWriteMask_      = 0xDEAD; // GLuint
     GLint stencilFrontFail_          = 0xDEAD; // GLenum
     GLint stencilFrontFunc_          = 0xDEAD; // GLenum
     GLint stencilFrontPassDepthFail_ = 0xDEAD; // GLenum
     GLint stencilFrontPassDepthPass_ = 0xDEAD; // GLenum
-    GLint stencilFrontRef_            = 0xDEAD;
+    GLint stencilFrontRef_           = 0xDEAD;
     GLint stencilFrontValueMask_     = 0xDEAD; // GLenum
     GLint stencilFrontWriteMask_     = 0xDEAD; // GLenum
 };
@@ -190,7 +190,7 @@ public:
 #undef Self
 
 private:
-    GLfloat blendColor_[4]     = {0.0f, 0.0f, 0.0f, 0.0f};
+    GLfloat blendColor_[4]    = {0.0f, 0.0f, 0.0f, 0.0f};
     GLint blendDstAlpha_      = 0xDEAD; // GLenum
     GLint blendDstRgb_        = 0xDEAD; // GLenum
     GLint blendEquationAlpha_ = 0xDEAD; // GLenum
@@ -198,7 +198,7 @@ private:
     GLint blendSrcAlpha_      = 0xDEAD; // GLenum
     GLint blendSrcRgb_        = 0xDEAD; // GLenum
     // NOTE: GL_LOGIC_OP_MODE and GL_COLOR_LOGIC_OP may go there, but they're very rare features
-    GLboolean colorLogicOp_  = GL_FALSE;
+    GLboolean colorLogicOp_ = GL_FALSE;
     GLint colorLogicOpMode_ = 0xDEAD; // GLenum
 
     bool restoreRare_ = false;

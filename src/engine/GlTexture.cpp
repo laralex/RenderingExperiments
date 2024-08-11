@@ -11,23 +11,52 @@ void Texture::Dispose() {
 }
 
 auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
-    Texture out{};
-    GLCALL(glGenTextures(1, &out.textureId_.id));
-    out.textureType_ = textureType;
-    out.size_ = glm::ivec3(size.x, size.y, 0);
-    out.internalFormat_ = internalFormat;
-    GLCALL(glBindTexture(out.textureType_, out.textureId_.id));
-    constexpr GLint border = 0;
-    GLCALL(glTexImage2D(out.textureType_, 0, out.internalFormat_, out.size_.x, out.size_.y, border, GL_RGB, GL_UNSIGNED_BYTE, nullptr));
-    if (!name.empty()) {
-        DebugLabel(out, name);
-        LogDebugLabel(out, "Texture was allocated");
+    {
+        GLenum t = textureType;
+        assert(
+            t == GL_TEXTURE_2D || t == GL_PROXY_TEXTURE_2D || t == GL_TEXTURE_1D_ARRAY || t == GL_PROXY_TEXTURE_1D_ARRAY
+            || t == GL_TEXTURE_RECTANGLE || t == GL_PROXY_TEXTURE_RECTANGLE || t == GL_TEXTURE_CUBE_MAP_POSITIVE_X
+            || t == GL_TEXTURE_CUBE_MAP_NEGATIVE_X || t == GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+            || t == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y || t == GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+            || t == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z || t == GL_PROXY_TEXTURE_CUBE_MAP);
     }
-    return out;
+
+    Texture texture{};
+    GLCALL(glGenTextures(1, &texture.textureId_.id));
+    texture.textureType_    = textureType;
+    texture.size_           = glm::ivec3(size.x, size.y, 0);
+    texture.internalFormat_ = internalFormat;
+    GLCALL(glBindTexture(texture.textureType_, texture.textureId_.id));
+    constexpr GLint border = 0;
+    GLCALL(glTexImage2D(
+        texture.textureType_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, GL_RGB,
+        GL_UNSIGNED_BYTE, nullptr));
+    if (!name.empty()) {
+        DebugLabel(texture, name);
+        LogDebugLabel(texture, "Texture was allocated");
+    }
+    return texture;
 }
 
-void Texture::GenerateMipmaps() {
+auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
+    -> Texture {
+    {
+        GLenum f = internalFormat;
+        assert(
+            f == GL_DEPTH_COMPONENT || f == GL_DEPTH_COMPONENT16 || f == GL_DEPTH_COMPONENT24
+            || f == GL_DEPTH_COMPONENT32F);
+    }
+
+    Texture texture = Allocate2D(GL_TEXTURE_2D, size, internalFormat, name);
+    glTexParameteri(
+        texture.textureType_, GL_DEPTH_STENCIL_TEXTURE_MODE, sampleStencilOnly ? GL_STENCIL_INDEX : GL_DEPTH_COMPONENT);
+    return texture;
+}
+
+void Texture::GenerateMipmaps(GLint minLevel, GLint maxLevel) {
     GLCALL(glBindTexture(textureType_, textureId_.id));
+    GLCALL(glTexParameteri(textureType_, GL_TEXTURE_BASE_LEVEL, minLevel));
+    GLCALL(glTexParameteri(textureType_, GL_TEXTURE_MAX_LEVEL, maxLevel));
     GLCALL(glGenerateMipmap(textureType_));
 }
 

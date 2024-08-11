@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/Prelude.hpp"
-#include <glm/vec2.hpp>
 #include <functional>
+#include <glm/vec2.hpp>
 
 namespace engine {
 

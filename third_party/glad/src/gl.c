@@ -48,6 +48,7 @@ int GLAD_GL_ARB_debug_output = 0;
 int GLAD_GL_ARB_framebuffer_sRGB = 0;
 int GLAD_GL_EXT_debug_label = 0;
 int GLAD_GL_EXT_debug_marker = 0;
+int GLAD_GL_EXT_texture_filter_anisotropic = 0;
 int GLAD_GL_KHR_debug = 0;
 int GLAD_GL_KHR_no_error = 0;
 int GLAD_GL_KHR_shader_subgroup = 0;
@@ -1592,6 +1593,7 @@ static int glad_gl_find_extensions_gl(void) {
     GLAD_GL_ARB_framebuffer_sRGB = glad_gl_has_extension(exts, exts_i, "GL_ARB_framebuffer_sRGB");
     GLAD_GL_EXT_debug_label = glad_gl_has_extension(exts, exts_i, "GL_EXT_debug_label");
     GLAD_GL_EXT_debug_marker = glad_gl_has_extension(exts, exts_i, "GL_EXT_debug_marker");
+    GLAD_GL_EXT_texture_filter_anisotropic = glad_gl_has_extension(exts, exts_i, "GL_EXT_texture_filter_anisotropic");
     GLAD_GL_KHR_debug = glad_gl_has_extension(exts, exts_i, "GL_KHR_debug");
     GLAD_GL_KHR_no_error = glad_gl_has_extension(exts, exts_i, "GL_KHR_no_error");
     GLAD_GL_KHR_shader_subgroup = glad_gl_has_extension(exts, exts_i, "GL_KHR_shader_subgroup");

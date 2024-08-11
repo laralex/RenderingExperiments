@@ -37,10 +37,10 @@ constexpr uint32_t indices[] = {
 };
 
 constexpr uint8_t textureData[] = {
-    20, 20, 20, // 00
-    40, 40, 40, // 01
-    60, 60, 60, // 02
-    80, 80, 80, // 03
+    20,  20,  20,  // 00
+    40,  40,  40,  // 01
+    60,  60,  60,  // 02
+    80,  80,  80,  // 03
     100, 100, 100, // 10
     120, 120, 120, // 11
     140, 140, 140, // 12
@@ -48,9 +48,9 @@ constexpr uint8_t textureData[] = {
 };
 
 constexpr GLint ATTRIB_POSITION_LOCATION = 0;
-constexpr GLint ATTRIB_UV_LOCATION = 1;
+constexpr GLint ATTRIB_UV_LOCATION       = 1;
 constexpr GLint UNIFORM_TEXTURE_LOCATION = 0;
-constexpr GLint UNIFORM_MVP_LOCATION = 10;
+constexpr GLint UNIFORM_MVP_LOCATION     = 10;
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
@@ -129,8 +129,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::PushDebugGroup("Main pass");
     GLCALL(glClearColor(0.3f, 0.5f, 0.5f, 0.0f));
     {
-        auto programGuard    = gl::UniformCtx(app->program);
-        glm::mat4 mvp = glm::mat4(1.0);
+        auto programGuard            = gl::UniformCtx(app->program);
+        glm::mat4 mvp                = glm::mat4(1.0);
         constexpr GLint TEXTURE_SLOT = 0;
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
