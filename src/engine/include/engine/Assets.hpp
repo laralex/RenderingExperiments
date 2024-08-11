@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/GlShader.hpp"
+#include "engine/gl/Shader.hpp"
 #include "engine/Prelude.hpp"
 
 #include <fstream>

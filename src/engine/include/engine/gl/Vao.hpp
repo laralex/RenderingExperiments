@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/GlBuffer.hpp"
+#include "engine/gl/Buffer.hpp"
 #include "engine/Prelude.hpp"
 
 namespace engine::gl {

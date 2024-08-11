@@ -1,4 +1,4 @@
-#include <engine/GlShader.hpp>
+#include <engine/gl/Shader.hpp>
 #include <engine_private/Prelude.hpp>
 
 #include <sstream>

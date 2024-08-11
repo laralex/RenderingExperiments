@@ -4,10 +4,10 @@
 #include <glad/gl.h>
 #include <string_view>
 
-#include "engine/GlCapabilities.hpp"
-#include "engine/GlExtensions.hpp"
-#include <engine/GlDebug.hpp>
-#include <engine/GlHelpers.hpp>
+#include "engine/gl/Capabilities.hpp"
+#include "engine/gl/Extensions.hpp"
+#include <engine/gl/Debug.hpp>
+#include <engine/gl/Helpers.hpp>
 
 #ifdef XDEBUG
 #define SPDLOG_COMPILED_LIB 1

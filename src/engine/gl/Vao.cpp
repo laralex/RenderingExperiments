@@ -1,4 +1,4 @@
-#include "engine/GlVao.hpp"
+#include "engine/gl/Vao.hpp"
 
 namespace engine::gl {
 

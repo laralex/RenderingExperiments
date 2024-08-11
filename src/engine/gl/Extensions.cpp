@@ -1,5 +1,5 @@
-#include "engine/GlExtensions.hpp"
-#include "engine/GlCapabilities.hpp"
+#include "engine/gl/Extensions.hpp"
+#include "engine/gl/Capabilities.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {

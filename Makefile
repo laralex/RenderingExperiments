@@ -27,12 +27,13 @@ CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
 
-obj_engine_ = Assets.o EngineLoop.o GlBuffer.o \
-	GlCapabilities.o GlDebug.o GlExtensions.o \
-	GlHelpers.o GlProgram.o GlSampler.o \
-	GlShader.o GlTexture.o \
-	GlTextureUnits.o GlUniform.o \
-	GlVao.o GlGuard.o \
+obj_engine_ = Assets.o EngineLoop.o \
+	gl/Buffer.o gl/Capabilities.o \
+	gl/Debug.o gl/Extensions.o \
+	gl/Helpers.o gl/Program.o gl/Sampler.o \
+	gl/Shader.o gl/Texture.o \
+	gl/TextureUnits.o gl/Uniform.o \
+	gl/Vao.o gl/Guard.o \
 	Prelude.o WindowContext.o
 
 obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
@@ -61,7 +62,7 @@ clean_own:
 build_app: ${BUILD_DIR}/engine/libengine.a ${BUILD_DIR}/app ${APP_EXE}
 
 .PHONY: build_engine
-build_engine: ${BUILD_DIR}/engine ${BUILD_DIR}/engine/libengine.a
+build_engine: ${BUILD_DIR}/engine ${BUILD_DIR}/engine/gl ${BUILD_DIR}/engine/libengine.a
 
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(vert\|frag\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
@@ -83,6 +84,9 @@ ${BUILD_DIR}/app/%.o: src/app/%.cpp ${hpp_engine}
 
 # compiling engine sources
 ${BUILD_DIR}/engine/%.o: src/engine/%.cpp ${hpp_engine} ${hpp_engine_private}
+	$(info > Compiling $@)
+	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private -c $(filter %.cpp,$^) -o $@
+${BUILD_DIR}/engine/gl/%.o: src/engine/gl/%.cpp ${hpp_engine} ${hpp_engine_private}
 	$(info > Compiling $@)
 	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private -c $(filter %.cpp,$^) -o $@
 
@@ -107,7 +111,7 @@ ${BUILD_DIR}/third_party/glm_install/glm/libglm.a:
 	cmake --build ${BUILD_DIR}/third_party/glm -- all
 	cmake --build ${BUILD_DIR}/third_party/glm -- install
 
-${BUILD_DIR}/app ${BUILD_DIR}/engine ${INSTALL_DIR}:
+${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/engine/gl ${INSTALL_DIR}:
 	mkdir -p $@
 
 .PHONY: init_repo

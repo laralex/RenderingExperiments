@@ -1,4 +1,4 @@
-#include "engine/GlGuard.hpp"
+#include "engine/gl/Guard.hpp"
 
 namespace {
 

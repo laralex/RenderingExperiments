@@ -1,8 +1,8 @@
-#include "engine/GlBuffer.hpp"
-#include "engine/GlProgram.hpp"
-#include "engine/GlSampler.hpp"
-#include "engine/GlTexture.hpp"
-#include "engine/GlVao.hpp"
+#include "engine/gl/Buffer.hpp"
+#include "engine/gl/Program.hpp"
+#include "engine/gl/Sampler.hpp"
+#include "engine/gl/Texture.hpp"
+#include "engine/gl/Vao.hpp"
 #include "engine/Prelude.hpp"
 #include "engine_private/Prelude.hpp"
 

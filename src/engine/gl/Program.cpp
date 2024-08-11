@@ -1,4 +1,4 @@
-#include "engine/GlProgram.hpp"
+#include "engine/gl/Program.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {

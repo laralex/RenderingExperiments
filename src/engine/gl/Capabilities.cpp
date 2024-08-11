@@ -1,4 +1,4 @@
-#include "engine/GlCapabilities.hpp"
+#include "engine/gl/Capabilities.hpp"
 
 namespace engine::gl {
 

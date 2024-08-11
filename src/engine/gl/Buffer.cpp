@@ -1,5 +1,5 @@
-#include <engine/GlBuffer.hpp>
-#include <engine/GlDebug.hpp>
+#include <engine/gl/Buffer.hpp>
+#include <engine/gl/Debug.hpp>
 
 namespace engine::gl {
 

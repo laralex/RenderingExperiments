@@ -1,5 +1,5 @@
-#include "engine/GlSampler.hpp"
-#include "engine/GlTextureUnits.hpp"
+#include "engine/gl/Sampler.hpp"
+#include "engine/gl/TextureUnits.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {

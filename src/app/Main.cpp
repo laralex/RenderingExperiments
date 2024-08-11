@@ -1,14 +1,14 @@
 #include <engine/Assets.hpp>
 #include <engine/EngineLoop.hpp>
-#include <engine/GlBuffer.hpp>
-#include <engine/GlGuard.hpp>
-#include <engine/GlProgram.hpp>
-#include <engine/GlSampler.hpp>
-#include <engine/GlShader.hpp>
-#include <engine/GlTexture.hpp>
-#include <engine/GlTextureUnits.hpp>
-#include <engine/GlUniform.hpp>
-#include <engine/GlVao.hpp>
+#include <engine/gl/Buffer.hpp>
+#include <engine/gl/Guard.hpp>
+#include <engine/gl/Program.hpp>
+#include <engine/gl/Sampler.hpp>
+#include <engine/gl/Shader.hpp>
+#include <engine/gl/Texture.hpp>
+#include <engine/gl/TextureUnits.hpp>
+#include <engine/gl/Uniform.hpp>
+#include <engine/gl/Vao.hpp>
 #include <engine/Prelude.hpp>
 
 #include <glm/glm.hpp>
