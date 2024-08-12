@@ -2,13 +2,13 @@
 #extension GL_ARB_explicit_uniform_location : require
 
 layout(location = ATTRIB_POSITION_LOCATION) in vec3 in_Pos;
-layout(location = ATTRIB_UV_LOCATION) in vec2 in_Uv;
+layout(location = ATTRIB_COLOR_LOCATION) in vec3 in_Color;
 
-out vec2 v_Uv;
+out vec3 v_Color;
 
 layout(location = UNIFORM_MVP_LOCATION) uniform mat4 u_MVP;
 
 void main() {
-    v_Uv = in_Uv;
+    v_Color = in_Color;
     gl_Position = u_MVP * vec4(in_Pos, 1.0);
 }

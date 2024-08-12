@@ -9,7 +9,7 @@
 #include <engine/gl/TextureUnits.hpp>
 #include <engine/gl/Uniform.hpp>
 #include <engine/gl/Vao.hpp>
-#include <engine/Prelude.hpp>
+#include <engine/AxesRenderer.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,6 +61,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
         gl::InitializeOpenGl();
+        gl::AllocateAxesRenderer();
 
         constexpr static int32_t NUM_VDEFINES   = 3;
         gl::ShaderDefine vdefines[NUM_VDEFINES] = {
@@ -142,19 +143,21 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlTextureUnits::BindCubemap(2U, 0U);
     gl::GlTextureUnits::EndStateSnapshot();
 
+    glm::vec3 cameraPosition     = glm::vec3(0.0, -2.0, std::sin(ctx.timeSec) - 1.5f);
+    glm::vec3 cameraTarget       = glm::vec3(0.0, 0.0, 0.0f);
+    glm::vec3 cameraUp           = glm::vec3(0.0, 1.0, 0.0f);
+    glm::ivec2 screenSize        = windowCtx.WindowSize();
+    float aspectRatio            = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
+    glm::mat4 proj               = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
+    glm::mat4 view               = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+    glm::mat4 camera             = proj * view;
+
     gl::PushDebugGroup("Main pass");
     GLCALL(glClearColor(0.3f, 0.5f, 0.5f, 0.0f));
     {
         auto programGuard            = gl::UniformCtx(app->program);
-        glm::vec3 cameraPosition     = glm::vec3(0.0, -2.0, std::sin(ctx.timeSec) - 1.5f);
-        glm::vec3 cameraTarget       = glm::vec3(0.0, 0.0, 0.0f);
-        glm::vec3 cameraUp           = glm::vec3(0.0, 1.0, 0.0f);
-        glm::ivec2 screenSize        = windowCtx.WindowSize();
-        float aspectRatio            = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
-        glm::mat4 proj               = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
-        glm::mat4 view               = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
         glm::mat4 model              = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 mvp                = proj * view * model;
+        glm::mat4 mvp                = camera * model;
         constexpr GLint TEXTURE_SLOT = 0;
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
@@ -165,11 +168,19 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->samplerBilinear.Id());
         }
     }
+    GLCALL(glEnable(GL_CULL_FACE));
+    GLCALL(glFrontFace(GL_CCW));
     GLCALL(glClear(GL_COLOR_BUFFER_BIT));
     GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     GLCALL(glBindVertexArray(app->vao.Id()));
     GLCALL(glUseProgram(app->program.Id()));
     GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    gl::PopDebugGroup();
+
+    gl::PushDebugGroup("Debug pass");
+    glm::mat4 model              = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 mvp                = camera * model;
+    gl::RenderAxes(mvp);
     gl::PopDebugGroup();
     gl::GlTextureUnits::RestoreState();
 }

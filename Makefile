@@ -27,7 +27,7 @@ CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
 
-obj_engine_ = Assets.o EngineLoop.o \
+obj_engine_ = Assets.o AxesRenderer.o EngineLoop.o \
 	gl/Buffer.o gl/Capabilities.o \
 	gl/Debug.o gl/Extensions.o \
 	gl/Helpers.o gl/Program.o gl/Sampler.o \
