@@ -6,6 +6,7 @@
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
+#include "engine/gl/Texture.hpp"
 #include "engine/gl/TextureUnits.hpp"
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
@@ -14,6 +15,10 @@ namespace {
 
 constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION = 0;
 constexpr GLint BLIT_TEXTURE_SLOT             = 0; // TODO: 1 and above slots don't work
+
+constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
+    255, 42, 255,
+};
 
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
@@ -49,6 +54,7 @@ GpuProgram CommonRenderers::blitProgram_{};
 Sampler CommonRenderers::samplerNearest_{};
 Sampler CommonRenderers::samplerLinear_{};
 Sampler CommonRenderers::samplerLinearMip_{};
+Texture CommonRenderers::stubColorTexture_{};
 
 void CommonRenderers::Initialize() {
     axesRenderer_          = AllocateAxesRenderer();
@@ -70,6 +76,9 @@ void CommonRenderers::Initialize() {
                             .WithLinearMinifyOverMips(true, true)
                             .WithAnisotropicFilter(8.0f)
                             .WithWrap(GL_CLAMP_TO_EDGE);
+    stubColorTexture_ = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
+    (void)gl::TextureCtx{stubColorTexture_}
+        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, TEXTURE_DATA_STUB_COLOR, stubColorTexture_.Size());
 }
 
 void CommonRenderers::RenderAxes(glm::mat4 const& mvp) {

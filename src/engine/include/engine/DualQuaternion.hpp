@@ -4,7 +4,7 @@
 
 namespace engine::math {
 
-struct DualNumber {
+struct DualNumber final {
     float real;
     float dual;
 
@@ -27,7 +27,7 @@ struct DualNumber {
     }
 };
 
-struct DualQuat {
+struct DualQuat final {
     glm::quat real;
     glm::quat dual;
 
@@ -86,7 +86,7 @@ struct DualQuat {
     }
 };
 
-struct DualQuatTransform {
+struct DualQuatTransform final {
     // to convert into 4x4 matrix
     // the dual quat should be stored in form
     // q = r + t * epsilon * r

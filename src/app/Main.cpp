@@ -172,10 +172,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
+        gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, gl::CommonRenderers::TextureStubColor().Id());
         if (windowCtx.MouseInsideWindow()) {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::GetSamplerNearest().Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::SamplerNearest().Id());
         } else {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::GetSamplerLinearMips().Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::SamplerLinearMips().Id());
         }
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));

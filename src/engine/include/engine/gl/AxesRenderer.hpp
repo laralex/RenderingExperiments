@@ -8,7 +8,7 @@
 
 namespace engine::gl {
 
-struct AxesRenderer {
+struct AxesRenderer final {
     AxesRenderer() = default;
     Vao vao;
     GpuBuffer attributeBuffer;

@@ -29,7 +29,4 @@ struct GlHandle {
     GLuint id;
 };
 
-void BlitFramebuffers(
-    GLuint srcFramebuffer, GLuint dstFramebuffer, GLbitfield colorDepthStencilMask, bool filterLinear);
-
 } // namespace engine::gl
