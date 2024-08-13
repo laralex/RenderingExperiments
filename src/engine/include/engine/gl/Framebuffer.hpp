@@ -59,8 +59,8 @@ public:
 
 private:
     static GlHandle contextFramebuffer_;
+    static GLenum framebufferTarget_;
     static bool hasInstances_;
-    static bool isDrawBinding_;
 };
 
 } // namespace engine::gl

@@ -40,7 +40,7 @@ obj_engine_ = Assets.o \
 	Prelude.o WindowContext.o
 
 obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
-obj_engine = $(addprefix ${BUILD_DIR}/engine/, ${obj_engine_})
+obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})
 hpp_engine = $(wildcard src/engine/include/engine/*)
 hpp_engine_private = $(wildcard src/engine/include_private/engine_private/*)
 
@@ -65,7 +65,7 @@ clean_own:
 build_app: ${BUILD_DIR}/engine/libengine.a ${BUILD_DIR}/app ${APP_EXE}
 
 .PHONY: build_engine
-build_engine: ${BUILD_DIR}/engine ${BUILD_DIR}/engine/gl ${BUILD_DIR}/engine/libengine.a
+build_engine: ${BUILD_DIR}/engine/src/gl ${BUILD_DIR}/engine/libengine.a
 
 .PHONY: ${INSTALL_DIR}/run_app
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
@@ -115,7 +115,7 @@ ${BUILD_DIR}/third_party/glm_install/glm/libglm.a:
 	cmake --build ${BUILD_DIR}/third_party/glm -- all
 	cmake --build ${BUILD_DIR}/third_party/glm -- install
 
-${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/engine/gl ${INSTALL_DIR}:
+${BUILD_DIR}/app ${BUILD_DIR}/engine/src/gl ${INSTALL_DIR}:
 	mkdir -p $@
 
 .PHONY: init_repo

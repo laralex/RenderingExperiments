@@ -151,10 +151,13 @@ auto AllocateAxesRenderer() -> AxesRenderer {
 void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp) {
     auto programGuard = gl::UniformCtx(renderer.program);
     gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
+    GLCALL(glBindVertexArray(renderer.vao.Id()));
+
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
-    GLCALL(glBindVertexArray(renderer.vao.Id()));
+    GLCALL(glDepthFunc(GL_LEQUAL));
+
     GLCALL(glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_BYTE, 0));
 }
 

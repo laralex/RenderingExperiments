@@ -27,7 +27,7 @@ public:
     static auto IsInitialized [[nodiscard]] () { return isInitialized_; }
 
     static void RenderAxes(glm::mat4 const& mvp);
-    static void Blit2D(GLuint srcTexture, GLuint dstFramebuffer);
+    static void Blit2D(GLuint srcTexture);
 
     static auto VaoFullscreen() -> gl::Vao const& { return fullscreenTriangleVao_; }
     static auto SamplerNearest() -> gl::Sampler const& { return samplerNearest_; }

@@ -14,7 +14,8 @@ VaoCtx::VaoCtx(Vao const& useVao) {
 }
 
 VaoCtx::~VaoCtx() {
-    assert(hasInstances_);
+    if (!hasInstances_) { return; }
+    // assert(hasInstances_);
     contextVao_.id = GL_NONE;
     GLCALL(glBindVertexArray(contextVao_));
     hasInstances_ = false;

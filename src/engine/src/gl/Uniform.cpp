@@ -14,7 +14,8 @@ UniformCtx::UniformCtx(GpuProgram const& useProgram) {
 }
 
 UniformCtx::~UniformCtx() {
-    assert(hasInstances_);
+    if (!hasInstances_) { return; }
+    // assert(hasInstances_);
     contextProgram_.id = GL_NONE;
     GLCALL(glUseProgram(contextProgram_));
     hasInstances_ = false;

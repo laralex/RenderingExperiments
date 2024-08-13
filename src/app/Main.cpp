@@ -23,8 +23,6 @@ struct Application final {
     engine::gl::GpuBuffer attributeBuffer{};
     engine::gl::GpuBuffer indexBuffer{};
     engine::gl::Texture texture{};
-    engine::gl::Framebuffer debugFramebuffer{};
-    engine::gl::Texture debugDepth{};
     engine::gl::Framebuffer outputFramebuffer{};
     engine::gl::Texture outputColor{};
     engine::gl::Texture outputDepth{};
@@ -59,12 +57,14 @@ constexpr GLint ATTRIB_POSITION_LOCATION = 0;
 constexpr GLint ATTRIB_UV_LOCATION       = 1;
 constexpr GLint UNIFORM_TEXTURE_LOCATION = 0;
 constexpr GLint UNIFORM_MVP_LOCATION     = 10;
+constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
-        glm::ivec2 screenSize = windowCtx.WindowSize();
+        // glm::ivec2 screenSize = windowCtx.WindowSize();
+        glm::ivec2 screenSize = INTERMEDITE_RENDER_RESOLUTION;
         gl::InitializeOpenGl();
 
         constexpr static int32_t NUM_VDEFINES   = 3;
@@ -122,12 +122,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
             .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
 
-        app->debugDepth = gl::Texture::Allocate2D(
-            GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Debug depth");
-        app->debugFramebuffer = gl::Framebuffer::Allocate("Debug Pass FBO");
-        (void)gl::FramebufferCtx{app->debugFramebuffer, true}
-            .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
-            .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->debugDepth);
+        // app->debugDepth = gl::Texture::Allocate2D(
+        //     GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Debug depth");
+        // app->debugFramebuffer = gl::Framebuffer::Allocate("Debug Pass FBO");
+        // (void)gl::FramebufferCtx{app->debugFramebuffer, true}
+        //     .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
+        //     .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->debugDepth);
         app->isInitialized = true;
     }
 
@@ -160,7 +160,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::mat4 proj           = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
     glm::mat4 view           = glm::lookAtRH(cameraPosition, cameraTarget, cameraUp);
     glm::mat4 camera         = proj * view;
-    XLOG("screen {} {}", renderSize.x, renderSize.y);
 
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
@@ -175,7 +174,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
-        gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, gl::CommonRenderers::TextureStubColor().Id());
+        // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, gl::CommonRenderers::TextureStubColor().Id());
         if (windowCtx.MouseInsideWindow()) {
             gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::SamplerNearest().Id());
         } else {
@@ -194,19 +193,26 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     }
 
     {
-        auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
-        // auto fbGuard         = gl::FramebufferCtx{0U, true};
-        auto fbGuard = gl::FramebufferCtx{app->debugFramebuffer, true};
-        fbGuard      = fbGuard.ClearDepth(1.0f);
-        glm::mat4 model = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 mvp   = camera * model;
-        gl::CommonRenderers::RenderAxes(mvp);
+        // present
+        glViewport(0, 0, screenSize.x, screenSize.y);
+        GLenum invalidateAttachments[1] = { GL_COLOR_ATTACHMENT0 };
+        auto dstGuard = gl::FramebufferCtx{0U, true}
+            .ClearDepthStencil(1.0f, 0);
+            // .Invalidate(1, invalidateAttachments);
+        gl::CommonRenderers::Blit2D(app->outputColor.Id());
     }
 
     {
-        // present
-        glViewport(0, 0, screenSize.x, screenSize.y);
-        gl::CommonRenderers::Blit2D(app->outputColor.Id(), 0U);
+        auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
+        auto fbGuard         = gl::FramebufferCtx{0U, true};
+
+        // GLCALL(glClearDepth(1.0f));
+        // GLCALL(glClear(GL_DEPTH_BUFFER_BIT));
+        // auto fbGuard = gl::FramebufferCtx{app->debugFramebuffer, true};
+        // fbGuard = fbGuard
+        glm::mat4 model = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 mvp   = camera * model;
+        gl::CommonRenderers::RenderAxes(mvp);
     }
 
     gl::GlTextureUnits::RestoreState();

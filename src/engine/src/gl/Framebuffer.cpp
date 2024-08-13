@@ -5,23 +5,26 @@ namespace engine::gl {
 
 bool FramebufferCtx::hasInstances_{false};
 GlHandle FramebufferCtx::contextFramebuffer_{GL_NONE};
-bool FramebufferCtx::isDrawBinding_{false};
+GLenum FramebufferCtx::framebufferTarget_{GL_DRAW_FRAMEBUFFER};
 
 FramebufferCtx::FramebufferCtx(Framebuffer const& useFramebuffer, bool bindAsDraw)
     : FramebufferCtx(useFramebuffer.Id(), bindAsDraw) { }
 
 FramebufferCtx::FramebufferCtx(GLuint useFramebuffer, bool bindAsDraw) {
+    // XLOG("FramebufferCtx ctor {}", useFramebuffer);
     assert(!hasInstances_);
     contextFramebuffer_.id = useFramebuffer;
-    isDrawBinding_         = bindAsDraw;
-    GLCALL(glBindFramebuffer(bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER, contextFramebuffer_.id));
+    framebufferTarget_ = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
+    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id));
     hasInstances_ = true;
 }
 
 FramebufferCtx::~FramebufferCtx() {
-    assert(hasInstances_);
+    // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
+    if (!hasInstances_) { return; }
+    // assert(hasInstances_);
     contextFramebuffer_.id = GL_NONE;
-    GLCALL(glBindVertexArray(contextFramebuffer_.id));
+    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id));
     hasInstances_ = false;
 }
 

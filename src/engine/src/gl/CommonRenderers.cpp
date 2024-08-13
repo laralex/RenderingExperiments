@@ -3,6 +3,7 @@
 #include "engine/Assets.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Framebuffer.hpp"
+#include "engine/gl/Guard.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
@@ -86,11 +87,11 @@ void CommonRenderers::RenderAxes(glm::mat4 const& mvp) {
     gl::RenderAxes(axesRenderer_, mvp);
 }
 
-void CommonRenderers::Blit2D(GLuint srcTexture, GLuint dstFramebuffer) {
-    auto dstGuard = FramebufferCtx{dstFramebuffer, true};
-    GlTextureUnits::Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
+void CommonRenderers::Blit2D(GLuint srcTexture) {
     auto programGuard = gl::UniformCtx(blitProgram_);
     auto vaoGuard     = gl::VaoCtx{fullscreenTriangleVao_};
+    gl::GlTextureUnits::Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
+    //auto depthGuard = gl::GlGuardDepth(false);
 
     GLCALL(glEnable(GL_CULL_FACE));
     GLCALL(glDisable(GL_BLEND));

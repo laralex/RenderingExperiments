@@ -16,7 +16,8 @@ TextureCtx::TextureCtx(Texture const& useTexture) {
 }
 
 TextureCtx::~TextureCtx() {
-    assert(hasInstances_);
+    if (!hasInstances_) { return; }
+    // assert(hasInstances_);
     contextTexture_.id = GL_NONE;
     GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
     hasInstances_ = false;
