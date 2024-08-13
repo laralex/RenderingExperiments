@@ -32,6 +32,8 @@ public:
         ARB_ES3_2_compatibility,
         ARB_invalidate_subdata,
         ARB_framebuffer_sRGB,
+        ARB_texture_storage,
+        ARB_texture_storage_multisample,
         EXT_debug_label,
         EXT_debug_marker,
         EXT_texture_filter_anisotropic,

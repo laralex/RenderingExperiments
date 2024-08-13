@@ -47,24 +47,32 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
     texture.internalFormat_ = internalFormat;
 
     GLCALL(glBindTexture(texture.textureType_, texture.textureId_.id));
-    constexpr GLint border = 0;
-    GLenum clientFormat    = GL_RGBA;
-    GLenum clientType      = GL_UNSIGNED_BYTE;
-    if (texture.internalFormat_ == GL_DEPTH_STENCIL | texture.internalFormat_ == GL_DEPTH24_STENCIL8
-        | texture.internalFormat_ == GL_DEPTH32F_STENCIL8) {
-        clientFormat = GL_DEPTH_STENCIL;
-        clientType   = GL_UNSIGNED_INT_24_8;
-    } else if (
-        texture.internalFormat_ == GL_DEPTH_COMPONENT | texture.internalFormat_ == GL_DEPTH_COMPONENT16
-        | texture.internalFormat_ == GL_DEPTH_COMPONENT24 | texture.internalFormat_ == GL_DEPTH_COMPONENT32
-        | texture.internalFormat_ == GL_DEPTH_COMPONENT32F) {
-        clientFormat = GL_DEPTH_COMPONENT;
-        clientType   = GL_UNSIGNED_INT;
-    }
-    GLCALL(glTexImage2D(
-        texture.textureType_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, clientFormat,
-        clientType, nullptr));
 
+    assert(GlExtensions::IsInitialized());
+    if (!GlExtensions::Supports(GlExtensions::ARB_texture_storage)) {
+        constexpr GLint border = 0;
+        GLenum clientFormat    = GL_RGBA;
+        GLenum clientType      = GL_UNSIGNED_BYTE;
+        if (texture.internalFormat_ == GL_DEPTH_STENCIL | texture.internalFormat_ == GL_DEPTH24_STENCIL8
+            | texture.internalFormat_ == GL_DEPTH32F_STENCIL8) {
+            clientFormat = GL_DEPTH_STENCIL;
+            clientType   = GL_UNSIGNED_INT_24_8;
+        } else if (
+            texture.internalFormat_ == GL_DEPTH_COMPONENT | texture.internalFormat_ == GL_DEPTH_COMPONENT16
+            | texture.internalFormat_ == GL_DEPTH_COMPONENT24 | texture.internalFormat_ == GL_DEPTH_COMPONENT32
+            | texture.internalFormat_ == GL_DEPTH_COMPONENT32F) {
+            clientFormat = GL_DEPTH_COMPONENT;
+            clientType   = GL_UNSIGNED_INT;
+        };
+        GLCALL(glTexImage2D(
+            texture.textureType_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, clientFormat,
+            clientType, nullptr));
+    } else {
+        // immutable texture (storage requirements can't change, but faster runtime check of texture completeness)
+        constexpr GLsizei numLevels = 1;
+        GLCALL(glTexStorage2D(
+            texture.textureType_, numLevels, texture.internalFormat_, texture.size_.x, texture.size_.y));
+    }
     GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
     GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));

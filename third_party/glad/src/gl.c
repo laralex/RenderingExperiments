@@ -47,6 +47,8 @@ int GLAD_GL_ARB_ES3_2_compatibility = 0;
 int GLAD_GL_ARB_debug_output = 0;
 int GLAD_GL_ARB_framebuffer_sRGB = 0;
 int GLAD_GL_ARB_invalidate_subdata = 0;
+int GLAD_GL_ARB_texture_storage = 0;
+int GLAD_GL_ARB_texture_storage_multisample = 0;
 int GLAD_GL_EXT_debug_label = 0;
 int GLAD_GL_EXT_debug_marker = 0;
 int GLAD_GL_EXT_texture_filter_anisotropic = 0;
@@ -1477,6 +1479,17 @@ static void glad_gl_load_GL_ARB_invalidate_subdata( GLADuserptrloadfunc load, vo
     glad_glInvalidateTexImage = (PFNGLINVALIDATETEXIMAGEPROC) load(userptr, "glInvalidateTexImage");
     glad_glInvalidateTexSubImage = (PFNGLINVALIDATETEXSUBIMAGEPROC) load(userptr, "glInvalidateTexSubImage");
 }
+static void glad_gl_load_GL_ARB_texture_storage( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_texture_storage) return;
+    glad_glTexStorage1D = (PFNGLTEXSTORAGE1DPROC) load(userptr, "glTexStorage1D");
+    glad_glTexStorage2D = (PFNGLTEXSTORAGE2DPROC) load(userptr, "glTexStorage2D");
+    glad_glTexStorage3D = (PFNGLTEXSTORAGE3DPROC) load(userptr, "glTexStorage3D");
+}
+static void glad_gl_load_GL_ARB_texture_storage_multisample( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_texture_storage_multisample) return;
+    glad_glTexStorage2DMultisample = (PFNGLTEXSTORAGE2DMULTISAMPLEPROC) load(userptr, "glTexStorage2DMultisample");
+    glad_glTexStorage3DMultisample = (PFNGLTEXSTORAGE3DMULTISAMPLEPROC) load(userptr, "glTexStorage3DMultisample");
+}
 static void glad_gl_load_GL_EXT_debug_label( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_GL_EXT_debug_label) return;
     glad_glGetObjectLabelEXT = (PFNGLGETOBJECTLABELEXTPROC) load(userptr, "glGetObjectLabelEXT");
@@ -1602,6 +1615,8 @@ static int glad_gl_find_extensions_gl(void) {
     GLAD_GL_ARB_debug_output = glad_gl_has_extension(exts, exts_i, "GL_ARB_debug_output");
     GLAD_GL_ARB_framebuffer_sRGB = glad_gl_has_extension(exts, exts_i, "GL_ARB_framebuffer_sRGB");
     GLAD_GL_ARB_invalidate_subdata = glad_gl_has_extension(exts, exts_i, "GL_ARB_invalidate_subdata");
+    GLAD_GL_ARB_texture_storage = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage");
+    GLAD_GL_ARB_texture_storage_multisample = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage_multisample");
     GLAD_GL_EXT_debug_label = glad_gl_has_extension(exts, exts_i, "GL_EXT_debug_label");
     GLAD_GL_EXT_debug_marker = glad_gl_has_extension(exts, exts_i, "GL_EXT_debug_marker");
     GLAD_GL_EXT_texture_filter_anisotropic = glad_gl_has_extension(exts, exts_i, "GL_EXT_texture_filter_anisotropic");
@@ -1696,6 +1711,8 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     glad_gl_load_GL_ARB_ES3_2_compatibility(load, userptr);
     glad_gl_load_GL_ARB_debug_output(load, userptr);
     glad_gl_load_GL_ARB_invalidate_subdata(load, userptr);
+    glad_gl_load_GL_ARB_texture_storage(load, userptr);
+    glad_gl_load_GL_ARB_texture_storage_multisample(load, userptr);
     glad_gl_load_GL_EXT_debug_label(load, userptr);
     glad_gl_load_GL_EXT_debug_marker(load, userptr);
     glad_gl_load_GL_KHR_debug(load, userptr);
