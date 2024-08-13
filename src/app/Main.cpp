@@ -122,34 +122,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
             .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
 
-        // app->debugDepth = gl::Texture::Allocate2D(
-        //     GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Debug depth");
-        // app->debugFramebuffer = gl::Framebuffer::Allocate("Debug Pass FBO");
-        // (void)gl::FramebufferCtx{app->debugFramebuffer, true}
-        //     .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
-        //     .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->debugDepth);
         app->isInitialized = true;
     }
-
-    GLfloat const color[]{0.5f * (std::sin(ctx.timeSec) + 1.0f), 0.0f, 0.0f, 1.0f};
-    gl::GlGuardAux guardBind;
-    gl::GlGuardVertex guardVert(true);
-    gl::GlGuardFlags guardF;
-    gl::GlGuardDepth guardD(true);
-    gl::GlGuardStencil guardS;
-    gl::GlGuardBlend guardB(true);
-    gl::GlGuardViewport guardV(true);
-    gl::GlGuardColor guardR;
-    gl::GlGuardFramebuffer guardFb(true);
-
-    gl::GlTextureUnits::BeginStateSnapshot();
-    gl::GlTextureUnits::Bind2D(0U, 0U);
-    gl::GlTextureUnits::Bind2D(1U, 0U);
-    gl::GlTextureUnits::Bind2D(2U, 0U);
-    gl::GlTextureUnits::BindCubemap(0U, 0U);
-    gl::GlTextureUnits::BindCubemap(1U, 0U);
-    gl::GlTextureUnits::BindCubemap(2U, 0U);
-    gl::GlTextureUnits::EndStateSnapshot();
 
     glm::vec3 cameraPosition = glm::vec3(0.0f, 2.0f, std::sin(ctx.timeSec) - 1.5f);
     glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -206,10 +180,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
 
-        // GLCALL(glClearDepth(1.0f));
-        // GLCALL(glClear(GL_DEPTH_BUFFER_BIT));
-        // auto fbGuard = gl::FramebufferCtx{app->debugFramebuffer, true};
-        // fbGuard = fbGuard
         glm::mat4 model = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
         glm::mat4 mvp   = camera * model;
         gl::CommonRenderers::RenderAxes(mvp);
