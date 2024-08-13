@@ -70,7 +70,6 @@ void GlfwCursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
 void GlfwResizeCallback(GLFWwindow* window, int width, int height) {
     auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
-    glViewport(0, 0, width, height);
     ctx->UpdateResolution(width, height);
 }
 

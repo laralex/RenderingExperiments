@@ -154,14 +154,17 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::vec3 cameraPosition = glm::vec3(0.0f, 2.0f, std::sin(ctx.timeSec) - 1.5f);
     glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraUp       = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::ivec2 renderSize    = app->outputColor.Size();
     glm::ivec2 screenSize    = windowCtx.WindowSize();
     float aspectRatio        = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
     glm::mat4 proj           = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
     glm::mat4 view           = glm::lookAtRH(cameraPosition, cameraTarget, cameraUp);
     glm::mat4 camera         = proj * view;
+    XLOG("screen {} {}", renderSize.x, renderSize.y);
 
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
+        glViewport(0, 0, renderSize.x, renderSize.y);
         auto fbGuard         = gl::FramebufferCtx{app->outputFramebuffer, true};
         fbGuard              = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
 
@@ -202,6 +205,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     {
         // present
+        glViewport(0, 0, screenSize.x, screenSize.y);
         gl::CommonRenderers::Blit2D(app->outputColor.Id(), 0U);
     }
 
