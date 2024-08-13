@@ -1,0 +1,94 @@
+#include "engine/gl/AxesRenderer.hpp"
+
+#include "engine/Assets.hpp"
+#include "engine/gl/CommonRenderers.hpp"
+#include "engine/gl/Framebuffer.hpp"
+#include "engine/gl/Program.hpp"
+#include "engine/gl/Sampler.hpp"
+#include "engine/gl/Shader.hpp"
+#include "engine/gl/TextureUnits.hpp"
+#include "engine/gl/Uniform.hpp"
+#include "engine/gl/Vao.hpp"
+
+namespace {
+
+constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION = 0;
+constexpr GLint BLIT_TEXTURE_SLOT             = 0; // TODO: 1 and above slots don't work
+
+auto AllocateBlitter() -> engine::gl::GpuProgram {
+    using namespace engine;
+    constexpr static int32_t NUM_FRAG_MACROS     = 1;
+    gl::ShaderDefine fragMacros[NUM_FRAG_MACROS] = {
+        {.name = "UNIFORM_TEXTURE_LOCATION", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
+    };
+    std::string vertexShaderCode   = gl::LoadShaderCode("data/engine/shaders/triangle_fullscreen.vert", nullptr, 0);
+    std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/blit.frag", fragMacros, NUM_FRAG_MACROS);
+    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
+    assert(vertexShader != GL_NONE && "AllocateBlitter");
+    GLuint fragmentShader = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
+    assert(fragmentShader != GL_NONE && "AllocateBlitter");
+    gl::GpuProgram blitProgram = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Blit");
+
+    GLCALL(glDeleteShader(vertexShader));
+    GLCALL(glDeleteShader(fragmentShader));
+
+    auto programGuard = gl::UniformCtx(blitProgram);
+    gl::UniformTexture(BLIT_UNIFORM_TEXTURE_LOCATION, BLIT_TEXTURE_SLOT);
+
+    return blitProgram;
+}
+
+} // namespace
+
+namespace engine::gl {
+
+bool CommonRenderers::isInitialized_{false};
+AxesRenderer CommonRenderers::axesRenderer_{};
+Vao CommonRenderers::fullscreenTriangleVao_{};
+GpuProgram CommonRenderers::blitProgram_{};
+Sampler CommonRenderers::samplerNearest_{};
+Sampler CommonRenderers::samplerLinear_{};
+Sampler CommonRenderers::samplerLinearMip_{};
+
+void CommonRenderers::Initialize() {
+    axesRenderer_          = AllocateAxesRenderer();
+    fullscreenTriangleVao_ = Vao::Allocate("Fullscreen triangle");
+    isInitialized_         = true;
+    blitProgram_           = AllocateBlitter();
+
+    samplerNearest_ = gl::Sampler::Allocate("Sampler nearset")
+                          .WithLinearMagnify(false)
+                          .WithLinearMinify(false)
+                          .WithWrap(GL_CLAMP_TO_EDGE);
+    samplerLinear_ = gl::Sampler::Allocate("Sampler linear")
+                         .WithLinearMagnify(true)
+                         .WithLinearMinify(true)
+                         .WithWrap(GL_CLAMP_TO_EDGE);
+    samplerLinearMip_ = gl::Sampler::Allocate("Sampler linear+mips")
+                            .WithLinearMagnify(true)
+                            .WithLinearMinify(true)
+                            .WithLinearMinifyOverMips(true, true)
+                            .WithAnisotropicFilter(8.0f)
+                            .WithWrap(GL_CLAMP_TO_EDGE);
+}
+
+void CommonRenderers::RenderAxes(glm::mat4 const& mvp) {
+    assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
+    gl::RenderAxes(axesRenderer_, mvp);
+}
+
+void CommonRenderers::Blit2D(GLuint srcTexture, GLuint dstFramebuffer) {
+    auto dstGuard = FramebufferCtx{dstFramebuffer, true};
+    GlTextureUnits::Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
+    auto programGuard = gl::UniformCtx(blitProgram_);
+    auto vaoGuard     = gl::VaoCtx{fullscreenTriangleVao_};
+
+    GLCALL(glEnable(GL_CULL_FACE));
+    GLCALL(glDisable(GL_BLEND));
+    GLCALL(glDisable(GL_DEPTH_TEST));
+    GLCALL(glDepthMask(GL_FALSE));
+
+    GLCALL(glDrawArrays(GL_TRIANGLES, 0, 3));
+}
+
+} // namespace engine::gl

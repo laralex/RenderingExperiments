@@ -46,6 +46,7 @@ int GLAD_GL_AMD_debug_output = 0;
 int GLAD_GL_ARB_ES3_2_compatibility = 0;
 int GLAD_GL_ARB_debug_output = 0;
 int GLAD_GL_ARB_framebuffer_sRGB = 0;
+int GLAD_GL_ARB_invalidate_subdata = 0;
 int GLAD_GL_EXT_debug_label = 0;
 int GLAD_GL_EXT_debug_marker = 0;
 int GLAD_GL_EXT_texture_filter_anisotropic = 0;
@@ -1467,6 +1468,15 @@ static void glad_gl_load_GL_ARB_debug_output( GLADuserptrloadfunc load, void* us
     glad_glDebugMessageInsertARB = (PFNGLDEBUGMESSAGEINSERTARBPROC) load(userptr, "glDebugMessageInsertARB");
     glad_glGetDebugMessageLogARB = (PFNGLGETDEBUGMESSAGELOGARBPROC) load(userptr, "glGetDebugMessageLogARB");
 }
+static void glad_gl_load_GL_ARB_invalidate_subdata( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_invalidate_subdata) return;
+    glad_glInvalidateBufferData = (PFNGLINVALIDATEBUFFERDATAPROC) load(userptr, "glInvalidateBufferData");
+    glad_glInvalidateBufferSubData = (PFNGLINVALIDATEBUFFERSUBDATAPROC) load(userptr, "glInvalidateBufferSubData");
+    glad_glInvalidateFramebuffer = (PFNGLINVALIDATEFRAMEBUFFERPROC) load(userptr, "glInvalidateFramebuffer");
+    glad_glInvalidateSubFramebuffer = (PFNGLINVALIDATESUBFRAMEBUFFERPROC) load(userptr, "glInvalidateSubFramebuffer");
+    glad_glInvalidateTexImage = (PFNGLINVALIDATETEXIMAGEPROC) load(userptr, "glInvalidateTexImage");
+    glad_glInvalidateTexSubImage = (PFNGLINVALIDATETEXSUBIMAGEPROC) load(userptr, "glInvalidateTexSubImage");
+}
 static void glad_gl_load_GL_EXT_debug_label( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_GL_EXT_debug_label) return;
     glad_glGetObjectLabelEXT = (PFNGLGETOBJECTLABELEXTPROC) load(userptr, "glGetObjectLabelEXT");
@@ -1591,6 +1601,7 @@ static int glad_gl_find_extensions_gl(void) {
     GLAD_GL_ARB_ES3_2_compatibility = glad_gl_has_extension(exts, exts_i, "GL_ARB_ES3_2_compatibility");
     GLAD_GL_ARB_debug_output = glad_gl_has_extension(exts, exts_i, "GL_ARB_debug_output");
     GLAD_GL_ARB_framebuffer_sRGB = glad_gl_has_extension(exts, exts_i, "GL_ARB_framebuffer_sRGB");
+    GLAD_GL_ARB_invalidate_subdata = glad_gl_has_extension(exts, exts_i, "GL_ARB_invalidate_subdata");
     GLAD_GL_EXT_debug_label = glad_gl_has_extension(exts, exts_i, "GL_EXT_debug_label");
     GLAD_GL_EXT_debug_marker = glad_gl_has_extension(exts, exts_i, "GL_EXT_debug_marker");
     GLAD_GL_EXT_texture_filter_anisotropic = glad_gl_has_extension(exts, exts_i, "GL_EXT_texture_filter_anisotropic");
@@ -1684,6 +1695,7 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     glad_gl_load_GL_AMD_debug_output(load, userptr);
     glad_gl_load_GL_ARB_ES3_2_compatibility(load, userptr);
     glad_gl_load_GL_ARB_debug_output(load, userptr);
+    glad_gl_load_GL_ARB_invalidate_subdata(load, userptr);
     glad_gl_load_GL_EXT_debug_label(load, userptr);
     glad_gl_load_GL_EXT_debug_marker(load, userptr);
     glad_gl_load_GL_KHR_debug(load, userptr);

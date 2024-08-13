@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "engine/gl/Capabilities.hpp"
+#include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Extensions.hpp"
 #include <engine/gl/Debug.hpp>
 #include <engine/gl/Helpers.hpp>

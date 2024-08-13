@@ -27,9 +27,12 @@ CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
 
-obj_engine_ = Assets.o AxesRenderer.o EngineLoop.o \
+obj_engine_ = Assets.o \
+	EngineLoop.o \
+	gl/AxesRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
-	gl/Debug.o gl/Extensions.o \
+	gl/CommonRenderers.o gl/Debug.o \
+	gl/Extensions.o gl/Framebuffer.o \
 	gl/Helpers.o gl/Program.o gl/Sampler.o \
 	gl/Shader.o gl/Texture.o \
 	gl/TextureUnits.o gl/Uniform.o \
@@ -64,6 +67,7 @@ build_app: ${BUILD_DIR}/engine/libengine.a ${BUILD_DIR}/app ${APP_EXE}
 .PHONY: build_engine
 build_engine: ${BUILD_DIR}/engine ${BUILD_DIR}/engine/gl ${BUILD_DIR}/engine/libengine.a
 
+.PHONY: ${INSTALL_DIR}/run_app
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(vert\|frag\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	cp ${APP_EXE} $@

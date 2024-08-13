@@ -3,18 +3,21 @@
 
 namespace engine::gl {
 
-bool UniformCtx::hasInstances = false;
+bool UniformCtx::hasInstances_{false};
+GlHandle UniformCtx::contextProgram_{GL_NONE};
 
 UniformCtx::UniformCtx(GpuProgram const& useProgram) {
-    assert(!hasInstances);
-    GLCALL(glUseProgram(useProgram.Id()));
-    hasInstances = true;
+    assert(!hasInstances_);
+    contextProgram_.id = useProgram.Id();
+    GLCALL(glUseProgram(contextProgram_));
+    hasInstances_ = true;
 }
 
 UniformCtx::~UniformCtx() {
-    assert(hasInstances);
-    GLCALL(glUseProgram(0U));
-    hasInstances = false;
+    assert(hasInstances_);
+    contextProgram_.id = GL_NONE;
+    GLCALL(glUseProgram(contextProgram_));
+    hasInstances_ = false;
 }
 
 void UniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {

@@ -217,6 +217,7 @@ ENGINE_EXPORT void SetApplicationData(EngineHandle engine, void* applicationData
 }
 
 ENGINE_EXPORT void BlockOnLoop(EngineHandle engine) {
+    spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v");
     WindowCtx& windowCtx = engine->windowCtx;
     GLFWwindow* window   = windowCtx.Window();
     glfwSetWindowUserPointer(window, &windowCtx);

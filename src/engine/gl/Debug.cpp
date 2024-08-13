@@ -1,9 +1,10 @@
+#include "engine/Prelude.hpp"
 #include "engine/gl/Buffer.hpp"
+#include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Texture.hpp"
 #include "engine/gl/Vao.hpp"
-#include "engine/Prelude.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace {
@@ -48,16 +49,16 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
     // + GL_SAMPLER
     // + GL_TEXTURE
     // GL_RENDERBUFFER
-    // GL_FRAMEBUFFER
+    // + GL_FRAMEBUFFER
     // + sync objects (pointers)
     if (GlExtensions::Supports(GlExtensions::KHR_debug)) {
         GLCALL(glObjectLabel(objectTypeKhr, objectId, label.size(), label.data()));
         return;
     }
     // + TEXTURE
-    // FRAMEBUFFER
+    // + FRAMEBUFFER
     // RENDERBUFFER,
-    // SAMPLER
+    // + SAMPLER
     // TRANSFORM_FEEDBACK
     // + BUFFER_OBJECT_EXT
     // SHADER_OBJECT_EXT
@@ -152,6 +153,10 @@ void CheckOpenGlError(const char* stmt, const char* fname, int line, bool fatal)
     if (fatal) { std::terminate(); }
 }
 
+DebugGroupCtx::DebugGroupCtx(std::string_view label, GLuint userData) { PushDebugGroup(label, userData); }
+
+DebugGroupCtx::~DebugGroupCtx() { PopDebugGroup(); }
+
 void PushDebugGroup(std::string_view label, GLuint userData) {
     assert(GlExtensions::IsInitialized());
     if (GlExtensions::Supports(GlExtensions::KHR_debug)) {
@@ -234,6 +239,18 @@ auto GetDebugLabel(Sampler const& sampler, char* outBuffer, size_t outBufferSize
 
 void LogDebugLabel(Sampler const& sampler, char const* message) {
     ::LogDebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), message);
+}
+
+void DebugLabel(Framebuffer const& fb, std::string_view label) {
+    ::DebugLabel(GL_FRAMEBUFFER, GL_FRAMEBUFFER, fb.Id(), label);
+}
+
+auto GetDebugLabel(Framebuffer const& fb, char* outBuffer, size_t outBufferSize) -> size_t {
+    return ::GetDebugLabel(GL_FRAMEBUFFER, GL_FRAMEBUFFER, fb.Id(), outBuffer, outBufferSize);
+}
+
+void LogDebugLabel(Framebuffer const& fb, char const* message) {
+    ::LogDebugLabel(GL_FRAMEBUFFER, GL_FRAMEBUFFER, fb.Id(), message);
 }
 
 void DebugLabel(void* glSyncObject, std::string_view label) {

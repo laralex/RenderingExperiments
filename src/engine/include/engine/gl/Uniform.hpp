@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/gl/Program.hpp"
 #include "engine/Prelude.hpp"
+#include "engine/gl/Program.hpp"
 
 namespace engine::gl {
 
@@ -18,7 +18,8 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 private:
-    static bool hasInstances;
+    static GlHandle contextProgram_;
+    static bool hasInstances_;
 };
 
 template <typename T> void UniformValue(GLint location, T const value) {

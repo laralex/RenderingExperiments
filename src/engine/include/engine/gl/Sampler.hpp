@@ -9,7 +9,7 @@ class Sampler final {
 
 public:
 #define Self Sampler
-    explicit Self()             = default;
+    explicit Self() = default;
     ~Self() { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;

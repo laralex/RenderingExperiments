@@ -3,6 +3,25 @@
 
 namespace engine::gl {
 
+bool TextureCtx::hasInstances_{false};
+GlHandle TextureCtx::contextTexture_{GL_NONE};
+GLenum TextureCtx::contextTextureType_{GL_NONE};
+
+TextureCtx::TextureCtx(Texture const& useTexture) {
+    assert(!hasInstances_);
+    contextTexture_.id  = useTexture.Id();
+    contextTextureType_ = useTexture.TextureType();
+    GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
+    hasInstances_ = true;
+}
+
+TextureCtx::~TextureCtx() {
+    assert(hasInstances_);
+    contextTexture_.id = GL_NONE;
+    GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
+    hasInstances_ = false;
+}
+
 void Texture::Dispose() {
     if (textureId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "Texture object was disposed");
@@ -26,11 +45,32 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
     texture.textureType_    = textureType;
     texture.size_           = glm::ivec3(size.x, size.y, 0);
     texture.internalFormat_ = internalFormat;
+
     GLCALL(glBindTexture(texture.textureType_, texture.textureId_.id));
     constexpr GLint border = 0;
+    GLenum clientFormat    = GL_RGBA;
+    GLenum clientType      = GL_UNSIGNED_BYTE;
+    if (texture.internalFormat_ == GL_DEPTH_STENCIL | texture.internalFormat_ == GL_DEPTH24_STENCIL8
+        | texture.internalFormat_ == GL_DEPTH32F_STENCIL8) {
+        clientFormat = GL_DEPTH_STENCIL;
+        clientType   = GL_UNSIGNED_INT_24_8;
+    } else if (
+        texture.internalFormat_ == GL_DEPTH_COMPONENT | texture.internalFormat_ == GL_DEPTH_COMPONENT16
+        | texture.internalFormat_ == GL_DEPTH_COMPONENT24 | texture.internalFormat_ == GL_DEPTH_COMPONENT32
+        | texture.internalFormat_ == GL_DEPTH_COMPONENT32F) {
+        clientFormat = GL_DEPTH_COMPONENT;
+        clientType   = GL_UNSIGNED_INT;
+    }
     GLCALL(glTexImage2D(
-        texture.textureType_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, GL_RGB,
-        GL_UNSIGNED_BYTE, nullptr));
+        texture.textureType_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, clientFormat,
+        clientType, nullptr));
+
+    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+
     if (!name.empty()) {
         DebugLabel(texture, name);
         LogDebugLabel(texture, "Texture was allocated");
@@ -53,16 +93,20 @@ auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleSten
     return texture;
 }
 
-void Texture::GenerateMipmaps(GLint minLevel, GLint maxLevel) {
-    GLCALL(glBindTexture(textureType_, textureId_.id));
-    GLCALL(glTexParameteri(textureType_, GL_TEXTURE_BASE_LEVEL, minLevel));
-    GLCALL(glTexParameteri(textureType_, GL_TEXTURE_MAX_LEVEL, maxLevel));
-    GLCALL(glGenerateMipmap(textureType_));
+auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) -> TextureCtx&& {
+    GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
+    GLCALL(glTexParameteri(contextTextureType_, GL_TEXTURE_BASE_LEVEL, minLevel));
+    GLCALL(glTexParameteri(contextTextureType_, GL_TEXTURE_MAX_LEVEL, maxLevel));
+    GLCALL(glGenerateMipmap(contextTextureType_));
+    return std::move(*this);
 }
 
-void Texture::Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data, GLint miplevel) {
+auto TextureCtx::Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data, glm::ivec3 size, GLint miplevel)
+    -> TextureCtx&& {
     GLint offsetX = 0, offsetY = 0;
-    GLCALL(glTexSubImage2D(textureType_, miplevel, offsetX, offsetY, size_.x, size_.y, dataFormat, dataType, data));
+    GLCALL(
+        glTexSubImage2D(contextTextureType_, miplevel, offsetX, offsetY, size.x, size.y, dataFormat, dataType, data));
+    return std::move(*this);
 }
 
 } // namespace engine::gl

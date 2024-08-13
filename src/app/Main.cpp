@@ -1,6 +1,7 @@
 #include <engine/Assets.hpp>
 #include <engine/EngineLoop.hpp>
 #include <engine/gl/Buffer.hpp>
+#include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/Guard.hpp>
 #include <engine/gl/Program.hpp>
 #include <engine/gl/Sampler.hpp>
@@ -9,7 +10,6 @@
 #include <engine/gl/TextureUnits.hpp>
 #include <engine/gl/Uniform.hpp>
 #include <engine/gl/Vao.hpp>
-#include <engine/AxesRenderer.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,8 +23,12 @@ struct Application final {
     engine::gl::GpuBuffer attributeBuffer{};
     engine::gl::GpuBuffer indexBuffer{};
     engine::gl::Texture texture{};
-    engine::gl::Sampler samplerNearest{};
-    engine::gl::Sampler samplerBilinear{};
+    engine::gl::Framebuffer debugFramebuffer{};
+    engine::gl::Texture debugDepth{};
+    engine::gl::Framebuffer outputFramebuffer{};
+    engine::gl::Texture outputColor{};
+    engine::gl::Texture outputDepth{};
+
     bool isInitialized = false;
 };
 
@@ -60,8 +64,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
+        glm::ivec2 screenSize = windowCtx.WindowSize();
         gl::InitializeOpenGl();
-        gl::AllocateAxesRenderer();
 
         constexpr static int32_t NUM_VDEFINES   = 3;
         gl::ShaderDefine vdefines[NUM_VDEFINES] = {
@@ -87,40 +91,43 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->indexBuffer =
             gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
         app->vao = gl::Vao::Allocate("Test VAO");
-        app->vao.LinkVertexAttribute(
-            app->attributeBuffer,
-            {.index           = ATTRIB_POSITION_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .normalized      = GL_FALSE,
-             .stride          = 5 * sizeof(float),
-             .offset          = 0});
-        app->vao.LinkVertexAttribute(
-            app->attributeBuffer,
-            {.index           = ATTRIB_UV_LOCATION,
-             .valuesPerVertex = 2,
-             .datatype        = GL_FLOAT,
-             .normalized      = GL_FALSE,
-             .stride          = 5 * sizeof(float),
-             .offset          = 3 * sizeof(float)});
-        app->vao.LinkIndices(app->indexBuffer);
+        (void)gl::VaoCtx{app->vao}
+            .LinkVertexAttribute(
+                app->attributeBuffer,
+                {.index           = ATTRIB_POSITION_LOCATION,
+                 .valuesPerVertex = 3,
+                 .datatype        = GL_FLOAT,
+                 .stride          = 5 * sizeof(float),
+                 .offset          = 0})
+            .LinkVertexAttribute(
+                app->attributeBuffer,
+                {.index           = ATTRIB_UV_LOCATION,
+                 .valuesPerVertex = 2,
+                 .datatype        = GL_FLOAT,
+                 .stride          = 5 * sizeof(float),
+                 .offset          = 3 * sizeof(float)})
+            .LinkIndices(app->indexBuffer);
 
         app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
-        app->texture.Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData);
-        app->texture.GenerateMipmaps();
+        (void)gl::TextureCtx{app->texture}
+            .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData, app->texture.Size())
+            .GenerateMipmaps();
 
-        app->samplerNearest = gl::Sampler::Allocate("Sampler nearset")
-                           .WithLinearMagnify(false)
-                           .WithLinearMinify(false)
-                           .WithLinearMinifyOverMips(false, false)
-                           .WithAnisotropicFilter(1.0f)
-                           .WithWrap(GL_CLAMP_TO_EDGE);
-        app->samplerBilinear = gl::Sampler::Allocate("Sampler bilinear")
-                           .WithLinearMagnify(true)
-                           .WithLinearMinify(true)
-                           .WithLinearMinifyOverMips(true, true)
-                           .WithAnisotropicFilter(8.0f)
-                           .WithWrap(GL_CLAMP_TO_EDGE);
+        app->outputColor =
+            gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
+        app->outputDepth = gl::Texture::Allocate2D(
+            GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
+        app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
+        (void)gl::FramebufferCtx{app->outputFramebuffer, true}
+            .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
+            .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
+
+        app->debugDepth = gl::Texture::Allocate2D(
+            GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Debug depth");
+        app->debugFramebuffer = gl::Framebuffer::Allocate("Debug Pass FBO");
+        (void)gl::FramebufferCtx{app->debugFramebuffer, true}
+            .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
+            .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->debugDepth);
         app->isInitialized = true;
     }
 
@@ -133,6 +140,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlGuardBlend guardB(true);
     gl::GlGuardViewport guardV(true);
     gl::GlGuardColor guardR;
+    gl::GlGuardFramebuffer guardFb(true);
 
     gl::GlTextureUnits::BeginStateSnapshot();
     gl::GlTextureUnits::Bind2D(0U, 0U);
@@ -143,18 +151,20 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     gl::GlTextureUnits::BindCubemap(2U, 0U);
     gl::GlTextureUnits::EndStateSnapshot();
 
-    glm::vec3 cameraPosition     = glm::vec3(0.0, -2.0, std::sin(ctx.timeSec) - 1.5f);
-    glm::vec3 cameraTarget       = glm::vec3(0.0, 0.0, 0.0f);
-    glm::vec3 cameraUp           = glm::vec3(0.0, 1.0, 0.0f);
-    glm::ivec2 screenSize        = windowCtx.WindowSize();
-    float aspectRatio            = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
-    glm::mat4 proj               = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
-    glm::mat4 view               = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
-    glm::mat4 camera             = proj * view;
+    glm::vec3 cameraPosition = glm::vec3(0.0f, 2.0f, std::sin(ctx.timeSec) - 1.5f);
+    glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 cameraUp       = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::ivec2 screenSize    = windowCtx.WindowSize();
+    float aspectRatio        = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
+    glm::mat4 proj           = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
+    glm::mat4 view           = glm::lookAtRH(cameraPosition, cameraTarget, cameraUp);
+    glm::mat4 camera         = proj * view;
 
-    gl::PushDebugGroup("Main pass");
-    GLCALL(glClearColor(0.3f, 0.5f, 0.5f, 0.0f));
     {
+        auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
+        auto fbGuard         = gl::FramebufferCtx{app->outputFramebuffer, true};
+        fbGuard              = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
+
         auto programGuard            = gl::UniformCtx(app->program);
         glm::mat4 model              = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
         glm::mat4 mvp                = camera * model;
@@ -163,25 +173,37 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         if (windowCtx.MouseInsideWindow()) {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->samplerNearest.Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::GetSamplerNearest().Id());
         } else {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->samplerBilinear.Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::GetSamplerLinearMips().Id());
         }
-    }
-    GLCALL(glEnable(GL_CULL_FACE));
-    GLCALL(glFrontFace(GL_CCW));
-    GLCALL(glClear(GL_COLOR_BUFFER_BIT));
-    GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-    GLCALL(glBindVertexArray(app->vao.Id()));
-    GLCALL(glUseProgram(app->program.Id()));
-    GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-    gl::PopDebugGroup();
+        GLCALL(glEnable(GL_CULL_FACE));
+        GLCALL(glEnable(GL_DEPTH_TEST));
+        GLCALL(glDepthMask(GL_TRUE));
+        GLCALL(glFrontFace(GL_CCW));
+        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+        GLCALL(glBindVertexArray(app->vao.Id()));
+        GLCALL(glUseProgram(app->program.Id()));
+        GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
-    gl::PushDebugGroup("Debug pass");
-    glm::mat4 model              = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    glm::mat4 mvp                = camera * model;
-    gl::RenderAxes(mvp);
-    gl::PopDebugGroup();
+        gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
+    }
+
+    {
+        auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
+        // auto fbGuard         = gl::FramebufferCtx{0U, true};
+        auto fbGuard = gl::FramebufferCtx{app->debugFramebuffer, true};
+        fbGuard      = fbGuard.ClearDepth(1.0f);
+        glm::mat4 model = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 mvp   = camera * model;
+        gl::CommonRenderers::RenderAxes(mvp);
+    }
+
+    {
+        // present
+        gl::CommonRenderers::Blit2D(app->outputColor.Id(), 0U);
+    }
+
     gl::GlTextureUnits::RestoreState();
 }
 

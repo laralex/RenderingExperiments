@@ -30,6 +30,7 @@ public:
         KHR_texture_compression_astc_sliced_3d,
         ARB_debug_output,
         ARB_ES3_2_compatibility,
+        ARB_invalidate_subdata,
         ARB_framebuffer_sRGB,
         EXT_debug_label,
         EXT_debug_marker,

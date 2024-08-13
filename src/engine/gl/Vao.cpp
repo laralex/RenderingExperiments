@@ -1,6 +1,24 @@
 #include "engine/gl/Vao.hpp"
+#include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
+
+bool VaoCtx::hasInstances_{false};
+GlHandle VaoCtx::contextVao_{GL_NONE};
+
+VaoCtx::VaoCtx(Vao const& useVao) {
+    assert(!hasInstances_);
+    contextVao_.id = useVao.Id();
+    GLCALL(glBindVertexArray(contextVao_));
+    hasInstances_ = true;
+}
+
+VaoCtx::~VaoCtx() {
+    assert(hasInstances_);
+    contextVao_.id = GL_NONE;
+    GLCALL(glBindVertexArray(contextVao_));
+    hasInstances_ = false;
+}
 
 void Vao::Dispose() {
     if (vaoId_ == GL_NONE) { return; }
@@ -21,36 +39,33 @@ auto Vao::Allocate(std::string_view name) -> Vao {
     return vao;
 }
 
-void Vao::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info) const {
-    if (vaoId_ == GL_NONE) {
-        XLOGE("Bad call to LinkVertexAttribute, engine::gl::Vao isn't initialized", 0);
-        return;
-    }
-
-    GLCALL(glBindVertexArray(vaoId_));
+auto VaoCtx::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized)
+    -> VaoCtx&& {
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
     // NOTE: safe int->ptr cast, because info.offset is of type intptr_t
     auto* offset = reinterpret_cast<GLsizei*>(info.offset);
-    GLCALL(
-        glVertexAttribPointer(info.index, info.valuesPerVertex, info.datatype, info.normalized, info.stride, offset));
+    if (info.datatype == GL_BYTE || info.datatype == GL_UNSIGNED_BYTE || info.datatype == GL_SHORT
+        || info.datatype == GL_UNSIGNED_SHORT || info.datatype == GL_INT || info.datatype == GL_UNSIGNED_INT) {
+        GLCALL(glVertexAttribIPointer(info.index, info.valuesPerVertex, info.datatype, info.stride, offset));
+    } else {
+        GLCALL(glVertexAttribPointer(
+            info.index, info.valuesPerVertex, info.datatype, normalized ? GL_TRUE : GL_FALSE, info.stride, offset));
+    }
     GLCALL(glEnableVertexAttribArray(info.index));
-
-    GLCALL(glBindVertexArray(0));
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    return std::move(*this);
 }
 
-void Vao::LinkIndices(GpuBuffer const& indexBuffer) const {
-    if (vaoId_ == GL_NONE) {
-        XLOGE("Bad call to LinkIndices, engine::gl::Vao isn't initialized", 0);
-        return;
-    }
-
-    GLCALL(glBindVertexArray(vaoId_));
+auto VaoCtx::LinkIndices(GpuBuffer const& indexBuffer) -> VaoCtx&& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
-    GLCALL(glBindVertexArray(0));
-    GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    return std::move(*this);
+}
+
+auto Vao::VerifyInitialization() const -> bool {
+    assert(vaoId_ != GL_NONE && "Bad call to engine::gl::Vao methods, object isn't yet initialized");
+    return true;
 }
 
 } // namespace engine::gl

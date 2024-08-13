@@ -26,9 +26,23 @@ public:
     // when false: depth value is read in shader (stencil value can't be retrieved)
     static auto AllocateZS [[nodiscard]] (
         glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly = false, std::string_view name = {}) -> Texture;
-    void GenerateMipmaps(GLint minLevel = 0, GLint maxLevel = 1000);
-    void Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data, GLint miplevel = 0);
+
     auto Id [[nodiscard]] () const -> GLuint { return textureId_; }
+    auto Size [[nodiscard]] () const -> glm::ivec3 { return size_; }
+    auto TextureType [[nodiscard]] () const -> GLenum { return textureType_; }
+    auto Is1D() const -> bool { return textureType_ == GL_TEXTURE_1D | textureType_ == GL_TEXTURE_1D_ARRAY; }
+    auto Is2D() const -> bool {
+        return textureType_ == GL_TEXTURE_2D | textureType_ == GL_TEXTURE_2D_ARRAY
+            | textureType_ == GL_TEXTURE_2D_MULTISAMPLE | textureType_ == GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+    }
+    auto Is3D() const -> bool { return textureType_ == GL_TEXTURE_3D; }
+    auto IsTextureArray() const -> bool {
+        return textureType_ == GL_TEXTURE_1D_ARRAY | textureType_ == GL_TEXTURE_2D_ARRAY
+            | textureType_ == GL_TEXTURE_2D_MULTISAMPLE_ARRAY | textureType_ == GL_TEXTURE_CUBE_MAP_ARRAY;
+    }
+    auto IsCubemap() const -> bool {
+        return textureType_ == GL_TEXTURE_CUBE_MAP | textureType_ == GL_TEXTURE_CUBE_MAP_ARRAY;
+    }
 
 private:
     void Dispose();
@@ -37,6 +51,30 @@ private:
     GLenum textureType_{GL_NONE};
     GLenum internalFormat_{GL_NONE};
     glm::ivec3 size_{};
+};
+
+// Helper object, binds GL texture in ctor, unbinds it in dtor
+// No two instances of the class should exist in one scope (checked by assert)
+class TextureCtx final {
+public:
+#define Self TextureCtx
+    explicit Self(Texture const& useTexture);
+    ~Self();
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
+#undef Self
+
+    auto GenerateMipmaps [[nodiscard]] (GLint minLevel = 0, GLint maxLevel = 1000) -> TextureCtx&&;
+    auto Fill2D
+        [[nodiscard]] (GLenum dataFormat, GLenum dataType, uint8_t const* data, glm::ivec3 size, GLint miplevel = 0)
+        -> TextureCtx&&;
+
+private:
+    static GlHandle contextTexture_;
+    static GLenum contextTextureType_;
+    static bool hasInstances_;
 };
 
 } // namespace engine::gl

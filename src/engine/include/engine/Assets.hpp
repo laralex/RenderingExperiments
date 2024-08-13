@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/gl/Shader.hpp"
 #include "engine/Prelude.hpp"
+#include "engine/gl/Shader.hpp"
 
 #include <fstream>
 #include <sstream>

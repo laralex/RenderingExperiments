@@ -27,6 +27,19 @@ namespace engine::gl {
 void InitializeDebug();
 void CheckOpenGlError(const char* stmt, const char* fname, int line, bool fatal);
 
+// Helper object, pushes debug group in ctor, pops it in dtor
+class DebugGroupCtx final {
+public:
+#define Self DebugGroupCtx
+    explicit Self(std::string_view label, GLuint userData = 0U);
+    ~Self();
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
+#undef Self
+};
+
 void PushDebugGroup(std::string_view label, GLuint userData = 0U);
 void PopDebugGroup();
 
@@ -54,6 +67,11 @@ class Sampler;
 void DebugLabel(Sampler const& sampler, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (Sampler const& sampler, char* outBuffer, size_t outBufferSize) -> size_t;
 void LogDebugLabel(Sampler const& sampler, char const* message);
+
+class Framebuffer;
+void DebugLabel(Framebuffer const& fb, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (Framebuffer const& fb, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(Framebuffer const& fb, char const* message);
 
 void DebugLabel(void const* glSyncObject, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (void* glSyncObject, char* outBuffer, size_t outBufferSize) -> size_t;
