@@ -9,12 +9,10 @@
 
 namespace {
 
+using namespace engine::gl;
+
 constexpr bool ENABLE_KHR_DEBUG_CALLBACK = true;
 constexpr bool ENABLE_DEBUG_GROUP_LOGS   = false;
-
-} // namespace
-
-namespace {
 
 void GLAPIENTRY DebugOutputCallback(
     GLenum source, GLenum type, GLuint /*id*/, GLenum severity, GLsizei length, const GLchar* message,
@@ -33,6 +31,35 @@ void GLAPIENTRY DebugOutputCallback(
     if (type == GL_DEBUG_TYPE_ERROR || type == GL_DEBUG_TYPE_ERROR_ARB) { }
     XLOG_LVL(logLevel, "GL_KHR_debug src=0x{:x} severe=0x{:x}: {}", source, severity, message);
 #endif
+}
+
+void FillDebugLabelEnums(GlObjectType objectType, GLenum& objectTypeKhr, GLenum& objectTypeExt) {
+    objectTypeKhr = GL_NONE;
+    objectTypeExt = GL_NONE;
+    switch (objectType) {
+        case GlObjectType::BUFFER:
+            objectTypeKhr = GL_BUFFER;
+            objectTypeExt = GL_BUFFER_OBJECT_EXT;
+            break;
+        case GlObjectType::VAO:
+            objectTypeKhr = GL_VERTEX_ARRAY;
+            objectTypeExt = GL_VERTEX_ARRAY_OBJECT_EXT;
+            break;
+        case GlObjectType::PROGRAM:
+            objectTypeKhr = GL_PROGRAM;
+            objectTypeExt = GL_PROGRAM_OBJECT_EXT;
+            break;
+        case GlObjectType::TEXTURE:
+            objectTypeKhr = objectTypeExt = GL_TEXTURE;
+            break;
+        case GlObjectType::SAMPLER:
+            objectTypeKhr = objectTypeExt = GL_SAMPLER;
+            break;
+        case GlObjectType::FRAMEBUFFER:
+            objectTypeKhr = objectTypeExt = GL_FRAMEBUFFER;
+            break;
+        default: std::terminate();
+    }
 }
 
 void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std::string_view label) {
@@ -95,7 +122,7 @@ void LogDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, 
     XLOG("{} (name={})", message, debugLabel);
 }
 
-} // namespace
+} // namespace anonymous
 
 namespace engine::gl {
 
@@ -180,6 +207,28 @@ void PopDebugGroup() {
         return;
     }
 }
+
+void DebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view label) {
+    GLenum objectTypeKhr = GL_NONE;
+    GLenum objectTypeExt = GL_NONE;
+    FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
+    ::DebugLabel(objectTypeKhr, objectTypeExt, object, label);
+}
+
+void LogDebugLabelUnsafe(GLuint object, GlObjectType objectType, char const* message) {
+    GLenum objectTypeKhr = GL_NONE;
+    GLenum objectTypeExt = GL_NONE;
+    FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
+    ::LogDebugLabel(objectTypeKhr, objectTypeExt, object, message);
+}
+
+auto GetDebugLabelUnsafe(GLuint object, GlObjectType objectType, char* outBuffer, size_t outBufferSize) -> size_t {
+    GLenum objectTypeKhr = GL_NONE;
+    GLenum objectTypeExt = GL_NONE;
+    FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
+    return ::GetDebugLabel(objectTypeKhr, objectTypeExt, object, outBuffer, outBufferSize);
+}
+
 
 void DebugLabel(GpuBuffer const& buffer, std::string_view label) {
     ::DebugLabel(GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), label);

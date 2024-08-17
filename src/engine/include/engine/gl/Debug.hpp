@@ -1,6 +1,6 @@
 #pragma once
 
-// #include "engine/Prelude.hpp"
+#include "engine/Prelude.hpp"
 #include <string_view>
 
 #ifdef XDEBUG
@@ -42,6 +42,20 @@ public:
 
 void PushDebugGroup(std::string_view label, GLuint userData = 0U);
 void PopDebugGroup();
+
+enum class GlObjectType {
+    BUFFER = 0,
+    VAO,
+    PROGRAM,
+    TEXTURE,
+    SAMPLER,
+    FRAMEBUFFER,
+    NUM_OBJECT_TYPES,
+};
+
+void DebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view label);
+void LogDebugLabelUnsafe(GLuint object, GlObjectType objectType, char const* message);
+auto GetDebugLabelUnsafe [[nodiscard]] (GLuint object, GlObjectType objectType, char* outBuffer, size_t outBufferSize) -> size_t;
 
 class GpuBuffer;
 void DebugLabel(GpuBuffer const& buffer, std::string_view label);

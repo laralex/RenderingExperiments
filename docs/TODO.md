@@ -1,4 +1,3 @@
-* framebuffer completeness
 * renderbuffer
 * render utils (lines, pyramids, bounding boxes, spheres)
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)

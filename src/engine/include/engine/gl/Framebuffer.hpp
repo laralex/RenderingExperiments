@@ -24,6 +24,7 @@ public:
     auto Id [[nodiscard]] () const -> GLuint { return fbId_; }
     void BindDraw() const;
     void BindRead() const;
+    auto IsComplete [[nodiscard]] () -> bool;
 
 private:
     void Dispose();
@@ -56,7 +57,7 @@ public:
     auto LinkTexture [[nodiscard]] (GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1)
     -> FramebufferCtx&&;
     // auto LinkBackbuffer(GLenum attachment, GLint texLevel = 0) const -> FramebufferCtx&&;
-
+    auto IsComplete [[nodiscard]] () -> bool;
 private:
     static GlHandle contextFramebuffer_;
     static GLenum framebufferTarget_;
