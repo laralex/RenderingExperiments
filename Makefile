@@ -42,8 +42,15 @@ obj_engine_ = Assets.o \
 
 obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
 obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})
-hpp_engine = $(wildcard src/engine/include/engine/*)
+hpp_engine = \
+	$(wildcard src/engine/include/engine/*) \
+	$(wildcard src/engine/include/engine/gl/*)
 hpp_engine_private = $(wildcard src/engine/include_private/engine_private/*)
+
+.PHONY: wtf
+wtf:
+	$(info > Depending on engine headers ${hpp_engine})
+	$(info > Depending on engine private headers ${hpp_engine_private})
 
 .PHONY: run
 run: ${INSTALL_DIR}/run_app

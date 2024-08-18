@@ -1,13 +1,9 @@
-#include "engine/gl/AxesRenderer.hpp"
-#include "engine/gl/BoxRenderer.hpp"
 #include "engine/Assets.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Guard.hpp"
 #include "engine/gl/Program.hpp"
-#include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
-#include "engine/gl/Texture.hpp"
 #include "engine/gl/TextureUnits.hpp"
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
@@ -48,17 +44,9 @@ auto AllocateBlitter() -> engine::gl::GpuProgram {
 
 namespace engine::gl {
 
-bool CommonRenderers::isInitialized_{false};
-AxesRenderer CommonRenderers::axesRenderer_{};
-BoxRenderer CommonRenderers::boxRenderer_{};
-Vao CommonRenderers::fullscreenTriangleVao_{};
-GpuProgram CommonRenderers::blitProgram_{};
-Sampler CommonRenderers::samplerNearest_{};
-Sampler CommonRenderers::samplerLinear_{};
-Sampler CommonRenderers::samplerLinearMip_{};
-Texture CommonRenderers::stubColorTexture_{};
-
 void CommonRenderers::Initialize() {
+    if (isInitialized_) { return; }
+
     axesRenderer_          = AllocateAxesRenderer();
     boxRenderer_           = AllocateBoxRenderer();
     fullscreenTriangleVao_ = Vao::Allocate("Fullscreen triangle");

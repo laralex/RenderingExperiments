@@ -1,6 +1,7 @@
 #include <engine/Assets.hpp>
 #include <engine/EngineLoop.hpp>
 #include <engine/gl/Buffer.hpp>
+#include <engine/gl/CommonRenderers.hpp>
 #include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/Guard.hpp>
 #include <engine/gl/Program.hpp>
@@ -19,6 +20,11 @@
 #include <GLFW/glfw3.h>
 
 struct Application final {
+    ~Application() {
+        XLOG("Disposing application", 0);
+        engine::gl::DisposeOpenGl();
+    }
+
     engine::gl::GpuProgram program{};
     engine::gl::Vao vao{};
     engine::gl::GpuBuffer attributeBuffer{};
@@ -28,6 +34,7 @@ struct Application final {
     engine::gl::Texture outputColor{};
     engine::gl::Texture outputDepth{};
     engine::gl::Renderbuffer renderbuffer{};
+    engine::gl::CommonRenderers commonRenderers{};
 
     bool isInitialized = false;
 };
@@ -61,71 +68,75 @@ constexpr GLint UNIFORM_TEXTURE_LOCATION = 0;
 constexpr GLint UNIFORM_MVP_LOCATION     = 10;
 constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
+static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
+    using namespace engine;
+    glm::ivec2 screenSize = INTERMEDITE_RENDER_RESOLUTION;
+    gl::InitializeOpenGl();
+    app->commonRenderers.Initialize();
+
+    constexpr static int32_t NUM_VDEFINES   = 3;
+    gl::ShaderDefine vdefines[NUM_VDEFINES] = {
+        {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
+    };
+    std::string vertexShaderCode = gl::LoadShaderCode("data/app/shaders/triangle.vert", vdefines, NUM_VDEFINES);
+
+    constexpr static int32_t NUM_FDEFINES   = 1;
+    gl::ShaderDefine fdefines[NUM_FDEFINES] = {
+        {.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
+    };
+    std::string fragmentShaderCode = gl::LoadShaderCode("data/app/shaders/texture.frag", fdefines, NUM_FDEFINES);
+    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
+    GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
+    app->program                   = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
+    GLCALL(glDeleteShader(vertexShader));
+    GLCALL(glDeleteShader(fragmentShader));
+
+    app->attributeBuffer =
+        gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test VBO");
+    app->indexBuffer =
+        gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
+    app->vao = gl::Vao::Allocate("Test VAO");
+    (void)gl::VaoCtx{app->vao}
+        .LinkVertexAttribute(
+            app->attributeBuffer,
+            {.index           = ATTRIB_POSITION_LOCATION,
+                .valuesPerVertex = 3,
+                .datatype        = GL_FLOAT,
+                .stride          = 5 * sizeof(float),
+                .offset          = 0})
+        .LinkVertexAttribute(
+            app->attributeBuffer,
+            {.index           = ATTRIB_UV_LOCATION,
+                .valuesPerVertex = 2,
+                .datatype        = GL_FLOAT,
+                .stride          = 5 * sizeof(float),
+                .offset          = 3 * sizeof(float)})
+        .LinkIndices(app->indexBuffer);
+
+    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
+    (void)gl::TextureCtx{app->texture}
+        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData, app->texture.Size())
+        .GenerateMipmaps();
+
+    app->outputColor =
+        gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
+    app->outputDepth = gl::Texture::Allocate2D(
+        GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
+    app->renderbuffer = gl::Renderbuffer::Allocate2D(screenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
+    app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
+    (void)gl::FramebufferCtx{app->outputFramebuffer, true}
+        .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
+        // .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
+        .LinkRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer);
+
+}
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
     if (!app->isInitialized) {
-        // glm::ivec2 screenSize = windowCtx.WindowSize();
-        glm::ivec2 screenSize = INTERMEDITE_RENDER_RESOLUTION;
-        gl::InitializeOpenGl();
-
-        constexpr static int32_t NUM_VDEFINES   = 3;
-        gl::ShaderDefine vdefines[NUM_VDEFINES] = {
-            {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-            {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
-            {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        };
-        std::string vertexShaderCode = gl::LoadShaderCode("data/app/shaders/triangle.vert", vdefines, NUM_VDEFINES);
-
-        constexpr static int32_t NUM_FDEFINES   = 1;
-        gl::ShaderDefine fdefines[NUM_FDEFINES] = {
-            {.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
-        };
-        std::string fragmentShaderCode = gl::LoadShaderCode("data/app/shaders/texture.frag", fdefines, NUM_FDEFINES);
-        GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-        GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-        app->program                   = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
-        GLCALL(glDeleteShader(vertexShader));
-        GLCALL(glDeleteShader(fragmentShader));
-
-        app->attributeBuffer =
-            gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test VBO");
-        app->indexBuffer =
-            gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
-        app->vao = gl::Vao::Allocate("Test VAO");
-        (void)gl::VaoCtx{app->vao}
-            .LinkVertexAttribute(
-                app->attributeBuffer,
-                {.index           = ATTRIB_POSITION_LOCATION,
-                 .valuesPerVertex = 3,
-                 .datatype        = GL_FLOAT,
-                 .stride          = 5 * sizeof(float),
-                 .offset          = 0})
-            .LinkVertexAttribute(
-                app->attributeBuffer,
-                {.index           = ATTRIB_UV_LOCATION,
-                 .valuesPerVertex = 2,
-                 .datatype        = GL_FLOAT,
-                 .stride          = 5 * sizeof(float),
-                 .offset          = 3 * sizeof(float)})
-            .LinkIndices(app->indexBuffer);
-
-        app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
-        (void)gl::TextureCtx{app->texture}
-            .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData, app->texture.Size())
-            .GenerateMipmaps();
-
-        app->outputColor =
-            gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
-        app->outputDepth = gl::Texture::Allocate2D(
-            GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
-        app->renderbuffer = gl::Renderbuffer::Allocate2D(screenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
-        app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
-        (void)gl::FramebufferCtx{app->outputFramebuffer, true}
-            .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
-            // .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
-            .LinkRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer);
-
+        InitializeApplication(ctx, windowCtx, app);
         app->isInitialized = true;
     }
 
@@ -156,11 +167,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
-        // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, gl::CommonRenderers::TextureStubColor().Id());
+        // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
         if (windowCtx.MouseInsideWindow()) {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::SamplerNearest().Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerNearest().Id());
         } else {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, gl::CommonRenderers::SamplerLinearMips().Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearMips().Id());
         }
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
@@ -181,7 +192,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto dstGuard = gl::FramebufferCtx{0U, true}
             .ClearDepthStencil(1.0f, 0);
             // .Invalidate(1, invalidateAttachments);
-        gl::CommonRenderers::Blit2D(app->outputColor.Id());
+        app->commonRenderers.Blit2D(app->outputColor.Id());
     }
 
     {
@@ -189,8 +200,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto fbGuard         = gl::FramebufferCtx{0U, true};
         
         glm::mat4 mvp = camera * model;
-        gl::CommonRenderers::RenderAxes(mvp);
-        gl::CommonRenderers::RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
+        app->commonRenderers.RenderAxes(mvp);
+        app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
     }
 
     gl::GlTextureUnits::RestoreState();

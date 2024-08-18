@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/Prelude.hpp"
+#include <glad/gl.h>
 #include <string_view>
 
 #ifdef XDEBUG

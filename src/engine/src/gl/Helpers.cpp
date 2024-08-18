@@ -9,7 +9,10 @@ ENGINE_EXPORT void InitializeOpenGl() {
     gl::GlCapabilities::Initialize();
     gl::InitializeDebug();
     gl::GlTextureUnits::Initialize();
-    gl::CommonRenderers::Initialize();
+}
+
+ENGINE_EXPORT void DisposeOpenGl() {
+
 }
 
 } // namespace engine::gl

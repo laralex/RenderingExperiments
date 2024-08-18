@@ -1,10 +1,12 @@
 #pragma once
 
-#include "engine/Prelude.hpp"
+#include <cassert>
+#include <glad/gl.h>
 
 namespace engine::gl {
 
 void InitializeOpenGl();
+void DisposeOpenGl();
 
 // Wrapper for OpenGL object identifiers. Becomes 0 when moved away from
 // This helps to define move constructor/assignment of other high level wrappers as simply "=default"
@@ -19,7 +21,9 @@ struct GlHandle {
         : id(other.id) {
         other.id = GL_NONE;
     }
+    // Self& operator=(Self&& other) = delete;
     Self& operator=(Self&& other) {
+        assert(id == GL_NONE && "OpenGL resource leaked");
         id       = other.id;
         other.id = GL_NONE;
         return *this;
