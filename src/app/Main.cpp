@@ -135,10 +135,14 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::ivec2 renderSize    = app->outputColor.Size();
     glm::ivec2 screenSize    = windowCtx.WindowSize();
     float aspectRatio        = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
-    glm::mat4 proj           = glm::perspective(glm::radians(60.0f), aspectRatio, 0.001f, 10.0f);
+    glm::mat4 proj           = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 100.0f);
     glm::mat4 view           = glm::lookAtRH(cameraPosition, cameraTarget, cameraUp);
     glm::mat4 camera         = proj * view;
 
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.2f));
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
         glViewport(0, 0, renderSize.x, renderSize.y);
@@ -146,7 +150,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         fbGuard              = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
 
         auto programGuard            = gl::UniformCtx(app->program);
-        glm::mat4 model              = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
         glm::mat4 mvp                = camera * model;
         constexpr GLint TEXTURE_SLOT = 0;
         gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
@@ -183,10 +187,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
-
-        glm::mat4 model = glm::rotate(glm::mat4(1.0), ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 mvp   = camera * model;
+        
+        glm::mat4 mvp = camera * model;
         gl::CommonRenderers::RenderAxes(mvp);
+        gl::CommonRenderers::RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
     }
 
     gl::GlTextureUnits::RestoreState();

@@ -29,7 +29,7 @@ obj_app_ = Main.o
 
 obj_engine_ = Assets.o \
 	EngineLoop.o \
-	gl/AxesRenderer.o \
+	gl/AxesRenderer.o gl/BoxRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
 	gl/CommonRenderers.o gl/Debug.o \
 	gl/Extensions.o gl/Framebuffer.o \

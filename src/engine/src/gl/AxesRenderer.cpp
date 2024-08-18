@@ -102,7 +102,7 @@ constexpr uint8_t indices[] = {
 
 constexpr int32_t UNIFORM_MVP_LOCATION = 0;
 
-} // namespace
+} // namespace anonymous
 
 namespace engine::gl {
 
@@ -151,7 +151,7 @@ auto AllocateAxesRenderer() -> AxesRenderer {
 void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp) {
     auto programGuard = gl::UniformCtx(renderer.program);
     gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
-    GLCALL(glBindVertexArray(renderer.vao.Id()));
+    auto vaoGuard = VaoCtx{renderer.vao};
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));

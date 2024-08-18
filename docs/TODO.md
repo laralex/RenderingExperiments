@@ -1,7 +1,8 @@
-* render utils (lines, pyramids, bounding boxes, spheres)
+* render utils (lines, pyramids, spheres)
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * camera
 * incremental compilation
+* uniforms functions are ugly
 
 
 world pos, world orient:

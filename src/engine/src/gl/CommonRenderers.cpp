@@ -1,5 +1,5 @@
 #include "engine/gl/AxesRenderer.hpp"
-
+#include "engine/gl/BoxRenderer.hpp"
 #include "engine/Assets.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Framebuffer.hpp"
@@ -50,6 +50,7 @@ namespace engine::gl {
 
 bool CommonRenderers::isInitialized_{false};
 AxesRenderer CommonRenderers::axesRenderer_{};
+BoxRenderer CommonRenderers::boxRenderer_{};
 Vao CommonRenderers::fullscreenTriangleVao_{};
 GpuProgram CommonRenderers::blitProgram_{};
 Sampler CommonRenderers::samplerNearest_{};
@@ -59,6 +60,7 @@ Texture CommonRenderers::stubColorTexture_{};
 
 void CommonRenderers::Initialize() {
     axesRenderer_          = AllocateAxesRenderer();
+    boxRenderer_           = AllocateBoxRenderer();
     fullscreenTriangleVao_ = Vao::Allocate("Fullscreen triangle");
     isInitialized_         = true;
     blitProgram_           = AllocateBlitter();
@@ -87,9 +89,18 @@ void CommonRenderers::RenderAxes(glm::mat4 const& mvp) {
     gl::RenderAxes(axesRenderer_, mvp);
 }
 
+void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) {
+    assert(IsInitialized() && "Bad call to RenderBox, CommonRenderers isn't initialized");
+    gl::RenderBox(boxRenderer_, centerMvp, color);
+}
+
+void CommonRenderers::RenderFulscreenTriangle() {
+    auto vaoGuard     = gl::VaoCtx{fullscreenTriangleVao_};
+    GLCALL(glDrawArrays(GL_TRIANGLES, 0, 3));
+}
+
 void CommonRenderers::Blit2D(GLuint srcTexture) {
     auto programGuard = gl::UniformCtx(blitProgram_);
-    auto vaoGuard     = gl::VaoCtx{fullscreenTriangleVao_};
     gl::GlTextureUnits::Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
     //auto depthGuard = gl::GlGuardDepth(false);
 
@@ -98,7 +109,7 @@ void CommonRenderers::Blit2D(GLuint srcTexture) {
     GLCALL(glDisable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_FALSE));
 
-    GLCALL(glDrawArrays(GL_TRIANGLES, 0, 3));
+    RenderFulscreenTriangle();
 }
 
 } // namespace engine::gl

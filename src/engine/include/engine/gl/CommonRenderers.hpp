@@ -7,6 +7,7 @@
 namespace engine::gl {
 
 class AxesRenderer;
+class BoxRenderer;
 class Vao;
 class GpuProgram;
 class Sampler;
@@ -27,6 +28,10 @@ public:
     static auto IsInitialized [[nodiscard]] () { return isInitialized_; }
 
     static void RenderAxes(glm::mat4 const& mvp);
+    // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
+    static void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f});
+
+    static void RenderFulscreenTriangle();
     static void Blit2D(GLuint srcTexture);
 
     static auto VaoFullscreen() -> gl::Vao const& { return fullscreenTriangleVao_; }
@@ -37,6 +42,7 @@ public:
 
 private:
     static AxesRenderer axesRenderer_;
+    static BoxRenderer boxRenderer_;
     static Vao fullscreenTriangleVao_;
     static GpuProgram blitProgram_;
     static bool isInitialized_;
