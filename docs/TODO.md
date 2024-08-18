@@ -1,4 +1,4 @@
-* render utils (lines, pyramids, spheres)
+* render utils (lines, spheres)
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * camera
 * incremental compilation

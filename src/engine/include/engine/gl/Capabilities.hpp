@@ -22,6 +22,7 @@ public:
     static GLint numExtensions;
     static GLint majorVersion;
     static GLint minorVersion;
+    static GLint maxUboBindings;
 
 private:
     static bool isInitialized;

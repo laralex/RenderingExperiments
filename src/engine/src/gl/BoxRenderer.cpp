@@ -151,7 +151,11 @@ auto AllocateBoxRenderer() -> BoxRenderer {
     std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/constant.frag", fdefines, NUM_FDEFINES);
     GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-    renderer.program               = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "BoxRenderer");
+
+    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "BoxRenderer");
+    assert(maybeProgram);
+    renderer.program = std::move(*maybeProgram);
+
     auto programGuard              = UniformCtx{renderer.program};
     gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 

@@ -109,28 +109,28 @@ namespace engine::gl {
 auto AllocateAxesRenderer() -> AxesRenderer {
     constexpr int32_t ATTRIB_POSITION_LOCATION = 0;
     constexpr int32_t ATTRIB_COLOR_LOCATION    = 1;
-    AxesRenderer axesRenderer;
-    axesRenderer.attributeBuffer = gl::GpuBuffer::Allocate(
+    AxesRenderer renderer;
+    renderer.attributeBuffer = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "AxesRenderer Vertices");
-    axesRenderer.indexBuffer = gl::GpuBuffer::Allocate(
+    renderer.indexBuffer = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "AxesRenderer Indices");
-    axesRenderer.vao = gl::Vao::Allocate("AxesRenderer");
-    (void)gl::VaoCtx{axesRenderer.vao}
+    renderer.vao = gl::Vao::Allocate("AxesRenderer");
+    (void)gl::VaoCtx{renderer.vao}
         .LinkVertexAttribute(
-            axesRenderer.attributeBuffer,
+            renderer.attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = 0})
         .LinkVertexAttribute(
-            axesRenderer.attributeBuffer,
+            renderer.attributeBuffer,
             {.index           = ATTRIB_COLOR_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(Vertex),
              .offset          = 3 * sizeof(float)})
-        .LinkIndices(axesRenderer.indexBuffer);
+        .LinkIndices(renderer.indexBuffer);
 
     constexpr static int32_t NUM_VDEFINES   = 3;
     gl::ShaderDefine vdefines[NUM_VDEFINES] = {
@@ -142,10 +142,14 @@ auto AllocateAxesRenderer() -> AxesRenderer {
     std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/axes.frag", nullptr, 0);
     GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-    axesRenderer.program           = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "AxesRenderer");
+
+    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "AxesRenderer");
+    assert(maybeProgram);
+    renderer.program = std::move(*maybeProgram);
+
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
-    return axesRenderer;
+    return renderer;
 }
 
 void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp) {

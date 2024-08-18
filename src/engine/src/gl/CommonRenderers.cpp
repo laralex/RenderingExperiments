@@ -31,7 +31,10 @@ auto AllocateBlitter() -> engine::gl::GpuProgram {
     assert(vertexShader != GL_NONE && "AllocateBlitter");
     GLuint fragmentShader = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
     assert(fragmentShader != GL_NONE && "AllocateBlitter");
-    gl::GpuProgram blitProgram = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Blit");
+
+    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Blit");
+    assert(maybeProgram);
+    gl::GpuProgram blitProgram = std::move(*maybeProgram);
 
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
@@ -85,9 +88,9 @@ void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) {
     gl::RenderBox(boxRenderer_, centerMvp, color);
 }
 
-void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, glm::vec4 color) {
+void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color) {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
-    gl::RenderFrustum(frustumRenderer_, centerMvp, color);
+    gl::RenderFrustum(frustumRenderer_, centerMvp, frustum, color);
 }
 
 void CommonRenderers::RenderFulscreenTriangle() {

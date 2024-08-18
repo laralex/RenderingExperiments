@@ -29,7 +29,7 @@ public:
     void RenderAxes(glm::mat4 const& mvp);
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f});
-    void RenderFrustum(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f});
+    void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f});
 
     void RenderFulscreenTriangle();
     void Blit2D(GLuint srcTexture);

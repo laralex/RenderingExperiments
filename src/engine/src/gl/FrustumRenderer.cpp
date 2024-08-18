@@ -7,6 +7,12 @@
 
 namespace {
 
+constexpr int32_t UNIFORM_MVP_LOCATION       = 0;
+// constexpr int32_t UNIFORM_THICKNESS_LOCATION = 1;
+constexpr int32_t UBO_FRUSTUM_INDEX   = 0;
+// constexpr int32_t UNIFORM_NEAR_FAR_LOCATION  = 3;
+constexpr int32_t UNIFORM_COLOR_LOCATION     = 100;
+
 constexpr float THICKNESS = 0.1f;
 constexpr float OUT_BEGIN = 0.5f;
 constexpr float OUT_END   = 1.0f;
@@ -125,12 +131,6 @@ constexpr uint8_t indices[] = {
 };
 // clang-format on
 
-constexpr int32_t UNIFORM_MVP_LOCATION       = 0;
-constexpr int32_t UNIFORM_THICKNESS_LOCATION = 1;
-constexpr int32_t UNIFORM_FRUSTUM_LOCATION   = 2;
-constexpr int32_t UNIFORM_NEAR_FAR_LOCATION  = 3;
-constexpr int32_t UNIFORM_COLOR_LOCATION     = 4;
-
 } // namespace
 
 namespace engine::gl {
@@ -162,14 +162,14 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
              .offset          = offsetof(Vertex, isNear)})
         .LinkIndices(renderer.indexBuffer);
 
-    constexpr static int32_t NUM_VDEFINES   = 6;
+    constexpr static int32_t NUM_VDEFINES   = 4;
     gl::ShaderDefine vdefines[NUM_VDEFINES] = {
         {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_FRUSTUM", .value = UNIFORM_FRUSTUM_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_NEAR_FAR", .value = UNIFORM_NEAR_FAR_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_THICKNESS", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "UBO_FRUSTUM", .value = UBO_FRUSTUM_INDEX, .type = gl::ShaderDefine::INT32},
+        // {.name = "UNIFORM_NEAR_FAR", .value = UNIFORM_NEAR_FAR_LOCATION, .type = gl::ShaderDefine::INT32},
+        // {.name = "UNIFORM_THICKNESS", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     constexpr static int32_t NUM_FDEFINES   = 1;
@@ -180,23 +180,40 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
     std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/constant.frag", fdefines, NUM_FDEFINES);
     GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-    renderer.program               = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "FrustumRenderer");
-    auto programGuard              = UniformCtx{renderer.program};
-    gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
+
+    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "FrustumRenderer");
+    assert(maybeProgram);
+    renderer.program = std::move(*maybeProgram);
+
+    //auto programGuard              = UniformCtx{renderer.program};
+    // gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
+
+    constexpr size_t UBO_SIZE = 20*sizeof(float); // TODO: stub
+    renderer.ubo = gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, UBO_SIZE, "FrustumRenderer UBO");
+
     return renderer;
 }
 
-void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, glm::vec4 color) {
+void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) {
     auto programGuard = gl::UniformCtx(renderer.program);
     gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &originMvp[0][0]);
+    float thickness = 0.1;
+    GLfloat frustumUbo[] = {
+        frustum.left, frustum.right, frustum.bottom, frustum.top,
+        frustum.near, frustum.far, thickness
+    };
     gl::UniformArray<4>(UNIFORM_COLOR_LOCATION, &color[0], 1);
-    glm::vec4 frustum{0.5f, 0.2f, 0.5f, 0.2f};
-    gl::UniformArray<4>(UNIFORM_FRUSTUM_LOCATION, &frustum[0], 1);
-    glm::vec2 nearFar{0.5f, 2.0f};
-    gl::UniformArray<2>(UNIFORM_NEAR_FAR_LOCATION, &nearFar[0], 1);
+
+    constexpr GLuint UBO_BINDING = 0U;
+    renderer.ubo.Fill(frustumUbo, sizeof(frustumUbo));
+    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, renderer.ubo.Id()));
+    programGuard.SetUbo(UBO_FRUSTUM_INDEX, UBO_BINDING);
+
+    // gl::UniformArray<1>(UBO_FRUSTUM_BINDING, frustumUbo, sizeof(frustumUbo)/sizeof(frustumUbo[0]));
+    // gl::UniformArray<2>(UNIFORM_NEAR_FAR_LOCATION, &frustum.near, 1);
 
     auto vaoGuard = VaoCtx{renderer.vao};
 

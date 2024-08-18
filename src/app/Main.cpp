@@ -89,7 +89,11 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     std::string fragmentShaderCode = gl::LoadShaderCode("data/app/shaders/texture.frag", fdefines, NUM_FDEFINES);
     GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-    app->program                   = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
+
+    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
+    assert(maybeProgram);
+    app->program  = std::move(*maybeProgram);
+
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
 
@@ -139,7 +143,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    glm::vec3 cameraPosition = glm::vec3(0.0f, 2.0f, std::sin(ctx.timeSec) - 1.5f);
+    float cameraZ = std::sin(ctx.timeSec) - 1.5f;
+    glm::vec3 cameraPosition = glm::vec3(0.0f, 2.0f, cameraZ * 0.0f - 1.5f);
     glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraUp       = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::ivec2 renderSize    = app->outputColor.Size();
@@ -200,7 +205,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 mvp = camera * model;
         app->commonRenderers.RenderAxes(mvp);
         app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
-        app->commonRenderers.RenderFrustum(mvp, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
+        float near = (std::sin(ctx.timeSec)+1.0f)*3.0f;
+        gl::Frustum frustum{-0.3f, 0.3f, -0.3f, 0.3f, near, 40.0f};
+        app->commonRenderers.RenderFrustum(mvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
     }
 
     gl::GlTextureUnits::RestoreState();

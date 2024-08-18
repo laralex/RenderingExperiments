@@ -17,6 +17,9 @@ public:
     Self(Self&&)                 = delete;
     Self& operator=(Self&&)      = delete;
 #undef Self
+
+    void SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const;
+
 private:
     static GlHandle contextProgram_;
     static bool hasInstances_;
@@ -131,5 +134,6 @@ void UniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices =
 void UniformMatrix3(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
 void UniformMatrix4(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
 void UniformTexture(GLint location, GLint textureSlot);
+void UniformBuffer(GpuProgram const& program, GLuint programBinding, GLuint bufferBindingIdx);
 
 } // namespace engine::gl
