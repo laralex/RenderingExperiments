@@ -4,6 +4,7 @@
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Texture.hpp"
+#include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/Vao.hpp"
 #include "engine_private/Prelude.hpp"
 
@@ -52,6 +53,9 @@ void FillDebugLabelEnums(GlObjectType objectType, GLenum& objectTypeKhr, GLenum&
         case GlObjectType::TEXTURE:
             objectTypeKhr = objectTypeExt = GL_TEXTURE;
             break;
+        case GlObjectType::RENDERBUFFER:
+            objectTypeKhr = objectTypeExt = GL_RENDERBUFFER;
+            break;
         case GlObjectType::SAMPLER:
             objectTypeKhr = objectTypeExt = GL_SAMPLER;
             break;
@@ -67,30 +71,30 @@ void DebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std
     assert(GlExtensions::IsInitialized());
     // Debug labels support
     // + GL_BUFFER
-    // GL_SHADER
     // + GL_PROGRAM
     // + GL_VERTEX_ARRAY
+    // + GL_SAMPLER
+    // + GL_TEXTURE
+    // + GL_RENDERBUFFER
+    // + GL_FRAMEBUFFER
+    // + sync objects (pointers)
+    // GL_SHADER
     // GL_QUERY
     // GL_PROGRAM_PIPELINE
     // GL_TRANSFORM_FEEDBACK
-    // + GL_SAMPLER
-    // + GL_TEXTURE
-    // GL_RENDERBUFFER
-    // + GL_FRAMEBUFFER
-    // + sync objects (pointers)
     if (GlExtensions::Supports(GlExtensions::KHR_debug)) {
         GLCALL(glObjectLabel(objectTypeKhr, objectId, label.size(), label.data()));
         return;
     }
     // + TEXTURE
     // + FRAMEBUFFER
-    // RENDERBUFFER,
+    // + RENDERBUFFER,
     // + SAMPLER
-    // TRANSFORM_FEEDBACK
     // + BUFFER_OBJECT_EXT
-    // SHADER_OBJECT_EXT
     // + PROGRAM_OBJECT_EXT
     // + VERTEX_ARRAY_OBJECT_EX
+    // TRANSFORM_FEEDBACK
+    // SHADER_OBJECT_EXT
     // QUERY_OBJECT_EXT
     // PROGRAM_PIPELINE_OBJECT_EX
     if (GlExtensions::Supports(GlExtensions::EXT_debug_label) && objectTypeExt != GL_NONE) {
@@ -276,6 +280,18 @@ auto GetDebugLabel(Texture const& texture, char* outBuffer, size_t outBufferSize
 
 void LogDebugLabel(Texture const& texture, char const* message) {
     ::LogDebugLabel(GL_TEXTURE, GL_TEXTURE, texture.Id(), message);
+}
+
+void DebugLabel(Renderbuffer const& renderbuffer, std::string_view label) {
+    ::DebugLabel(GL_RENDERBUFFER, GL_RENDERBUFFER, renderbuffer.Id(), label);
+}
+
+auto GetDebugLabel(Renderbuffer const& renderbuffer, char* outBuffer, size_t outBufferSize) -> size_t {
+    return ::GetDebugLabel(GL_RENDERBUFFER, GL_RENDERBUFFER, renderbuffer.Id(), outBuffer, outBufferSize);
+}
+
+void LogDebugLabel(Renderbuffer const& renderbuffer, char const* message) {
+    ::LogDebugLabel(GL_RENDERBUFFER, GL_RENDERBUFFER, renderbuffer.Id(), message);
 }
 
 void DebugLabel(Sampler const& sampler, std::string_view label) {

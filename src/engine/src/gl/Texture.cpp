@@ -5,13 +5,13 @@ namespace engine::gl {
 
 bool TextureCtx::hasInstances_{false};
 GlHandle TextureCtx::contextTexture_{GL_NONE};
-GLenum TextureCtx::contextTextureType_{GL_NONE};
+GLenum TextureCtx::contextTarget_{GL_NONE};
 
 TextureCtx::TextureCtx(Texture const& useTexture) {
     assert(!hasInstances_);
     contextTexture_.id  = useTexture.Id();
-    contextTextureType_ = useTexture.TextureType();
-    GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
+    contextTarget_ = useTexture.TextureSlotTarget();
+    GLCALL(glBindTexture(contextTarget_, contextTexture_.id));
     hasInstances_ = true;
 }
 
@@ -19,7 +19,7 @@ TextureCtx::~TextureCtx() {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     contextTexture_.id = GL_NONE;
-    GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
+    GLCALL(glBindTexture(contextTarget_, contextTexture_.id));
     hasInstances_ = false;
 }
 
@@ -43,11 +43,11 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
 
     Texture texture{};
     GLCALL(glGenTextures(1, &texture.textureId_.id));
-    texture.textureType_    = textureType;
+    texture.target_    = textureType;
     texture.size_           = glm::ivec3(size.x, size.y, 0);
     texture.internalFormat_ = internalFormat;
 
-    GLCALL(glBindTexture(texture.textureType_, texture.textureId_.id));
+    GLCALL(glBindTexture(texture.target_, texture.textureId_.id));
 
     assert(GlExtensions::IsInitialized());
     if (!GlExtensions::Supports(GlExtensions::ARB_texture_storage)) {
@@ -66,19 +66,19 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
             clientType   = GL_UNSIGNED_INT;
         };
         GLCALL(glTexImage2D(
-            texture.textureType_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, clientFormat,
+            texture.target_, 0, texture.internalFormat_, texture.size_.x, texture.size_.y, border, clientFormat,
             clientType, nullptr));
     } else {
         // immutable texture (storage requirements can't change, but faster runtime check of texture completeness)
         constexpr GLsizei numLevels = 1;
         GLCALL(glTexStorage2D(
-            texture.textureType_, numLevels, texture.internalFormat_, texture.size_.x, texture.size_.y));
+            texture.target_, numLevels, texture.internalFormat_, texture.size_.x, texture.size_.y));
     }
-    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    GLCALL(glTexParameteri(texture.textureType_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 
     if (!name.empty()) {
         DebugLabel(texture, name);
@@ -98,15 +98,15 @@ auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleSten
 
     Texture texture = Allocate2D(GL_TEXTURE_2D, size, internalFormat, name);
     glTexParameteri(
-        texture.textureType_, GL_DEPTH_STENCIL_TEXTURE_MODE, sampleStencilOnly ? GL_STENCIL_INDEX : GL_DEPTH_COMPONENT);
+        texture.target_, GL_DEPTH_STENCIL_TEXTURE_MODE, sampleStencilOnly ? GL_STENCIL_INDEX : GL_DEPTH_COMPONENT);
     return texture;
 }
 
 auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) -> TextureCtx&& {
-    GLCALL(glBindTexture(contextTextureType_, contextTexture_.id));
-    GLCALL(glTexParameteri(contextTextureType_, GL_TEXTURE_BASE_LEVEL, minLevel));
-    GLCALL(glTexParameteri(contextTextureType_, GL_TEXTURE_MAX_LEVEL, maxLevel));
-    GLCALL(glGenerateMipmap(contextTextureType_));
+    GLCALL(glBindTexture(contextTarget_, contextTexture_.id));
+    GLCALL(glTexParameteri(contextTarget_, GL_TEXTURE_BASE_LEVEL, minLevel));
+    GLCALL(glTexParameteri(contextTarget_, GL_TEXTURE_MAX_LEVEL, maxLevel));
+    GLCALL(glGenerateMipmap(contextTarget_));
     return std::move(*this);
 }
 
@@ -114,7 +114,7 @@ auto TextureCtx::Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data,
     -> TextureCtx&& {
     GLint offsetX = 0, offsetY = 0;
     GLCALL(
-        glTexSubImage2D(contextTextureType_, miplevel, offsetX, offsetY, size.x, size.y, dataFormat, dataType, data));
+        glTexSubImage2D(contextTarget_, miplevel, offsetX, offsetY, size.x, size.y, dataFormat, dataType, data));
     return std::move(*this);
 }
 

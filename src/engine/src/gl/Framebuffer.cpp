@@ -1,5 +1,6 @@
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Texture.hpp"
+#include "engine/gl/Renderbuffer.hpp"
 
 namespace engine::gl {
 
@@ -107,7 +108,7 @@ auto FramebufferCtx::LinkTexture(GLenum attachment, Texture const& tex, GLint te
     if (tex.Is2D()) {
         // NOTE: doesn't work for cubemaps, must use slice e.g.
         // GL_TEXTURE_CUBE_MAP_POSITIVE_X as texture type (target)
-        GLCALL(glFramebufferTexture2D(framebufferTarget_, attachment, tex.TextureType(), tex.Id(), texLevel));
+        GLCALL(glFramebufferTexture2D(framebufferTarget_, attachment, tex.TextureSlotTarget(), tex.Id(), texLevel));
         updated = true;
     }
     if (tex.Is3D()) {
@@ -120,6 +121,11 @@ auto FramebufferCtx::LinkTexture(GLenum attachment, Texture const& tex, GLint te
     } else {
         assert(false && "Failed to set framebuffer attachment");
     }
+    return std::move(*this);
+}
+
+auto FramebufferCtx::LinkRenderbuffer(GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) -> FramebufferCtx&& {
+    GLCALL(glFramebufferRenderbuffer(framebufferTarget_, attachment, rb.RenderbufferSlotTarget(), rb.Id()));
     return std::move(*this);
 }
 

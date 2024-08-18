@@ -48,6 +48,7 @@ enum class GlObjectType {
     VAO,
     PROGRAM,
     TEXTURE,
+    RENDERBUFFER,
     SAMPLER,
     FRAMEBUFFER,
     NUM_OBJECT_TYPES,
@@ -76,6 +77,11 @@ class Texture;
 void DebugLabel(Texture const& texture, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (Texture const& texture, char* outBuffer, size_t outBufferSize) -> size_t;
 void LogDebugLabel(Texture const& texture, char const* message);
+
+class Renderbuffer;
+void DebugLabel(Renderbuffer const& renderbuffer, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (Renderbuffer const& renderbuffer, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(Renderbuffer const& renderbuffer, char const* message);
 
 class Sampler;
 void DebugLabel(Sampler const& sampler, std::string_view label);

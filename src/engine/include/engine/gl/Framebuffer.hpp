@@ -5,6 +5,7 @@
 namespace engine::gl {
 
 class Texture;
+class Renderbuffer;
 
 class Framebuffer final {
 
@@ -56,7 +57,10 @@ public:
 
     auto LinkTexture [[nodiscard]] (GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1)
     -> FramebufferCtx&&;
+    auto LinkRenderbuffer [[nodiscard]] (GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1)
+    -> FramebufferCtx&&;
     // auto LinkBackbuffer(GLenum attachment, GLint texLevel = 0) const -> FramebufferCtx&&;
+
     auto IsComplete [[nodiscard]] () -> bool;
 private:
     static GlHandle contextFramebuffer_;

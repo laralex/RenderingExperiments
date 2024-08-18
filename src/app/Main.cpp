@@ -4,6 +4,7 @@
 #include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/Guard.hpp>
 #include <engine/gl/Program.hpp>
+#include <engine/gl/Renderbuffer.hpp>
 #include <engine/gl/Sampler.hpp>
 #include <engine/gl/Shader.hpp>
 #include <engine/gl/Texture.hpp>
@@ -26,6 +27,7 @@ struct Application final {
     engine::gl::Framebuffer outputFramebuffer{};
     engine::gl::Texture outputColor{};
     engine::gl::Texture outputDepth{};
+    engine::gl::Renderbuffer renderbuffer{};
 
     bool isInitialized = false;
 };
@@ -117,10 +119,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
         app->outputDepth = gl::Texture::Allocate2D(
             GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
+        app->renderbuffer = gl::Renderbuffer::Allocate2D(screenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
         app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
         (void)gl::FramebufferCtx{app->outputFramebuffer, true}
             .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
-            .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
+            // .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
+            .LinkRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer);
 
         app->isInitialized = true;
     }
