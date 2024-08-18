@@ -1,6 +1,7 @@
 #pragma once
 
-#include "engine/Prelude.hpp"
+#include <glad/gl.h>
+
 #include <unordered_set>
 
 namespace engine::gl {

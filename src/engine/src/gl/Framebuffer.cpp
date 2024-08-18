@@ -1,6 +1,6 @@
 #include "engine/gl/Framebuffer.hpp"
-#include "engine/gl/Texture.hpp"
 #include "engine/gl/Renderbuffer.hpp"
+#include "engine/gl/Texture.hpp"
 
 namespace engine::gl {
 
@@ -15,7 +15,7 @@ FramebufferCtx::FramebufferCtx(GLuint useFramebuffer, bool bindAsDraw) {
     // XLOG("FramebufferCtx ctor {}", useFramebuffer);
     assert(!hasInstances_);
     contextFramebuffer_.id = useFramebuffer;
-    framebufferTarget_ = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
+    framebufferTarget_     = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
     GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id));
     hasInstances_ = true;
 }
@@ -57,7 +57,7 @@ void Framebuffer::BindRead() const { GLCALL(glBindFramebuffer(GL_READ_FRAMEBUFFE
 auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) -> FramebufferCtx&& {
     GLint rgba[] = {r, g, b, a};
     GLCALL(glClearBufferiv(GL_COLOR, drawBufferIdx, rgba));
-    // 
+    //
     return std::move(*this);
 }
 
@@ -147,9 +147,7 @@ auto FramebufferCtx::Invalidate(uint32_t numAttachments, GLenum* attachments) ->
 auto Framebuffer::IsComplete() -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(fbId_) == GL_FRAMEBUFFER_COMPLETE);
-    if (isComplete) {
-        LogDebugLabel(*this, "Framebuffer is not complete");
-    }
+    if (isComplete) { LogDebugLabel(*this, "Framebuffer is not complete"); }
     return isComplete;
 }
 

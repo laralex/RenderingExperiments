@@ -62,10 +62,10 @@ constexpr uint8_t textureData[] = {
     160, 160, 160, // 13
 };
 
-constexpr GLint ATTRIB_POSITION_LOCATION = 0;
-constexpr GLint ATTRIB_UV_LOCATION       = 1;
-constexpr GLint UNIFORM_TEXTURE_LOCATION = 0;
-constexpr GLint UNIFORM_MVP_LOCATION     = 10;
+constexpr GLint ATTRIB_POSITION_LOCATION           = 0;
+constexpr GLint ATTRIB_UV_LOCATION                 = 1;
+constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
+constexpr GLint UNIFORM_MVP_LOCATION               = 10;
 constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
 static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
@@ -102,17 +102,17 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         .LinkVertexAttribute(
             app->attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
-                .valuesPerVertex = 3,
-                .datatype        = GL_FLOAT,
-                .stride          = 5 * sizeof(float),
-                .offset          = 0})
+             .valuesPerVertex = 3,
+             .datatype        = GL_FLOAT,
+             .stride          = 5 * sizeof(float),
+             .offset          = 0})
         .LinkVertexAttribute(
             app->attributeBuffer,
             {.index           = ATTRIB_UV_LOCATION,
-                .valuesPerVertex = 2,
-                .datatype        = GL_FLOAT,
-                .stride          = 5 * sizeof(float),
-                .offset          = 3 * sizeof(float)})
+             .valuesPerVertex = 2,
+             .datatype        = GL_FLOAT,
+             .stride          = 5 * sizeof(float),
+             .offset          = 3 * sizeof(float)})
         .LinkIndices(app->indexBuffer);
 
     app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
@@ -124,13 +124,12 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
     app->outputDepth = gl::Texture::Allocate2D(
         GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
-    app->renderbuffer = gl::Renderbuffer::Allocate2D(screenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
+    app->renderbuffer      = gl::Renderbuffer::Allocate2D(screenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
     (void)gl::FramebufferCtx{app->outputFramebuffer, true}
         .LinkTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
         // .LinkTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
         .LinkRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer);
-
 }
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
@@ -151,16 +150,16 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::mat4 camera         = proj * view;
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, ctx.timeSec * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.2f));
+    model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model           = glm::rotate(model, ctx.timeSec * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+    model           = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.2f));
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
         glViewport(0, 0, renderSize.x, renderSize.y);
-        auto fbGuard         = gl::FramebufferCtx{app->outputFramebuffer, true};
-        fbGuard              = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
+        auto fbGuard = gl::FramebufferCtx{app->outputFramebuffer, true};
+        fbGuard      = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
 
-        auto programGuard            = gl::UniformCtx(app->program);
+        auto programGuard = gl::UniformCtx(app->program);
 
         glm::mat4 mvp                = camera * model;
         constexpr GLint TEXTURE_SLOT = 0;
@@ -188,20 +187,20 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     {
         // present
         glViewport(0, 0, screenSize.x, screenSize.y);
-        GLenum invalidateAttachments[1] = { GL_COLOR_ATTACHMENT0 };
-        auto dstGuard = gl::FramebufferCtx{0U, true}
-            .ClearDepthStencil(1.0f, 0);
-            // .Invalidate(1, invalidateAttachments);
+        GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
+        auto dstGuard                   = gl::FramebufferCtx{0U, true}.ClearDepthStencil(1.0f, 0);
+        // .Invalidate(1, invalidateAttachments);
         app->commonRenderers.Blit2D(app->outputColor.Id());
     }
 
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
-        
+
         glm::mat4 mvp = camera * model;
         app->commonRenderers.RenderAxes(mvp);
         app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
+        app->commonRenderers.RenderFrustum(mvp, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
     }
 
     gl::GlTextureUnits::RestoreState();

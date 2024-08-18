@@ -102,7 +102,7 @@ constexpr uint8_t indices[] = {
 
 constexpr int32_t UNIFORM_MVP_LOCATION = 0;
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl {
 

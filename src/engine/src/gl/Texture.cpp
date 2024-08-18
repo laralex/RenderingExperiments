@@ -9,8 +9,8 @@ GLenum TextureCtx::contextTarget_{GL_NONE};
 
 TextureCtx::TextureCtx(Texture const& useTexture) {
     assert(!hasInstances_);
-    contextTexture_.id  = useTexture.Id();
-    contextTarget_ = useTexture.TextureSlotTarget();
+    contextTexture_.id = useTexture.Id();
+    contextTarget_     = useTexture.TextureSlotTarget();
     GLCALL(glBindTexture(contextTarget_, contextTexture_.id));
     hasInstances_ = true;
 }
@@ -43,7 +43,7 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
 
     Texture texture{};
     GLCALL(glGenTextures(1, &texture.textureId_.id));
-    texture.target_    = textureType;
+    texture.target_         = textureType;
     texture.size_           = glm::ivec3(size.x, size.y, 0);
     texture.internalFormat_ = internalFormat;
 
@@ -71,8 +71,7 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
     } else {
         // immutable texture (storage requirements can't change, but faster runtime check of texture completeness)
         constexpr GLsizei numLevels = 1;
-        GLCALL(glTexStorage2D(
-            texture.target_, numLevels, texture.internalFormat_, texture.size_.x, texture.size_.y));
+        GLCALL(glTexStorage2D(texture.target_, numLevels, texture.internalFormat_, texture.size_.x, texture.size_.y));
     }
     GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
@@ -113,8 +112,7 @@ auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) -> TextureCtx&&
 auto TextureCtx::Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data, glm::ivec3 size, GLint miplevel)
     -> TextureCtx&& {
     GLint offsetX = 0, offsetY = 0;
-    GLCALL(
-        glTexSubImage2D(contextTarget_, miplevel, offsetX, offsetY, size.x, size.y, dataFormat, dataType, data));
+    GLCALL(glTexSubImage2D(contextTarget_, miplevel, offsetX, offsetY, size.x, size.y, dataFormat, dataType, data));
     return std::move(*this);
 }
 

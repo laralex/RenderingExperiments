@@ -7,17 +7,11 @@
 
 namespace {
 
-constexpr float THICKNESS    = 0.03f;
-constexpr float OUT_BEGIN    = -0.5f;
-constexpr float OUT_END      =  0.5f;
-constexpr float IN_BEGIN     = -0.5f;
-constexpr float IN_END       =  0.5f;
-constexpr float BIAS         = 0.00f;
-
-constexpr float ZERO[3]      = { 0.0f, 0.0f, 0.0f };
-constexpr float AXIS_X[3]    = { 1.0f, 0.0f, 0.0f };
-constexpr float AXIS_Y[3]    = { 0.0f, 1.0f, 0.0f };
-constexpr float AXIS_Z[3]    = { 0.0f, 0.0f, 1.0f };
+constexpr float THICKNESS = 0.03f;
+constexpr float OUT_BEGIN = -0.5f;
+constexpr float OUT_END   = 0.5f;
+constexpr float IN_BEGIN  = -0.5f;
+constexpr float IN_END    = 0.5f;
 
 struct Vertex {
     float position[3];
@@ -105,16 +99,16 @@ constexpr uint8_t indices[] = {
 };
 // clang-format on
 
-constexpr int32_t UNIFORM_MVP_LOCATION = 0;
+constexpr int32_t UNIFORM_MVP_LOCATION       = 0;
 constexpr int32_t UNIFORM_THICKNESS_LOCATION = 1;
-constexpr int32_t UNIFORM_COLOR_LOCATION = 2;
+constexpr int32_t UNIFORM_COLOR_LOCATION     = 2;
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl {
 
 auto AllocateBoxRenderer() -> BoxRenderer {
-    constexpr int32_t ATTRIB_POSITION_LOCATION = 0;
+    constexpr int32_t ATTRIB_POSITION_LOCATION     = 0;
     constexpr int32_t ATTRIB_INNER_MARKER_LOCATION = 1;
 
     BoxRenderer renderer;
@@ -143,7 +137,9 @@ auto AllocateBoxRenderer() -> BoxRenderer {
     constexpr static int32_t NUM_VDEFINES   = 4;
     gl::ShaderDefine vdefines[NUM_VDEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name  = "ATTRIB_INNER_MARKER_LOCATION",
+         .value = ATTRIB_INNER_MARKER_LOCATION,
+         .type  = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
     };
@@ -155,8 +151,8 @@ auto AllocateBoxRenderer() -> BoxRenderer {
     std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/constant.frag", fdefines, NUM_FDEFINES);
     GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-    renderer.program           = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "BoxRenderer");
-    auto programGuard = UniformCtx{renderer.program};
+    renderer.program               = *gl::GpuProgram::Allocate(vertexShader, fragmentShader, "BoxRenderer");
+    auto programGuard              = UniformCtx{renderer.program};
     gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     GLCALL(glDeleteShader(vertexShader));

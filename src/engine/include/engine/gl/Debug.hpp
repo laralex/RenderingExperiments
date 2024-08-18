@@ -56,7 +56,8 @@ enum class GlObjectType {
 
 void DebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view label);
 void LogDebugLabelUnsafe(GLuint object, GlObjectType objectType, char const* message);
-auto GetDebugLabelUnsafe [[nodiscard]] (GLuint object, GlObjectType objectType, char* outBuffer, size_t outBufferSize) -> size_t;
+auto GetDebugLabelUnsafe [[nodiscard]] (GLuint object, GlObjectType objectType, char* outBuffer, size_t outBufferSize)
+-> size_t;
 
 class GpuBuffer;
 void DebugLabel(GpuBuffer const& buffer, std::string_view label);

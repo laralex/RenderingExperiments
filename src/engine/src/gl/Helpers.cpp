@@ -11,8 +11,6 @@ ENGINE_EXPORT void InitializeOpenGl() {
     gl::GlTextureUnits::Initialize();
 }
 
-ENGINE_EXPORT void DisposeOpenGl() {
-
-}
+ENGINE_EXPORT void DisposeOpenGl() { }
 
 } // namespace engine::gl

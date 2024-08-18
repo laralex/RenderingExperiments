@@ -8,16 +8,16 @@
 
 namespace engine::gl {
 
-struct PyramidRenderer final {
-    PyramidRenderer() = default;
+struct FrustumRenderer final {
+    FrustumRenderer() = default;
     Vao vao;
     GpuBuffer attributeBuffer;
     GpuBuffer indexBuffer;
     GpuProgram program;
 };
 
-auto AllocatePyramidRenderer [[nodiscard]] () -> PyramidRenderer;
+auto AllocateFrustumRenderer [[nodiscard]] () -> FrustumRenderer;
 
-void RenderBox(BoxRenderer const& renderer, glm::mat4 const& centerMvp, glm::vec4 color);
+void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, glm::vec4 color);
 
 } // namespace engine::gl

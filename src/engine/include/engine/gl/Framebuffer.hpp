@@ -62,6 +62,7 @@ public:
     // auto LinkBackbuffer(GLenum attachment, GLint texLevel = 0) const -> FramebufferCtx&&;
 
     auto IsComplete [[nodiscard]] () -> bool;
+
 private:
     static GlHandle contextFramebuffer_;
     static GLenum framebufferTarget_;

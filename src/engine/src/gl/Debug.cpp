@@ -2,9 +2,9 @@
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Program.hpp"
+#include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Texture.hpp"
-#include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/Vao.hpp"
 #include "engine_private/Prelude.hpp"
 
@@ -38,31 +38,32 @@ void FillDebugLabelEnums(GlObjectType objectType, GLenum& objectTypeKhr, GLenum&
     objectTypeKhr = GL_NONE;
     objectTypeExt = GL_NONE;
     switch (objectType) {
-        case GlObjectType::BUFFER:
-            objectTypeKhr = GL_BUFFER;
-            objectTypeExt = GL_BUFFER_OBJECT_EXT;
-            break;
-        case GlObjectType::VAO:
-            objectTypeKhr = GL_VERTEX_ARRAY;
-            objectTypeExt = GL_VERTEX_ARRAY_OBJECT_EXT;
-            break;
-        case GlObjectType::PROGRAM:
-            objectTypeKhr = GL_PROGRAM;
-            objectTypeExt = GL_PROGRAM_OBJECT_EXT;
-            break;
-        case GlObjectType::TEXTURE:
-            objectTypeKhr = objectTypeExt = GL_TEXTURE;
-            break;
-        case GlObjectType::RENDERBUFFER:
-            objectTypeKhr = objectTypeExt = GL_RENDERBUFFER;
-            break;
-        case GlObjectType::SAMPLER:
-            objectTypeKhr = objectTypeExt = GL_SAMPLER;
-            break;
-        case GlObjectType::FRAMEBUFFER:
-            objectTypeKhr = objectTypeExt = GL_FRAMEBUFFER;
-            break;
-        default: std::terminate();
+    case GlObjectType::BUFFER:
+        objectTypeKhr = GL_BUFFER;
+        objectTypeExt = GL_BUFFER_OBJECT_EXT;
+        break;
+    case GlObjectType::VAO:
+        objectTypeKhr = GL_VERTEX_ARRAY;
+        objectTypeExt = GL_VERTEX_ARRAY_OBJECT_EXT;
+        break;
+    case GlObjectType::PROGRAM:
+        objectTypeKhr = GL_PROGRAM;
+        objectTypeExt = GL_PROGRAM_OBJECT_EXT;
+        break;
+    case GlObjectType::TEXTURE:
+        objectTypeKhr = objectTypeExt = GL_TEXTURE;
+        break;
+    case GlObjectType::RENDERBUFFER:
+        objectTypeKhr = objectTypeExt = GL_RENDERBUFFER;
+        break;
+    case GlObjectType::SAMPLER:
+        objectTypeKhr = objectTypeExt = GL_SAMPLER;
+        break;
+    case GlObjectType::FRAMEBUFFER:
+        objectTypeKhr = objectTypeExt = GL_FRAMEBUFFER;
+        break;
+    default:
+        std::terminate();
     }
 }
 
@@ -126,7 +127,7 @@ void LogDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, 
     XLOG("{} (name={})", message, debugLabel);
 }
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl {
 
@@ -232,7 +233,6 @@ auto GetDebugLabelUnsafe(GLuint object, GlObjectType objectType, char* outBuffer
     FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
     return ::GetDebugLabel(objectTypeKhr, objectTypeExt, object, outBuffer, outBufferSize);
 }
-
 
 void DebugLabel(GpuBuffer const& buffer, std::string_view label) {
     ::DebugLabel(GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), label);

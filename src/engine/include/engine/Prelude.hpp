@@ -6,9 +6,9 @@
 #include <string_view>
 
 #include "engine/gl/Capabilities.hpp"
-#include <engine/gl/Helpers.hpp>
 #include "engine/gl/Extensions.hpp"
 #include <engine/gl/Debug.hpp>
+#include <engine/gl/Helpers.hpp>
 
 #ifdef XDEBUG
 #define SPDLOG_COMPILED_LIB 1

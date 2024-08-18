@@ -2,9 +2,10 @@
 
 #include "engine/gl/AxesRenderer.hpp"
 #include "engine/gl/BoxRenderer.hpp"
+#include "engine/gl/FrustumRenderer.hpp"
+#include "engine/gl/Program.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Texture.hpp"
-#include "engine/gl/Program.hpp"
 
 #include <glad/gl.h>
 #include <glm/mat4x4.hpp>
@@ -28,6 +29,7 @@ public:
     void RenderAxes(glm::mat4 const& mvp);
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f});
+    void RenderFrustum(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f});
 
     void RenderFulscreenTriangle();
     void Blit2D(GLuint srcTexture);
@@ -41,6 +43,7 @@ public:
 private:
     AxesRenderer axesRenderer_;
     BoxRenderer boxRenderer_;
+    FrustumRenderer frustumRenderer_;
     Vao fullscreenTriangleVao_;
     GpuProgram blitProgram_;
     bool isInitialized_;

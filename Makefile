@@ -32,6 +32,7 @@ obj_engine_ = Assets.o \
 	gl/AxesRenderer.o gl/BoxRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
 	gl/CommonRenderers.o gl/Debug.o \
+	gl/FrustumRenderer.o \
 	gl/Extensions.o gl/Framebuffer.o \
 	gl/Helpers.o gl/Program.o \
 	gl/Renderbuffer.o gl/Sampler.o \

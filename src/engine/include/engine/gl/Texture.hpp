@@ -32,17 +32,15 @@ public:
     auto TextureSlotTarget [[nodiscard]] () const -> GLenum { return target_; }
     auto Is1D() const -> bool { return target_ == GL_TEXTURE_1D | target_ == GL_TEXTURE_1D_ARRAY; }
     auto Is2D() const -> bool {
-        return target_ == GL_TEXTURE_2D | target_ == GL_TEXTURE_2D_ARRAY
-            | target_ == GL_TEXTURE_2D_MULTISAMPLE | target_ == GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+        return target_ == GL_TEXTURE_2D | target_ == GL_TEXTURE_2D_ARRAY | target_ == GL_TEXTURE_2D_MULTISAMPLE
+            | target_ == GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
     }
     auto Is3D() const -> bool { return target_ == GL_TEXTURE_3D; }
     auto IsTextureArray() const -> bool {
         return target_ == GL_TEXTURE_1D_ARRAY | target_ == GL_TEXTURE_2D_ARRAY
             | target_ == GL_TEXTURE_2D_MULTISAMPLE_ARRAY | target_ == GL_TEXTURE_CUBE_MAP_ARRAY;
     }
-    auto IsCubemap() const -> bool {
-        return target_ == GL_TEXTURE_CUBE_MAP | target_ == GL_TEXTURE_CUBE_MAP_ARRAY;
-    }
+    auto IsCubemap() const -> bool { return target_ == GL_TEXTURE_CUBE_MAP | target_ == GL_TEXTURE_CUBE_MAP_ARRAY; }
 
 private:
     void Dispose();
