@@ -13,7 +13,7 @@ constexpr int32_t UBO_FRUSTUM_INDEX   = 0;
 // constexpr int32_t UNIFORM_NEAR_FAR_LOCATION  = 3;
 constexpr int32_t UNIFORM_COLOR_LOCATION     = 100;
 
-constexpr float THICKNESS = 0.1f;
+constexpr float THICKNESS = 0.03f;
 constexpr float OUT_BEGIN = 0.5f;
 constexpr float OUT_END   = 1.0f;
 constexpr float IN_BEGIN  = 0.5f;
@@ -169,8 +169,6 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UBO_FRUSTUM", .value = UBO_FRUSTUM_INDEX, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
-        // {.name = "UNIFORM_NEAR_FAR", .value = UNIFORM_NEAR_FAR_LOCATION, .type = gl::ShaderDefine::INT32},
-        // {.name = "UNIFORM_THICKNESS", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
@@ -189,10 +187,9 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
 void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) {
     auto programGuard = gl::UniformCtx(renderer.program);
     gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &originMvp[0][0]);
-    float thickness = 0.1;
     GLfloat frustumUbo[] = {
         frustum.left, frustum.right, frustum.bottom, frustum.top,
-        frustum.near, frustum.far, thickness
+        frustum.near, frustum.far, THICKNESS
     };
     gl::UniformArray<4>(UNIFORM_COLOR_LOCATION, &color[0], 1);
 

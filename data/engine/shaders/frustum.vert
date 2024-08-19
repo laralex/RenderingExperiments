@@ -18,11 +18,7 @@ layout(packed, binding = UBO_FRUSTUM) uniform FrustumParams {
 void main() {
     float z = dot(in_NearFarInnerWeight.xy, u_NearFar);
     float thickness = in_NearFarInnerWeight.z * u_Thickness;
-    vec4 frustum = u_LeftRightBottomTop * in_FrustumWeights * (z + thickness);
-    vec2 xy = frustum.x * vec2(1.0, 0.0) // left
-        + frustum.y * vec2(1.0, 0.0) // right
-        + frustum.z * vec2(0.0, 1.0) // bottom
-        + frustum.w * vec2(0.0, 1.0) // top
-        ;
+    vec4 frustum =  in_FrustumWeights * (u_LeftRightBottomTop * z / u_NearFar.x - thickness);
+    vec2 xy = vec2(frustum.x + frustum.y, frustum.z + frustum.w);
     gl_Position = u_MVP * vec4(xy, z /*- thickness*/, 1.0);
 }

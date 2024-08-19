@@ -198,8 +198,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 mvp = camera * model;
         app->commonRenderers.RenderAxes(mvp);
         app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
-        float near = (std::sin(ctx.timeSec)+1.0f)*3.0f;
-        gl::Frustum frustum{-0.3f, 0.3f, -0.3f, 0.3f, near, 40.0f};
+        float near = (std::sin(ctx.timeSec)+1.5f)*3.0f;
+        gl::Frustum frustum{-0.3f, 1.3f + std::sin(2.0f*ctx.timeSec), -0.3f, 0.3f, near, 10.0f};
         app->commonRenderers.RenderFrustum(mvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
     }
 
