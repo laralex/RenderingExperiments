@@ -20,10 +20,12 @@ ENGINE_EXPORT auto LoadTextFile(std::string_view const filepath) -> std::string 
 
 namespace engine::gl {
 
-auto LoadShaderCode(std::string_view const filepath, ShaderDefine const* defines, int32_t limit, int32_t stride)
+auto LoadShaderCode(std::string_view const filepath, CpuView<ShaderDefine const> defines)
     -> std::string {
     std::string code = LoadTextFile(filepath);
-    code             = AddShaderDefines(code, defines, limit, stride);
+    if (defines) {
+        code             = AddShaderDefines(code, defines);
+    }
     return code;
 }
 

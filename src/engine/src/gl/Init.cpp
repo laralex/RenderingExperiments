@@ -2,7 +2,8 @@
 #include "engine/gl/TextureUnits.hpp"
 #include "engine_private/Prelude.hpp"
 
-namespace engine::gl {
+namespace engine::gl
+{
 
 ENGINE_EXPORT void InitializeOpenGl() {
     gl::GlExtensions::Initialize();

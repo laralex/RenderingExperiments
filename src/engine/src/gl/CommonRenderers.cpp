@@ -21,23 +21,17 @@ constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
 
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
-    constexpr static int32_t NUM_FRAG_MACROS     = 1;
-    gl::ShaderDefine fragMacros[NUM_FRAG_MACROS] = {
+    constexpr static int32_t NUM_DEFINES     = 1;
+    gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
-    std::string vertexShaderCode   = gl::LoadShaderCode("data/engine/shaders/triangle_fullscreen.vert", nullptr, 0);
-    std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/blit.frag", fragMacros, NUM_FRAG_MACROS);
-    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-    assert(vertexShader != GL_NONE && "AllocateBlitter");
-    GLuint fragmentShader = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-    assert(fragmentShader != GL_NONE && "AllocateBlitter");
 
-    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Blit");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        "data/engine/shaders/triangle_fullscreen.vert",
+        "data/engine/shaders/blit.frag",
+        CpuView{defines, NUM_DEFINES}, "Blit");
     assert(maybeProgram);
     gl::GpuProgram blitProgram = std::move(*maybeProgram);
-
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
 
     auto programGuard = gl::UniformCtx(blitProgram);
     gl::UniformTexture(BLIT_UNIFORM_TEXTURE_LOCATION, BLIT_TEXTURE_SLOT);

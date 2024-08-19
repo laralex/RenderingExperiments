@@ -3,10 +3,17 @@
 #include <cassert>
 #include <glad/gl.h>
 
+namespace engine {
+    template<typename T>
+    struct CpuView;
+} // namespace engine
+
 namespace engine::gl {
 
-void InitializeOpenGl();
-void DisposeOpenGl();
+struct ShaderDefine;
+
+auto LinkProgram(std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {}) -> std::optional<GpuProgram>;
+auto LinkProgramFromFiles(std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<ShaderDefine const> defines, std::string_view name = {}) -> std::optional<GpuProgram>;
 
 // Wrapper for OpenGL object identifiers. Becomes 0 when moved away from
 // This helps to define move constructor/assignment of other high level wrappers as simply "=default"

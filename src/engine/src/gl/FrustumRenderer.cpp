@@ -162,34 +162,23 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
              .offset          = offsetof(Vertex, isNear)})
         .LinkIndices(renderer.indexBuffer);
 
-    constexpr static int32_t NUM_VDEFINES   = 4;
-    gl::ShaderDefine vdefines[NUM_VDEFINES] = {
+    constexpr static int32_t NUM_DEFINES   = 5;
+    gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UBO_FRUSTUM", .value = UBO_FRUSTUM_INDEX, .type = gl::ShaderDefine::INT32},
+        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
         // {.name = "UNIFORM_NEAR_FAR", .value = UNIFORM_NEAR_FAR_LOCATION, .type = gl::ShaderDefine::INT32},
         // {.name = "UNIFORM_THICKNESS", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
-    constexpr static int32_t NUM_FDEFINES   = 1;
-    gl::ShaderDefine fdefines[NUM_FDEFINES] = {
-        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
-    };
-    std::string vertexShaderCode   = gl::LoadShaderCode("data/engine/shaders/frustum.vert", vdefines, NUM_VDEFINES);
-    std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/constant.frag", fdefines, NUM_FDEFINES);
-    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-    GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
-
-    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "FrustumRenderer");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        "data/engine/shaders/frustum.vert",
+        "data/engine/shaders/constant.frag",
+        CpuView{defines, NUM_DEFINES}, "FrustumRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);
-
-    //auto programGuard              = UniformCtx{renderer.program};
-    // gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
-
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
 
     constexpr size_t UBO_SIZE = 20*sizeof(float); // TODO: stub
     renderer.ubo = gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, UBO_SIZE, "FrustumRenderer UBO");
@@ -211,9 +200,6 @@ void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, 
     renderer.ubo.Fill(frustumUbo, sizeof(frustumUbo));
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, renderer.ubo.Id()));
     programGuard.SetUbo(UBO_FRUSTUM_INDEX, UBO_BINDING);
-
-    // gl::UniformArray<1>(UBO_FRUSTUM_BINDING, frustumUbo, sizeof(frustumUbo)/sizeof(frustumUbo[0]));
-    // gl::UniformArray<2>(UNIFORM_NEAR_FAR_LOCATION, &frustum.near, 1);
 
     auto vaoGuard = VaoCtx{renderer.vao};
 

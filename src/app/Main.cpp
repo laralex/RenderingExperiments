@@ -4,6 +4,7 @@
 #include <engine/gl/CommonRenderers.hpp>
 #include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/Guard.hpp>
+#include <engine/gl/Init.hpp>
 #include <engine/gl/Program.hpp>
 #include <engine/gl/Renderbuffer.hpp>
 #include <engine/gl/Sampler.hpp>
@@ -74,28 +75,20 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     gl::InitializeOpenGl();
     app->commonRenderers.Initialize();
 
-    constexpr static int32_t NUM_VDEFINES   = 3;
-    gl::ShaderDefine vdefines[NUM_VDEFINES] = {
+    constexpr static int32_t NUM_DEFINES   = 4;
+    gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-    };
-    std::string vertexShaderCode = gl::LoadShaderCode("data/app/shaders/triangle.vert", vdefines, NUM_VDEFINES);
-
-    constexpr static int32_t NUM_FDEFINES   = 1;
-    gl::ShaderDefine fdefines[NUM_FDEFINES] = {
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
-    std::string fragmentShaderCode = gl::LoadShaderCode("data/app/shaders/texture.frag", fdefines, NUM_FDEFINES);
-    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-    GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
 
-    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "Test program");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        "data/app/shaders/triangle.vert",
+        "data/app/shaders/texture.frag",
+        CpuView{defines, NUM_DEFINES}, "Test program");
     assert(maybeProgram);
     app->program  = std::move(*maybeProgram);
-
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
 
     app->attributeBuffer =
         gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test VBO");

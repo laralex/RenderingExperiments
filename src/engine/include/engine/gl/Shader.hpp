@@ -24,7 +24,7 @@ struct ShaderDefine {
 };
 
 auto AddShaderDefines
-    [[nodiscard]] (std::string_view code, ShaderDefine const* defines, int32_t limit, int32_t stride = 1)
+    [[nodiscard]] (std::string_view code, CpuView<ShaderDefine const> defines)
     -> std::string;
 
 } // namespace engine::gl

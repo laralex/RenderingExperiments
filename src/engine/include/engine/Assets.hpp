@@ -16,6 +16,6 @@ auto LoadTextFile [[nodiscard]] (std::string_view const filepath) -> std::string
 namespace engine::gl {
 
 auto LoadShaderCode
-    [[nodiscard]] (std::string_view const filepath, ShaderDefine const* defines, int32_t limit, int32_t stride = 1)
+    [[nodiscard]] (std::string_view const filepath, CpuView<ShaderDefine const> defines)
     -> std::string;
 } // namespace engine::gl

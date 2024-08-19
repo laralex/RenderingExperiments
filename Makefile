@@ -27,19 +27,20 @@ CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
 
-obj_engine_ = Assets.o \
-	EngineLoop.o \
+obj_engine_ = \
+	Assets.o EngineLoop.o \
+	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o gl/BoxRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
-	gl/CommonRenderers.o gl/Debug.o \
-	gl/FrustumRenderer.o \
+	gl/Common.o gl/CommonRenderers.o gl/Debug.o \
+	gl/FrustumRenderer.o gl/Guard.o \
+	gl/Init.o \
 	gl/Extensions.o gl/Framebuffer.o \
-	gl/Helpers.o gl/Program.o \
+	gl/Program.o \
 	gl/Renderbuffer.o gl/Sampler.o \
 	gl/Shader.o gl/Texture.o \
 	gl/TextureUnits.o gl/Uniform.o \
-	gl/Vao.o gl/Guard.o \
-	Prelude.o WindowContext.o
+	gl/Vao.o
 
 obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
 obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})

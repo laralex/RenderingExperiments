@@ -5,13 +5,14 @@
 
 namespace engine::gl {
 
-auto AddShaderDefines(std::string_view code, ShaderDefine const* defines, int32_t limit, int32_t stride)
+auto AddShaderDefines(std::string_view code, CpuView<ShaderDefine const> defines)
     -> std::string {
     std::stringstream ss;
     auto versionEnd = code.find('\n') + 1;
     ss << code.substr(0U, versionEnd);
-    for (size_t i = 0; i < limit; i += stride) {
-        ShaderDefine const& define = defines[i];
+    size_t numDefines = defines.NumElements();
+    for (size_t i = 0; i < numDefines; ++i) {
+        ShaderDefine const& define = *defines[i];
         ss << "#define" << ' ' << define.name << ' ';
         switch (define.type) {
         case ShaderDefine::INT32:
@@ -32,6 +33,7 @@ auto AddShaderDefines(std::string_view code, ShaderDefine const* defines, int32_
         }
         ss << '\n';
     }
+    XLOG("Shader defines: {}", ss.str());
     ss << code.substr(versionEnd);
     return ss.str();
 }

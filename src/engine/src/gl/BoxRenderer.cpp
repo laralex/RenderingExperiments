@@ -134,33 +134,25 @@ auto AllocateBoxRenderer() -> BoxRenderer {
              .offset          = offsetof(Vertex, innerMarker)})
         .LinkIndices(renderer.indexBuffer);
 
-    constexpr static int32_t NUM_VDEFINES   = 4;
-    gl::ShaderDefine vdefines[NUM_VDEFINES] = {
+    constexpr static int32_t NUM_DEFINES   = 5;
+    gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name  = "ATTRIB_INNER_MARKER_LOCATION",
-         .value = ATTRIB_INNER_MARKER_LOCATION,
-         .type  = gl::ShaderDefine::INT32},
+        {.name  = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type  = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
-    };
-    constexpr static int32_t NUM_FDEFINES   = 1;
-    gl::ShaderDefine fdefines[NUM_FDEFINES] = {
         {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
     };
-    std::string vertexShaderCode   = gl::LoadShaderCode("data/engine/shaders/box.vert", vdefines, NUM_VDEFINES);
-    std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/constant.frag", fdefines, NUM_FDEFINES);
-    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-    GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
 
-    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "BoxRenderer");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        "data/engine/shaders/box.vert",
+        "data/engine/shaders/constant.frag",
+        CpuView{defines, NUM_DEFINES}, "BoxRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);
 
     auto programGuard              = UniformCtx{renderer.program};
     gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
     return renderer;
 }
 

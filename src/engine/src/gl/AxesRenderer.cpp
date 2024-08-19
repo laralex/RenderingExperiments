@@ -132,23 +132,20 @@ auto AllocateAxesRenderer() -> AxesRenderer {
              .offset          = 3 * sizeof(float)})
         .LinkIndices(renderer.indexBuffer);
 
-    constexpr static int32_t NUM_VDEFINES   = 3;
-    gl::ShaderDefine vdefines[NUM_VDEFINES] = {
+    constexpr static int32_t NUM_DEFINES   = 3;
+    gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_COLOR_LOCATION", .value = ATTRIB_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
     };
-    std::string vertexShaderCode   = gl::LoadShaderCode("data/engine/shaders/axes.vert", vdefines, NUM_VDEFINES);
-    std::string fragmentShaderCode = gl::LoadShaderCode("data/engine/shaders/axes.frag", nullptr, 0);
-    GLuint vertexShader            = gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-    GLuint fragmentShader          = gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
 
-    auto maybeProgram = gl::GpuProgram::Allocate(vertexShader, fragmentShader, "AxesRenderer");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        "data/engine/shaders/axes.vert",
+        "data/engine/shaders/axes.frag",
+        CpuView{defines, NUM_DEFINES}, "AxesRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);
 
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
     return renderer;
 }
 
