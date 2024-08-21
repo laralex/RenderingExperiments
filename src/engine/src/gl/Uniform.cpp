@@ -8,7 +8,7 @@ GlHandle UniformCtx::contextProgram_{GL_NONE};
 
 UniformCtx::UniformCtx(GpuProgram const& useProgram) {
     assert(!hasInstances_);
-    contextProgram_.id = useProgram.Id();
+    contextProgram_.id_ = useProgram.Id();
     GLCALL(glUseProgram(contextProgram_));
     hasInstances_ = true;
 }
@@ -16,13 +16,13 @@ UniformCtx::UniformCtx(GpuProgram const& useProgram) {
 UniformCtx::~UniformCtx() {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
-    contextProgram_.id = GL_NONE;
+    contextProgram_.id_ = GL_NONE;
     GLCALL(glUseProgram(contextProgram_));
     hasInstances_ = false;
 }
 
 void UniformCtx::SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const {
-    GLCALL(glUniformBlockBinding(contextProgram_.id, programBinding, bufferBindingIdx));
+    GLCALL(glUniformBlockBinding(contextProgram_.id_, programBinding, bufferBindingIdx));
 }
 
 void UniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {

@@ -23,8 +23,6 @@ struct ShaderDefine {
     bool highPrecision = true;
 };
 
-auto AddShaderDefines
-    [[nodiscard]] (std::string_view code, CpuView<ShaderDefine const> defines)
-    -> std::string;
+auto AddShaderDefines [[nodiscard]] (std::string_view code, CpuView<ShaderDefine const> defines) -> std::string;
 
 } // namespace engine::gl

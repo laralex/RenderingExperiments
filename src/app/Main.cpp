@@ -75,7 +75,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     gl::InitializeOpenGl();
     app->commonRenderers.Initialize();
 
-    constexpr static int32_t NUM_DEFINES   = 4;
+    constexpr static int32_t NUM_DEFINES        = 4;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -84,18 +84,17 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/app/shaders/triangle.vert",
-        "data/app/shaders/texture.frag",
-        CpuView{defines, NUM_DEFINES}, "Test program");
+        "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", CpuView{defines, NUM_DEFINES},
+        "Test program");
     assert(maybeProgram);
-    app->program  = std::move(*maybeProgram);
+    app->program = std::move(*maybeProgram);
 
     app->attributeBuffer =
         gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test VBO");
     app->indexBuffer =
         gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
     app->vao = gl::Vao::Allocate("Test VAO");
-    (void)gl::VaoCtx{app->vao}
+    (void)gl::VaoMutableCtx{app->vao}
         .LinkVertexAttribute(
             app->attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
@@ -110,7 +109,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
              .datatype        = GL_FLOAT,
              .stride          = 5 * sizeof(float),
              .offset          = 3 * sizeof(float)})
-        .LinkIndices(app->indexBuffer);
+        .LinkIndices(app->indexBuffer, GL_UNSIGNED_INT);
 
     app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
     (void)gl::TextureCtx{app->texture}
@@ -136,7 +135,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    float cameraZ = std::sin(ctx.timeSec) - 1.5f;
+    float cameraZ            = std::sin(ctx.timeSec) - 1.5f;
     glm::vec3 cameraPosition = glm::vec3(0.0f, 2.0f, cameraZ * 0.0f - 1.5f);
     glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraUp       = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -177,7 +176,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
         GLCALL(glBindVertexArray(app->vao.Id()));
         GLCALL(glUseProgram(app->program.Id()));
-        GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        GLCALL(glDrawElements(GL_TRIANGLES, app->vao.IndexCount(), app->vao.IndexDataType(), 0));
 
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
     }
@@ -198,8 +197,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 mvp = camera * model;
         app->commonRenderers.RenderAxes(mvp);
         app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
-        float near = (std::sin(ctx.timeSec)+1.5f)*3.0f;
-        gl::Frustum frustum{-0.3f, 1.3f + std::sin(2.0f*ctx.timeSec), -0.3f, 0.3f, near, 10.0f};
+        float near = (std::sin(ctx.timeSec) + 1.5f) * 3.0f;
+        gl::Frustum frustum{-0.3f, 1.3f + std::sin(2.0f * ctx.timeSec), -0.3f, 0.3f, near, 10.0f};
         app->commonRenderers.RenderFrustum(mvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
     }
 

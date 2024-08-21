@@ -7,11 +7,10 @@
 
 namespace {
 
-constexpr int32_t UNIFORM_MVP_LOCATION       = 0;
-// constexpr int32_t UNIFORM_THICKNESS_LOCATION = 1;
-constexpr int32_t UBO_FRUSTUM_INDEX   = 0;
-// constexpr int32_t UNIFORM_NEAR_FAR_LOCATION  = 3;
-constexpr int32_t UNIFORM_COLOR_LOCATION     = 100;
+constexpr GLint UNIFORM_MVP_LOCATION   = 0;
+constexpr GLint UBO_CONTEXT_BINDING    = 0; // global for GL
+constexpr GLint UBO_SHADER_BINDING     = 0; // local for shader
+constexpr GLint UNIFORM_COLOR_LOCATION = 100;
 
 constexpr float THICKNESS = 0.03f;
 constexpr float OUT_BEGIN = 0.5f;
@@ -24,6 +23,16 @@ struct Vertex {
     float isNear;
     float isFar;
     float isInner;
+};
+
+struct UboData {
+    GLfloat left;
+    GLfloat right;
+    GLfloat bottom;
+    GLfloat top;
+    GLfloat near;
+    GLfloat far;
+    GLfloat thickness;
 };
 
 // clang-format off
@@ -136,8 +145,8 @@ constexpr uint8_t indices[] = {
 namespace engine::gl {
 
 auto AllocateFrustumRenderer() -> FrustumRenderer {
-    constexpr int32_t ATTRIB_FRUSTUM_WEIGHTS_LOCATION = 0;
-    constexpr int32_t ATTRIB_OTHER_WEIGHTS_LOCATION   = 1;
+    constexpr GLint ATTRIB_FRUSTUM_WEIGHTS_LOCATION = 0;
+    constexpr GLint ATTRIB_OTHER_WEIGHTS_LOCATION   = 1;
 
     FrustumRenderer renderer;
     renderer.attributeBuffer = gl::GpuBuffer::Allocate(
@@ -145,7 +154,7 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
     renderer.indexBuffer = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "FrustumRenderer Indices");
     renderer.vao = gl::Vao::Allocate("FrustumRenderer");
-    (void)gl::VaoCtx{renderer.vao}
+    (void)gl::VaoMutableCtx{renderer.vao}
         .LinkVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,
@@ -160,43 +169,47 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, isNear)})
-        .LinkIndices(renderer.indexBuffer);
+        .LinkIndices(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
-    constexpr static int32_t NUM_DEFINES   = 5;
+    constexpr static int32_t NUM_DEFINES        = 5;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UBO_FRUSTUM", .value = UBO_FRUSTUM_INDEX, .type = gl::ShaderDefine::INT32},
+        {.name = "UBO_FRUSTUM", .value = UBO_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/frustum.vert",
-        "data/engine/shaders/constant.frag",
-        CpuView{defines, NUM_DEFINES}, "FrustumRenderer");
+        "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag", CpuView{defines, NUM_DEFINES},
+        "FrustumRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);
 
-    constexpr size_t UBO_SIZE = 20*sizeof(float); // TODO: stub
-    renderer.ubo = gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, UBO_SIZE, "FrustumRenderer UBO");
+    renderer.ubo =
+        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboData), "FrustumRenderer UBO");
 
     return renderer;
 }
 
-void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) {
+void RenderFrustum(
+    FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) {
     auto programGuard = gl::UniformCtx(renderer.program);
     gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &originMvp[0][0]);
-    GLfloat frustumUbo[] = {
-        frustum.left, frustum.right, frustum.bottom, frustum.top,
-        frustum.near, frustum.far, THICKNESS
+    UboData ubo{
+        .left      = frustum.left,
+        .right     = frustum.right,
+        .bottom    = frustum.bottom,
+        .top       = frustum.top,
+        .near      = frustum.near,
+        .far       = frustum.far,
+        .thickness = THICKNESS,
     };
     gl::UniformArray<4>(UNIFORM_COLOR_LOCATION, &color[0], 1);
 
-    constexpr GLuint UBO_BINDING = 0U;
-    renderer.ubo.Fill(frustumUbo, sizeof(frustumUbo));
-    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, renderer.ubo.Id()));
-    programGuard.SetUbo(UBO_FRUSTUM_INDEX, UBO_BINDING);
+    renderer.ubo.Fill(&ubo.left, sizeof(ubo));
+    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, renderer.ubo.Id()));
+    programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
 
     auto vaoGuard = VaoCtx{renderer.vao};
 
@@ -205,7 +218,7 @@ void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, 
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    GLCALL(glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_BYTE, 0));
+    GLCALL(glDrawElements(GL_TRIANGLES, renderer.vao.IndexCount(), renderer.vao.IndexDataType(), 0));
 }
 
 } // namespace engine::gl

@@ -99,17 +99,17 @@ constexpr uint8_t indices[] = {
 };
 // clang-format on
 
-constexpr int32_t UNIFORM_MVP_LOCATION       = 0;
-constexpr int32_t UNIFORM_THICKNESS_LOCATION = 1;
-constexpr int32_t UNIFORM_COLOR_LOCATION     = 2;
+constexpr GLint UNIFORM_MVP_LOCATION       = 0;
+constexpr GLint UNIFORM_THICKNESS_LOCATION = 1;
+constexpr GLint UNIFORM_COLOR_LOCATION     = 2;
 
 } // namespace
 
 namespace engine::gl {
 
 auto AllocateBoxRenderer() -> BoxRenderer {
-    constexpr int32_t ATTRIB_POSITION_LOCATION     = 0;
-    constexpr int32_t ATTRIB_INNER_MARKER_LOCATION = 1;
+    constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
+    constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
 
     BoxRenderer renderer;
     renderer.attributeBuffer = gl::GpuBuffer::Allocate(
@@ -117,7 +117,7 @@ auto AllocateBoxRenderer() -> BoxRenderer {
     renderer.indexBuffer = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "BoxRenderer Indices");
     renderer.vao = gl::Vao::Allocate("BoxRenderer");
-    (void)gl::VaoCtx{renderer.vao}
+    (void)gl::VaoMutableCtx{renderer.vao}
         .LinkVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
@@ -132,25 +132,26 @@ auto AllocateBoxRenderer() -> BoxRenderer {
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, innerMarker)})
-        .LinkIndices(renderer.indexBuffer);
+        .LinkIndices(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
-    constexpr static int32_t NUM_DEFINES   = 5;
+    constexpr static int32_t NUM_DEFINES        = 5;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name  = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type  = gl::ShaderDefine::INT32},
+        {.name  = "ATTRIB_INNER_MARKER_LOCATION",
+         .value = ATTRIB_INNER_MARKER_LOCATION,
+         .type  = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/box.vert",
-        "data/engine/shaders/constant.frag",
-        CpuView{defines, NUM_DEFINES}, "BoxRenderer");
+        "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, NUM_DEFINES},
+        "BoxRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);
 
-    auto programGuard              = UniformCtx{renderer.program};
+    auto programGuard = UniformCtx{renderer.program};
     gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     return renderer;
@@ -168,7 +169,7 @@ void RenderBox(BoxRenderer const& renderer, glm::mat4 const& centerMvp, glm::vec
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    GLCALL(glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_BYTE, 0));
+    GLCALL(glDrawElements(GL_TRIANGLES, renderer.vao.IndexCount(), renderer.vao.IndexDataType(), 0));
 }
 
 } // namespace engine::gl

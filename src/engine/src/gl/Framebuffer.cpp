@@ -14,9 +14,9 @@ FramebufferCtx::FramebufferCtx(Framebuffer const& useFramebuffer, bool bindAsDra
 FramebufferCtx::FramebufferCtx(GLuint useFramebuffer, bool bindAsDraw) {
     // XLOG("FramebufferCtx ctor {}", useFramebuffer);
     assert(!hasInstances_);
-    contextFramebuffer_.id = useFramebuffer;
+    contextFramebuffer_.id_ = useFramebuffer;
     framebufferTarget_     = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
-    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id));
+    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id_));
     hasInstances_ = true;
 }
 
@@ -24,21 +24,21 @@ FramebufferCtx::~FramebufferCtx() {
     // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
-    contextFramebuffer_.id = GL_NONE;
-    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id));
+    contextFramebuffer_.id_ = GL_NONE;
+    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id_));
     hasInstances_ = false;
 }
 
 void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "Framebuffer object was disposed");
-    GLCALL(glDeleteFramebuffers(1, &fbId_.id));
-    fbId_.id = GL_NONE;
+    GLCALL(glDeleteFramebuffers(1, &fbId_.id_));
+    fbId_.id_ = GL_NONE;
 }
 
 auto Framebuffer::Allocate(std::string_view name) -> Framebuffer {
     Framebuffer fb{};
-    GLCALL(glGenFramebuffers(1, &fb.fbId_.id));
+    GLCALL(glGenFramebuffers(1, &fb.fbId_.id_));
     fb.BindRead();
     if (!name.empty()) {
         DebugLabel(fb, name);
@@ -147,15 +147,15 @@ auto FramebufferCtx::Invalidate(uint32_t numAttachments, GLenum* attachments) ->
 auto Framebuffer::IsComplete() -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(fbId_) == GL_FRAMEBUFFER_COMPLETE);
-    if (isComplete) { LogDebugLabel(*this, "Framebuffer is not complete"); }
+    if (!isComplete) { LogDebugLabel(*this, "Framebuffer is not complete"); }
     return isComplete;
 }
 
 auto FramebufferCtx::IsComplete() -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(framebufferTarget_) == GL_FRAMEBUFFER_COMPLETE);
-    if (isComplete) {
-        LogDebugLabelUnsafe(contextFramebuffer_.id, GlObjectType::FRAMEBUFFER, "Framebuffer is not complete");
+    if (!isComplete) {
+        LogDebugLabelUnsafe(contextFramebuffer_.id_, GlObjectType::FRAMEBUFFER, "Framebuffer is not complete");
     }
     return isComplete;
 }

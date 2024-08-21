@@ -21,12 +21,14 @@ public:
         -> GpuBuffer;
     auto Id [[nodiscard]] () const -> GLuint { return bufferId_; }
     void Fill(GLvoid const* data, GLsizeiptr dataSize) const;
+    auto SizeBytes() const -> int32_t { return sizeBytes_; };
 
 private:
     void Dispose();
-    GlHandle bufferId_{GL_NONE};
+    GlHandle bufferId_ = GlHandle{GL_NONE};
     GLenum targetType_ = 0xDEAD;
     GLenum usage_      = 0xDEAD;
+    int32_t sizeBytes_  = 0xDEAD;
 };
 
 } // namespace engine::gl

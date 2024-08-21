@@ -100,22 +100,22 @@ constexpr uint8_t indices[] = {
     Z_ARROW_IDX_OFFSET + 4, Z_ARROW_IDX_OFFSET + 2, Z_ARROW_IDX_OFFSET + 3, Z_ARROW_IDX_OFFSET + 4,
 };
 
-constexpr int32_t UNIFORM_MVP_LOCATION = 0;
+constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 } // namespace
 
 namespace engine::gl {
 
 auto AllocateAxesRenderer() -> AxesRenderer {
-    constexpr int32_t ATTRIB_POSITION_LOCATION = 0;
-    constexpr int32_t ATTRIB_COLOR_LOCATION    = 1;
+    constexpr GLint ATTRIB_POSITION_LOCATION = 0;
+    constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
     renderer.attributeBuffer = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "AxesRenderer Vertices");
     renderer.indexBuffer = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "AxesRenderer Indices");
     renderer.vao = gl::Vao::Allocate("AxesRenderer");
-    (void)gl::VaoCtx{renderer.vao}
+    (void)gl::VaoMutableCtx{renderer.vao}
         .LinkVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
@@ -130,9 +130,9 @@ auto AllocateAxesRenderer() -> AxesRenderer {
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(Vertex),
              .offset          = 3 * sizeof(float)})
-        .LinkIndices(renderer.indexBuffer);
+        .LinkIndices(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
-    constexpr static int32_t NUM_DEFINES   = 3;
+    constexpr static int32_t NUM_DEFINES        = 3;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_COLOR_LOCATION", .value = ATTRIB_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -140,9 +140,8 @@ auto AllocateAxesRenderer() -> AxesRenderer {
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/axes.vert",
-        "data/engine/shaders/axes.frag",
-        CpuView{defines, NUM_DEFINES}, "AxesRenderer");
+        "data/engine/shaders/axes.vert", "data/engine/shaders/axes.frag", CpuView{defines, NUM_DEFINES},
+        "AxesRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);
 
@@ -159,7 +158,7 @@ void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp) {
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    GLCALL(glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_BYTE, 0));
+    GLCALL(glDrawElements(GL_TRIANGLES, renderer.vao.IndexCount(), renderer.vao.IndexDataType(), 0));
 }
 
 } // namespace engine::gl

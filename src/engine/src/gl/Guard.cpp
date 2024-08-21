@@ -18,7 +18,7 @@ GlGuardAux::GlGuardAux() {
     GLCALL(glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture_));
     GLCALL(glGetIntegerv(GL_CURRENT_PROGRAM, &program_));
     // NOTE: probably a bad idea to store/restore glDrawBuffers, as it's state of framebuffer
-    // for (size_t i = 0; i < sizeof(drawBuffers) / sizeof(drawBuffers[0]); ++i) {
+    // for (size_t i = 0; i < std::size(indices); ++i) {
     //     GLCALL(glGetIntegerv(GL_DRAW_BUFFER0 + i, drawBuffers + i)));
     // }
     GLCALL(glGetIntegerv(GL_DISPATCH_INDIRECT_BUFFER_BINDING, &dispatchIndirectBuffer_));
@@ -40,7 +40,7 @@ GlGuardAux::~GlGuardAux() {
     GLCALL(glBindBuffer(GL_TEXTURE_BUFFER, textureBuffer_));
     // GLCALL(glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer));
 
-    // GLCALL(glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers));
+    // GLCALL(glDrawBuffers(std::size(drawBuffers), drawBuffers));
     // XLOG("~GlGuardAux", 0);
 }
 

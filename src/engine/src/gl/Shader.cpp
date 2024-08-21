@@ -5,8 +5,7 @@
 
 namespace engine::gl {
 
-auto AddShaderDefines(std::string_view code, CpuView<ShaderDefine const> defines)
-    -> std::string {
+auto AddShaderDefines(std::string_view code, CpuView<ShaderDefine const> defines) -> std::string {
     std::stringstream ss;
     auto versionEnd = code.find('\n') + 1;
     ss << code.substr(0U, versionEnd);
@@ -33,7 +32,6 @@ auto AddShaderDefines(std::string_view code, CpuView<ShaderDefine const> defines
         }
         ss << '\n';
     }
-    XLOG("Shader defines: {}", ss.str());
     ss << code.substr(versionEnd);
     return ss.str();
 }

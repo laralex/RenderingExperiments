@@ -15,7 +15,13 @@ struct Frustum {
     float top;
     float near;
     float far;
-    Frustum(float left, float right, float bottom, float top, float near, float far) : left(left), right(right), bottom(bottom), top(top), near(near), far(far) {}
+    Frustum(float left, float right, float bottom, float top, float near, float far)
+        : left(left)
+        , right(right)
+        , bottom(bottom)
+        , top(top)
+        , near(near)
+        , far(far) { }
 };
 
 struct FrustumRenderer final {
@@ -29,6 +35,8 @@ struct FrustumRenderer final {
 
 auto AllocateFrustumRenderer [[nodiscard]] () -> FrustumRenderer;
 
-void RenderFrustum(FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0));
+void RenderFrustum(
+    FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum,
+    glm::vec4 color = glm::vec4(1.0));
 
 } // namespace engine::gl

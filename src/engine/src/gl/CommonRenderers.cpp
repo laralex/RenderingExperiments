@@ -21,15 +21,14 @@ constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
 
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
-    constexpr static int32_t NUM_DEFINES     = 1;
+    constexpr static int32_t NUM_DEFINES        = 1;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/triangle_fullscreen.vert",
-        "data/engine/shaders/blit.frag",
-        CpuView{defines, NUM_DEFINES}, "Blit");
+        "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag", CpuView{defines, NUM_DEFINES},
+        "Blit");
     assert(maybeProgram);
     gl::GpuProgram blitProgram = std::move(*maybeProgram);
 

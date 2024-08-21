@@ -4,33 +4,33 @@
 namespace engine::gl {
 
 bool VaoCtx::hasInstances_{false};
-GlHandle VaoCtx::contextVao_{GL_NONE};
 
-VaoCtx::VaoCtx(Vao const& useVao) {
+VaoCtx::VaoCtx(Vao const& useVao) : contextVao_(useVao) {
     assert(!hasInstances_);
-    contextVao_.id = useVao.Id();
-    GLCALL(glBindVertexArray(contextVao_));
+    GLCALL(glBindVertexArray(contextVao_.Id()));
     hasInstances_ = true;
 }
 
 VaoCtx::~VaoCtx() {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
-    contextVao_.id = GL_NONE;
-    GLCALL(glBindVertexArray(contextVao_));
+    GLCALL(glBindVertexArray(0U));
     hasInstances_ = false;
 }
+
+VaoMutableCtx::VaoMutableCtx(Vao& useVao) : contextVao_(useVao), context_(useVao) {}
+
 
 void Vao::Dispose() {
     if (vaoId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "VAO object was disposed");
-    GLCALL(glDeleteVertexArrays(1, &vaoId_.id));
-    vaoId_.id = GL_NONE;
+    GLCALL(glDeleteVertexArrays(1, &vaoId_.id_));
+    vaoId_.id_ = GL_NONE;
 }
 
 auto Vao::Allocate(std::string_view name) -> Vao {
     Vao vao{};
-    GLCALL(glGenVertexArrays(1, &vao.vaoId_.id));
+    GLCALL(glGenVertexArrays(1, &vao.vaoId_.id_));
     GLCALL(glBindVertexArray(vao.vaoId_));
     GLCALL(glBindVertexArray(0U));
     if (!name.empty()) {
@@ -40,8 +40,8 @@ auto Vao::Allocate(std::string_view name) -> Vao {
     return vao;
 }
 
-auto VaoCtx::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized)
-    -> VaoCtx&& {
+auto VaoMutableCtx::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized)
+    -> VaoMutableCtx&& {
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
@@ -59,8 +59,27 @@ auto VaoCtx::LinkVertexAttribute(GpuBuffer const& attributeBuffer, Vao::Attribut
     return std::move(*this);
 }
 
-auto VaoCtx::LinkIndices(GpuBuffer const& indexBuffer) -> VaoCtx&& {
+auto VaoMutableCtx::LinkIndices(GpuBuffer const& indexBuffer, GLenum dataType) -> VaoMutableCtx&& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
+    contextVao_.indexBuffer_ = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
+    contextVao_.indexBufferDataType_ = dataType;
+    GLsizei bytesPerIndex = 1;
+    switch (dataType) {
+    case GL_UNSIGNED_BYTE: case GL_BYTE:
+        bytesPerIndex = 1;
+        break;
+    case GL_UNSIGNED_SHORT: case GL_SHORT:
+        bytesPerIndex = 2;
+        break;
+    case GL_UNSIGNED_INT: case GL_INT:
+        bytesPerIndex = 4;
+        break;
+    default:
+        assert(false && "VaoMutableCtx::LinkIndices provided unknown dataType");
+        break;
+    }
+    assert (indexBuffer.SizeBytes() % bytesPerIndex == 0 && "Index buffer has memory size not divisible by sizeof(dataType)");
+    contextVao_.indexBufferNumIndices_ = indexBuffer.SizeBytes() / bytesPerIndex;
     return std::move(*this);
 }
 
