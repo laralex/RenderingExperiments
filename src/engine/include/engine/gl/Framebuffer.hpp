@@ -6,6 +6,7 @@ namespace engine::gl {
 
 class Texture;
 class Renderbuffer;
+class FramebufferCtx;
 
 class Framebuffer final {
 
@@ -31,6 +32,8 @@ private:
     void Dispose();
     GlHandle fbId_{GL_NONE};
     int32_t numAttachments_{0};
+
+    friend class FramebufferCtx;
 };
 
 // Helper object, binds GL FBO in ctor, unbinds it in dtor

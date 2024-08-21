@@ -31,7 +31,7 @@ obj_engine_ = \
 	Assets.o EngineLoop.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
-	gl/BoxRenderer.o \
+	gl/BoxRenderer.o gl/BillboardRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
 	gl/Common.o gl/CommonRenderers.o gl/Debug.o \
 	gl/FrustumRenderer.o gl/Guard.o \

@@ -16,7 +16,7 @@
 // clang-format off
 #define XLOG_LVL(lvl, format, ...) { spdlog::log(lvl, format, __VA_ARGS__); }
 #define XLOG(format, ...) { spdlog::info(format, __VA_ARGS__); }
-#define XLOGW(format, ...) { spdlog::warning(format, __VA_ARGS__); }
+#define XLOGW(format, ...) { spdlog::warn(format, __VA_ARGS__); }
 #define XLOGE(format, ...) { spdlog::error(format, __VA_ARGS__); }
 // clang-format on
 #else

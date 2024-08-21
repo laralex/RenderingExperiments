@@ -9,38 +9,38 @@ GLenum RenderbufferCtx::contextTarget_{GL_NONE};
 
 RenderbufferCtx::RenderbufferCtx(Renderbuffer const& useRenderbuffer) {
     assert(!hasInstances_);
-    contextRenderbuffer_.id_ = useRenderbuffer.Id();
+    contextRenderbuffer_.UnsafeAssign(useRenderbuffer.renderbufferId_);
     contextTarget_          = useRenderbuffer.RenderbufferSlotTarget();
-    GLCALL(glBindRenderbuffer(contextTarget_, contextRenderbuffer_.id_));
+    GLCALL(glBindRenderbuffer(contextTarget_, contextRenderbuffer_));
     hasInstances_ = true;
 }
 
 RenderbufferCtx::~RenderbufferCtx() {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
-    contextRenderbuffer_.id_ = GL_NONE;
-    GLCALL(glBindRenderbuffer(contextTarget_, contextRenderbuffer_.id_));
+    contextRenderbuffer_.UnsafeReset();
+    GLCALL(glBindRenderbuffer(contextTarget_, contextRenderbuffer_));
     hasInstances_ = false;
 }
 
 void Renderbuffer::Dispose() {
     if (renderbufferId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "Renderbuffer object was disposed");
-    GLCALL(glDeleteRenderbuffers(1, &renderbufferId_.id_));
-    renderbufferId_.id_ = GL_NONE;
+    GLCALL(glDeleteRenderbuffers(1, &renderbufferId_));
+    renderbufferId_.UnsafeReset();
 }
 
 auto Renderbuffer::Allocate2D(glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples, std::string_view name)
     -> Renderbuffer {
 
     Renderbuffer renderbuffer{};
-    GLCALL(glGenRenderbuffers(1, &renderbuffer.renderbufferId_.id_));
+    GLCALL(glGenRenderbuffers(1, &renderbuffer.renderbufferId_));
     renderbuffer.target_         = GL_RENDERBUFFER;
     renderbuffer.internalFormat_ = internalFormat;
     renderbuffer.size_           = glm::ivec3(size.x, size.y, 0);
     renderbuffer.msaaSamples_    = msaaSamples;
 
-    GLCALL(glBindRenderbuffer(renderbuffer.target_, renderbuffer.renderbufferId_.id_));
+    GLCALL(glBindRenderbuffer(renderbuffer.target_, renderbuffer.renderbufferId_));
 
     // storage requirements can't change in the future
     GLCALL(glRenderbufferStorageMultisample(

@@ -36,6 +36,8 @@ private:
     GLenum internalFormat_{GL_NONE};
     GLsizei msaaSamples_{0};
     glm::ivec3 size_{};
+
+    friend class RenderbufferCtx;
 };
 
 // Helper object, binds GL renderbuffer in ctor, unbinds it in dtor

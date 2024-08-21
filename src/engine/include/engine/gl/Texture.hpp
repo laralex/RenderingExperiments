@@ -49,6 +49,8 @@ private:
     GLenum target_{GL_NONE};
     GLenum internalFormat_{GL_NONE};
     glm::ivec3 size_{};
+
+    friend class TextureCtx;
 };
 
 // Helper object, binds GL texture in ctor, unbinds it in dtor

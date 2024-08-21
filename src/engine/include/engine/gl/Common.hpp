@@ -20,7 +20,9 @@ auto LinkProgramFromFiles [[nodiscard]] (
 
 // Wrapper for OpenGL object identifiers. Becomes 0 when moved away from
 // This helps to define move constructor/assignment of other high level wrappers as simply "=default"
-struct GlHandle {
+class GlHandle final {
+
+public:
 #define Self GlHandle
     explicit Self(GLuint id)
         : id_(id) { }
@@ -28,18 +30,26 @@ struct GlHandle {
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&& other)
-        : id_(other.id_) {
-        other.id_ = GL_NONE;
+        : id_(other) {
+        other.UnsafeReset();
     }
-    // Self& operator=(Self&& other) = delete;
     Self& operator=(Self&& other) {
         assert(id_ == GL_NONE && "OpenGL resource leaked");
         id_       = other.id_;
-        other.id_ = GL_NONE;
+        other.UnsafeReset();
         return *this;
     }
 #undef Self
+    void UnsafeReset() { id_ = GL_NONE; }
+
+    // NOTE: don't implement as operator=, because it opens holes
+    // with overwriting of GL object handles and leaking resources
+    void UnsafeAssign(GlHandle const& other) { id_ = other.id_; }
+    GLuint* operator&() { return &id_; }
     operator GLuint() const { return id_; }
+    operator GLuint&() { return id_; }
+
+private:
     GLuint id_;
 };
 

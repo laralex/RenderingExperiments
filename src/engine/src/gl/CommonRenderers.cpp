@@ -13,12 +13,6 @@ namespace {
 constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION = 0;
 constexpr GLint BLIT_TEXTURE_SLOT             = 0; // TODO: 1 and above slots don't work
 
-constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
-    255,
-    42,
-    255,
-};
-
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
     constexpr static int32_t NUM_DEFINES        = 1;
@@ -48,7 +42,14 @@ void CommonRenderers::Initialize() {
     axesRenderer_          = AllocateAxesRenderer();
     boxRenderer_           = AllocateBoxRenderer();
     frustumRenderer_       = AllocateFrustumRenderer();
-    fullscreenTriangleVao_ = Vao::Allocate("Fullscreen triangle");
+    billboardRenderer_       = AllocateBillboardRenderer();
+
+    datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
+    (void)VaoMutableCtx{datalessTriangleVao_}.LinkIndices(3);
+
+    datalessQuadVao_ = Vao::Allocate("Dataless Quad VAO");
+    (void)VaoMutableCtx{datalessQuadVao_}.LinkIndices(4);
+
     isInitialized_         = true;
     blitProgram_           = AllocateBlitter();
 
@@ -67,31 +68,39 @@ void CommonRenderers::Initialize() {
                             .WithAnisotropicFilter(8.0f)
                             .WithWrap(GL_CLAMP_TO_EDGE);
     stubColorTexture_ = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
+    constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = { 255, 42, 255, };
     (void)gl::TextureCtx{stubColorTexture_}.Fill2D(
         GL_RGB, GL_UNSIGNED_BYTE, TEXTURE_DATA_STUB_COLOR, stubColorTexture_.Size());
 }
 
-void CommonRenderers::RenderAxes(glm::mat4 const& mvp) {
+void CommonRenderers::RenderAxes(glm::mat4 const& mvp) const {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     gl::RenderAxes(axesRenderer_, mvp);
 }
 
-void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) {
+void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderBox, CommonRenderers isn't initialized");
     gl::RenderBox(boxRenderer_, centerMvp, color);
 }
 
-void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color) {
+void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
     gl::RenderFrustum(frustumRenderer_, centerMvp, frustum, color);
 }
 
-void CommonRenderers::RenderFulscreenTriangle() {
-    auto vaoGuard = gl::VaoCtx{fullscreenTriangleVao_};
+void CommonRenderers::RenderFulscreenTriangle() const {
+    assert(IsInitialized() && "Bad call to RenderFulscreenTriangle, CommonRenderers isn't initialized");
+    auto vaoGuard = gl::VaoCtx{datalessTriangleVao_};
     GLCALL(glDrawArrays(GL_TRIANGLES, 0, 3));
 }
 
-void CommonRenderers::Blit2D(GLuint srcTexture) {
+void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
+    assert(IsInitialized() && "Bad call to RenderBillboard, CommonRenderers isn't initialized");
+    gl::RenderBillboard(billboardRenderer_, args);
+}
+
+void CommonRenderers::Blit2D(GLuint srcTexture) const {
+    assert(IsInitialized() && "Bad call to Blit2D, CommonRenderers isn't initialized");
     auto programGuard = gl::UniformCtx(blitProgram_);
     gl::GlTextureUnits::Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
     // auto depthGuard = gl::GlGuardDepth(false);

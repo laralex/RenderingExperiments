@@ -9,14 +9,14 @@ GlHandle FramebufferCtx::contextFramebuffer_{GL_NONE};
 GLenum FramebufferCtx::framebufferTarget_{GL_DRAW_FRAMEBUFFER};
 
 FramebufferCtx::FramebufferCtx(Framebuffer const& useFramebuffer, bool bindAsDraw)
-    : FramebufferCtx(useFramebuffer.Id(), bindAsDraw) { }
+    : FramebufferCtx(useFramebuffer.fbId_, bindAsDraw) { }
 
 FramebufferCtx::FramebufferCtx(GLuint useFramebuffer, bool bindAsDraw) {
     // XLOG("FramebufferCtx ctor {}", useFramebuffer);
     assert(!hasInstances_);
-    contextFramebuffer_.id_ = useFramebuffer;
+    contextFramebuffer_ = GlHandle{useFramebuffer};
     framebufferTarget_     = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
-    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id_));
+    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
     hasInstances_ = true;
 }
 
@@ -24,21 +24,21 @@ FramebufferCtx::~FramebufferCtx() {
     // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
-    contextFramebuffer_.id_ = GL_NONE;
-    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_.id_));
+    contextFramebuffer_.UnsafeReset();
+    GLCALL(glBindFramebuffer(framebufferTarget_, 0U));
     hasInstances_ = false;
 }
 
 void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "Framebuffer object was disposed");
-    GLCALL(glDeleteFramebuffers(1, &fbId_.id_));
-    fbId_.id_ = GL_NONE;
+    GLCALL(glDeleteFramebuffers(1, &fbId_));
+    fbId_.UnsafeReset();
 }
 
 auto Framebuffer::Allocate(std::string_view name) -> Framebuffer {
     Framebuffer fb{};
-    GLCALL(glGenFramebuffers(1, &fb.fbId_.id_));
+    GLCALL(glGenFramebuffers(1, &fb.fbId_));
     fb.BindRead();
     if (!name.empty()) {
         DebugLabel(fb, name);
@@ -155,7 +155,7 @@ auto FramebufferCtx::IsComplete() -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(framebufferTarget_) == GL_FRAMEBUFFER_COMPLETE);
     if (!isComplete) {
-        LogDebugLabelUnsafe(contextFramebuffer_.id_, GlObjectType::FRAMEBUFFER, "Framebuffer is not complete");
+        LogDebugLabelUnsafe(contextFramebuffer_, GlObjectType::FRAMEBUFFER, "Framebuffer is not complete");
     }
     return isComplete;
 }

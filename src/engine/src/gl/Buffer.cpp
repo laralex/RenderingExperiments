@@ -6,8 +6,8 @@ namespace engine::gl {
 void GpuBuffer::Dispose() {
     if (bufferId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "GpuBuffer was disposed");
-    glDeleteBuffers(1, &bufferId_.id_);
-    bufferId_.id_ = GL_NONE;
+    glDeleteBuffers(1, &bufferId_);
+    bufferId_.UnsafeReset();
 }
 
 auto GpuBuffer::Allocate(
@@ -22,7 +22,7 @@ auto GpuBuffer::Allocate(
             || t == GL_UNIFORM_BUFFER);
     }
     GpuBuffer gpuBuffer{};
-    GLCALL(glGenBuffers(1, &gpuBuffer.bufferId_.id_));
+    GLCALL(glGenBuffers(1, &gpuBuffer.bufferId_));
     GLCALL(glBindBuffer(targetType, gpuBuffer.bufferId_));
     GLCALL(glBufferData(targetType, dataSize, data, usage));
     GLCALL(glBindBuffer(targetType, 0));

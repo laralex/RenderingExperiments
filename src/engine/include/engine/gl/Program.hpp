@@ -23,6 +23,8 @@ public:
 private:
     void Dispose();
     GlHandle programId_{GL_NONE};
+
+    friend class UniformCtx;
 };
 
 auto CompileShader [[nodiscard]] (GLenum shaderType, std::string_view code) -> GLuint;

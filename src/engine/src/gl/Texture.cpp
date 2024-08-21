@@ -9,25 +9,25 @@ GLenum TextureCtx::contextTarget_{GL_NONE};
 
 TextureCtx::TextureCtx(Texture const& useTexture) {
     assert(!hasInstances_);
-    contextTexture_.id_ = useTexture.Id();
+    contextTexture_.UnsafeAssign(useTexture.textureId_);
     contextTarget_     = useTexture.TextureSlotTarget();
-    GLCALL(glBindTexture(contextTarget_, contextTexture_.id_));
+    GLCALL(glBindTexture(contextTarget_, contextTexture_));
     hasInstances_ = true;
 }
 
 TextureCtx::~TextureCtx() {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
-    contextTexture_.id_ = GL_NONE;
-    GLCALL(glBindTexture(contextTarget_, contextTexture_.id_));
+    contextTexture_.UnsafeReset();
+    GLCALL(glBindTexture(contextTarget_, contextTexture_));
     hasInstances_ = false;
 }
 
 void Texture::Dispose() {
     if (textureId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "Texture object was disposed");
-    GLCALL(glDeleteTextures(1, &textureId_.id_));
-    textureId_.id_ = GL_NONE;
+    GLCALL(glDeleteTextures(1, &textureId_));
+    textureId_.UnsafeReset();
 }
 
 auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
@@ -42,12 +42,12 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
     }
 
     Texture texture{};
-    GLCALL(glGenTextures(1, &texture.textureId_.id_));
+    GLCALL(glGenTextures(1, &texture.textureId_));
     texture.target_         = textureType;
     texture.size_           = glm::ivec3(size.x, size.y, 0);
     texture.internalFormat_ = internalFormat;
 
-    GLCALL(glBindTexture(texture.target_, texture.textureId_.id_));
+    GLCALL(glBindTexture(texture.target_, texture.textureId_));
 
     assert(GlExtensions::IsInitialized());
     if (!GlExtensions::Supports(GlExtensions::ARB_texture_storage)) {
@@ -102,7 +102,7 @@ auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleSten
 }
 
 auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) -> TextureCtx&& {
-    GLCALL(glBindTexture(contextTarget_, contextTexture_.id_));
+    GLCALL(glBindTexture(contextTarget_, contextTexture_));
     GLCALL(glTexParameteri(contextTarget_, GL_TEXTURE_BASE_LEVEL, minLevel));
     GLCALL(glTexParameteri(contextTarget_, GL_TEXTURE_MAX_LEVEL, maxLevel));
     GLCALL(glGenerateMipmap(contextTarget_));

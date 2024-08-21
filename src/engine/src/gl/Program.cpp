@@ -7,7 +7,7 @@ ENGINE_EXPORT void GpuProgram::Dispose() {
     if (programId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "GpuProgram was disposed");
     GLCALL(glDeleteProgram(programId_));
-    programId_.id_ = GL_NONE;
+    programId_.UnsafeReset();
 }
 
 ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShader, std::string_view name)
@@ -26,7 +26,7 @@ ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShad
 
     if (isLinked == GL_TRUE) {
         auto program          = GpuProgram();
-        program.programId_.id_ = programId;
+        program.programId_ = GlHandle{programId};
         if (!name.empty()) {
             DebugLabel(program, name);
             LogDebugLabel(program, "GpuProgram was compiled");
@@ -62,8 +62,9 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     static char infoLog[512];
     GLCALL(glGetShaderInfoLog(shader, 512, nullptr, infoLog));
     GLCALL(glDeleteShader(shader));
-    char typeLabel = (shaderType == GL_VERTEX_SHADER ? 'v' : (shaderType == GL_FRAGMENT_SHADER ? 'f' : 'c'));
-    XLOGE("Failed to compile shader (type={}):\n{}", typeLabel, infoLog);
+    char const* typeLabel = (shaderType == GL_VERTEX_SHADER ? "vertex" : (
+        shaderType == GL_FRAGMENT_SHADER ? "fragment" : "compute"));
+    XLOGE("Failed to compile {} shader:\n{}", typeLabel, infoLog);
 
     return GL_NONE;
 }

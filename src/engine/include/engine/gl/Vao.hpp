@@ -7,8 +7,6 @@
 
 namespace engine::gl {
 
-class VaoMutableCtx;
-
 class Vao final {
 
 public:
@@ -38,6 +36,7 @@ public:
 
 private:
     friend class VaoMutableCtx;
+    friend class VaoCtx;
 
     void Dispose();
     GlHandle vaoId_{GL_NONE};
@@ -83,6 +82,7 @@ public:
         [[nodiscard]] (GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false)
         -> VaoMutableCtx&&;
     auto LinkIndices [[nodiscard]] (GpuBuffer const& indexBuffer, GLenum dataType) -> VaoMutableCtx&&;
+    auto LinkIndices [[nodiscard]] (GLsizei numVirtualIndices) -> VaoMutableCtx&&;
 
 private:
     Vao& contextVao_;

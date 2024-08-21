@@ -7,7 +7,7 @@ bool VaoCtx::hasInstances_{false};
 
 VaoCtx::VaoCtx(Vao const& useVao) : contextVao_(useVao) {
     assert(!hasInstances_);
-    GLCALL(glBindVertexArray(contextVao_.Id()));
+    GLCALL(glBindVertexArray(contextVao_.vaoId_));
     hasInstances_ = true;
 }
 
@@ -24,13 +24,13 @@ VaoMutableCtx::VaoMutableCtx(Vao& useVao) : contextVao_(useVao), context_(useVao
 void Vao::Dispose() {
     if (vaoId_ == GL_NONE) { return; }
     LogDebugLabel(*this, "VAO object was disposed");
-    GLCALL(glDeleteVertexArrays(1, &vaoId_.id_));
-    vaoId_.id_ = GL_NONE;
+    GLCALL(glDeleteVertexArrays(1, &vaoId_));
+    vaoId_.UnsafeReset();
 }
 
 auto Vao::Allocate(std::string_view name) -> Vao {
     Vao vao{};
-    GLCALL(glGenVertexArrays(1, &vao.vaoId_.id_));
+    GLCALL(glGenVertexArrays(1, &vao.vaoId_));
     GLCALL(glBindVertexArray(vao.vaoId_));
     GLCALL(glBindVertexArray(0U));
     if (!name.empty()) {
@@ -63,15 +63,16 @@ auto VaoMutableCtx::LinkIndices(GpuBuffer const& indexBuffer, GLenum dataType) -
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
     contextVao_.indexBuffer_ = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
     contextVao_.indexBufferDataType_ = dataType;
+    XLOGW("VaoMutableCtx::LinkIndices Not implemented shared_ptr bookeeping", 0);
     GLsizei bytesPerIndex = 1;
     switch (dataType) {
-    case GL_UNSIGNED_BYTE: case GL_BYTE:
+    case GL_UNSIGNED_BYTE:
         bytesPerIndex = 1;
         break;
-    case GL_UNSIGNED_SHORT: case GL_SHORT:
+    case GL_UNSIGNED_SHORT:
         bytesPerIndex = 2;
         break;
-    case GL_UNSIGNED_INT: case GL_INT:
+    case GL_UNSIGNED_INT:
         bytesPerIndex = 4;
         break;
     default:
@@ -80,6 +81,14 @@ auto VaoMutableCtx::LinkIndices(GpuBuffer const& indexBuffer, GLenum dataType) -
     }
     assert (indexBuffer.SizeBytes() % bytesPerIndex == 0 && "Index buffer has memory size not divisible by sizeof(dataType)");
     contextVao_.indexBufferNumIndices_ = indexBuffer.SizeBytes() / bytesPerIndex;
+    return std::move(*this);
+}
+
+auto VaoMutableCtx::LinkIndices [[nodiscard]] (GLsizei numVirtualIndices) -> VaoMutableCtx&& {
+    GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0U));
+    contextVao_.indexBuffer_ = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
+    contextVao_.indexBufferDataType_ = GL_UNSIGNED_INT;
+    contextVao_.indexBufferNumIndices_ = numVirtualIndices;
     return std::move(*this);
 }
 
