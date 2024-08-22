@@ -12,7 +12,7 @@ constexpr GLint UBO_CONTEXT_BINDING    = 0; // global for GL
 constexpr GLint UBO_SHADER_BINDING     = 0; // local for shader
 constexpr GLint UNIFORM_COLOR_LOCATION = 100;
 
-constexpr float THICKNESS = 0.03f;
+constexpr float THICKNESS = 0.01f;
 constexpr float OUT_BEGIN = 0.5f;
 constexpr float OUT_END   = 1.0f;
 constexpr float IN_BEGIN  = 0.5f;
@@ -26,13 +26,8 @@ struct Vertex {
 };
 
 struct UboData {
-    GLfloat left;
-    GLfloat right;
-    GLfloat bottom;
-    GLfloat top;
-    GLfloat near;
-    GLfloat far;
-    GLfloat thickness;
+    alignas(16) glm::vec4 leftRightBottomTop;
+    alignas(16) glm::vec4 nearFarThickness;
 };
 
 // clang-format off
@@ -196,16 +191,11 @@ void RenderFrustum(
     FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) {
     auto programGuard = gl::UniformCtx(renderer.program);
     UboData ubo{
-        .left      = frustum.left,
-        .right     = frustum.right,
-        .bottom    = frustum.bottom,
-        .top       = frustum.top,
-        .near      = frustum.near,
-        .far       = frustum.far,
-        .thickness = THICKNESS,
+        .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
+        .nearFarThickness   = {frustum.near, frustum.far, THICKNESS, 0.0},
     };
 
-    renderer.ubo.Fill(&ubo.left, sizeof(ubo));
+    renderer.ubo.Fill(&ubo, sizeof(ubo));
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, renderer.ubo.Id()));
     programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
 

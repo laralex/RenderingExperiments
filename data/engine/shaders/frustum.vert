@@ -9,16 +9,15 @@ out vec3 v_Color;
 
 layout(location = UNIFORM_MVP) uniform mat4 u_MVP;
 
-layout(packed, binding = UBO_FRUSTUM) uniform FrustumParams {
+layout(std140, binding = UBO_FRUSTUM) uniform FrustumParams {
     vec4 u_LeftRightBottomTop;
-    vec2 u_NearFar;
-    float u_Thickness;
+    vec4 u_NearFarThickness;
 };
 
 void main() {
-    float z = dot(in_NearFarInnerWeight.xy, u_NearFar);
-    float thickness = in_NearFarInnerWeight.z * u_Thickness;
-    vec4 frustum =  in_FrustumWeights * (u_LeftRightBottomTop * z / u_NearFar.x - thickness);
+    float z = dot(in_NearFarInnerWeight.xy, u_NearFarThickness.xy);
+    float thickness = in_NearFarInnerWeight.z * u_NearFarThickness.z;
+    vec4 frustum =  in_FrustumWeights * (u_LeftRightBottomTop * z / u_NearFarThickness.x - thickness);
     vec2 xy = vec2(frustum.x + frustum.y, frustum.z + frustum.w);
     gl_Position = u_MVP * vec4(xy, z /*- thickness*/, 1.0);
 }

@@ -201,8 +201,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::Frustum frustum{-0.3f, 1.3f + std::sin(2.0f * ctx.timeSec), -0.3f, 0.3f, near, 10.0f};
         app->commonRenderers.RenderFrustum(mvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
 
-        glm::vec2 billboardSize = glm::vec2{5.0f, 5.0f};
-        glm::vec3 billboardPivotOffset = glm::vec3{0.5f, 0.0f, 0.0f};
+        glm::vec2 billboardSize = glm::vec2{0.5f, 0.2f};
+        glm::vec3 billboardPivotOffset = glm::vec3{0.0f, std::sin(ctx.timeSec), 0.0f};
         app->commonRenderers.RenderBillboard(gl::BillboardRenderArgs{
             app->commonRenderers.VaoDatalessQuad(), GL_TRIANGLE_STRIP,
             mvp, billboardSize, billboardPivotOffset

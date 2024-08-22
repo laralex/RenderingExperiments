@@ -4,10 +4,10 @@
 
 out vec2 v_Uv;
 
-layout(packed, binding = UBO_BINDING) uniform Params {
-    mat4 u_PivotMVP;
-    vec3 u_PivotPositionOffset;
+layout(std140, binding = UBO_BINDING) uniform Params {
     vec2 u_LocalSize;
+    vec4 u_PivotPositionOffset; // vec3 in fact
+    mat4 u_PivotMVP;
 };
 
 const vec2 VERTICES[] = vec2[](
@@ -18,15 +18,14 @@ const vec2 VERTICES[] = vec2[](
 );
 
 void main() {
-    vec3 ndc = vec3(VERTICES[gl_VertexID], 0.0);
+    vec2 ndc = vec2(VERTICES[gl_VertexID]);
 #ifdef GL_ARB_gpu_shader5
-    v_Uv = fma(ndc.xy, vec2(0.5), vec2(0.5));
+    v_Uv = fma(ndc, vec2(0.5), vec2(0.5));
 #else
-    v_Uv = ndc.xy * vec2(0.5) + vec2(0.5);
+    v_Uv = ndc * vec2(0.5) + vec2(0.5);
 #endif //GL_EXT_some_extension
 
-    vec3 localSize = vec3(u_LocalSize, 0.0);
-    ndc *= localSize;
-    ndc += u_PivotPositionOffset * localSize;
-    gl_Position = vec4(ndc, 1.0);
+    vec4 offset = vec4(u_PivotPositionOffset.xy * u_LocalSize, u_PivotPositionOffset.z, 0.0);
+    vec4 ndc4 = vec4(ndc * u_LocalSize, 0.0, 1.0) + offset;
+    gl_Position = ndc4;
 }
