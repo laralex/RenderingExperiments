@@ -1,5 +1,6 @@
 #include "engine/Assets.hpp"
 #include "engine/Prelude.hpp"
+#include "engine/gl/Vao.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine_private/Prelude.hpp"
@@ -26,6 +27,17 @@ auto LinkProgramFromFiles(
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, defines);
     std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, defines);
     return LinkProgram(vertexShaderCode, fragmentShaderCode, name);
+}
+
+void RenderVao(Vao const& vao, GLenum primitive) {
+    auto vaoGuard = VaoCtx{vao};
+    GLint firstIndex = vao.FirstIndex();
+    if (vao.IsIndexed()) {
+        // TODO: crash when passing firstIndex instead of 0, the static buffers get updated
+        GLCALL(glDrawElements(primitive, vao.IndexCount(), vao.IndexDataType(), 0));
+    } else {
+        GLCALL(glDrawArrays(primitive, firstIndex, vao.IndexCount()));
+    }
 }
 
 } // namespace engine::gl

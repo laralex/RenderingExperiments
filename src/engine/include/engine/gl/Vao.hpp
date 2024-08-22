@@ -29,9 +29,11 @@ public:
 
     static auto Allocate [[nodiscard]] (std::string_view name = {}) -> Vao;
     auto Id [[nodiscard]] () const -> GLuint { return vaoId_; }
-    auto VerifyInitialization [[nodiscard]] () const -> bool;
+    auto IsInitialized [[nodiscard]] () const -> bool;
+    auto IsIndexed [[nodiscard]] () const -> bool { return indexBufferDataType_ != GL_NONE; }
     auto IndexDataType [[nodiscard]] () const -> GLenum { return indexBufferDataType_; }
-    auto IndexCount [[nodiscard]] () const -> GLsizei { return indexBufferNumIndices_; }
+    auto IndexCount [[nodiscard]] () const -> GLsizei { return numIndices_; }
+    auto FirstIndex [[nodiscard]] () const -> GLint { return firstIndex_; }
     auto operator== [[nodiscard]] (Vao const& other) -> bool { return vaoId_ == other.vaoId_; }
 
 private:
@@ -43,7 +45,10 @@ private:
 
     std::shared_ptr<GpuBuffer> indexBuffer_{};
     GLenum indexBufferDataType_{GL_NONE}; // e.g. GL_UNSIGNED_INT
-    GLsizei indexBufferNumIndices_{0};
+
+    // array indices for glDrawArrays, or EBO indices for glDrawElements
+    GLsizei numIndices_{0};
+    GLint firstIndex_{0};
 };
 
 // Helper object, binds GL VAO in ctor, unbinds it in dtor
@@ -78,12 +83,11 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
-    auto LinkVertexAttribute
+    auto MakeVertexAttribute
         [[nodiscard]] (GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false)
         -> VaoMutableCtx&&;
-    auto LinkIndices [[nodiscard]] (GpuBuffer const& indexBuffer, GLenum dataType) -> VaoMutableCtx&&;
-    auto LinkIndices [[nodiscard]] (GLsizei numVirtualIndices) -> VaoMutableCtx&&;
-
+    auto MakeIndexed [[nodiscard]] (GpuBuffer const& indexBuffer, GLenum dataType, GLint firstVertexId = 0) -> VaoMutableCtx&&;
+    auto MakeUnindexed [[nodiscard]] (GLsizei numVertexIds, GLint firstVertexId = 0) -> VaoMutableCtx&&;
 private:
     Vao& contextVao_;
     VaoCtx context_;

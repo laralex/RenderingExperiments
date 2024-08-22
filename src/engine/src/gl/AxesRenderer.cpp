@@ -116,21 +116,21 @@ auto AllocateAxesRenderer() -> AxesRenderer {
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "AxesRenderer Indices");
     renderer.vao = gl::Vao::Allocate("AxesRenderer");
     (void)gl::VaoMutableCtx{renderer.vao}
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = 0})
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_COLOR_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(Vertex),
              .offset          = 3 * sizeof(float)})
-        .LinkIndices(renderer.indexBuffer, GL_UNSIGNED_BYTE);
+        .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
     constexpr static int32_t NUM_DEFINES        = 3;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
@@ -149,16 +149,15 @@ auto AllocateAxesRenderer() -> AxesRenderer {
 }
 
 void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp) {
-    auto programGuard = gl::UniformCtx(renderer.program);
-    gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
-    auto vaoGuard = VaoCtx{renderer.vao};
+    auto programGuard = gl::UniformCtx{renderer.program};
+    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    GLCALL(glDrawElements(GL_TRIANGLES, renderer.vao.IndexCount(), renderer.vao.IndexDataType(), 0));
+    RenderVao(renderer.vao);
 }
 
 } // namespace engine::gl

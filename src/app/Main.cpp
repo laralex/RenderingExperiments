@@ -95,21 +95,21 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
     app->vao = gl::Vao::Allocate("Test VAO");
     (void)gl::VaoMutableCtx{app->vao}
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             app->attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = 5 * sizeof(float),
              .offset          = 0})
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             app->attributeBuffer,
             {.index           = ATTRIB_UV_LOCATION,
              .valuesPerVertex = 2,
              .datatype        = GL_FLOAT,
              .stride          = 5 * sizeof(float),
              .offset          = 3 * sizeof(float)})
-        .LinkIndices(app->indexBuffer, GL_UNSIGNED_INT);
+        .MakeIndexed(app->indexBuffer, GL_UNSIGNED_INT);
 
     app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
     (void)gl::TextureCtx{app->texture}
@@ -160,8 +160,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         glm::mat4 mvp                = camera * model;
         constexpr GLint TEXTURE_SLOT = 0;
-        gl::UniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
-        gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &mvp[0][0]);
+        programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
+        programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
         if (windowCtx.MouseInsideWindow()) {
@@ -174,9 +174,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-        GLCALL(glBindVertexArray(app->vao.Id()));
         GLCALL(glUseProgram(app->program.Id()));
-        GLCALL(glDrawElements(GL_TRIANGLES, app->vao.IndexCount(), app->vao.IndexDataType(), 0));
+        gl::RenderVao(app->vao);
 
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
     }
@@ -202,8 +201,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::Frustum frustum{-0.3f, 1.3f + std::sin(2.0f * ctx.timeSec), -0.3f, 0.3f, near, 10.0f};
         app->commonRenderers.RenderFrustum(mvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
 
-        glm::vec2 billboardSize = glm::vec2{5.0, 4.0};
-        glm::vec3 billboardPivotOffset = glm::vec3{0.0};
+        glm::vec2 billboardSize = glm::vec2{5.0f, 5.0f};
+        glm::vec3 billboardPivotOffset = glm::vec3{0.5f, 0.0f, 0.0f};
         app->commonRenderers.RenderBillboard(gl::BillboardRenderArgs{
             app->commonRenderers.VaoDatalessQuad(),
             mvp, billboardPivotOffset, billboardSize

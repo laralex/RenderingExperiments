@@ -118,21 +118,21 @@ auto AllocateBoxRenderer() -> BoxRenderer {
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "BoxRenderer Indices");
     renderer.vao = gl::Vao::Allocate("BoxRenderer");
     (void)gl::VaoMutableCtx{renderer.vao}
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, position)})
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_INNER_MARKER_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, innerMarker)})
-        .LinkIndices(renderer.indexBuffer, GL_UNSIGNED_BYTE);
+        .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
     constexpr static int32_t NUM_DEFINES        = 5;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
@@ -152,24 +152,22 @@ auto AllocateBoxRenderer() -> BoxRenderer {
     renderer.program = std::move(*maybeProgram);
 
     auto programGuard = UniformCtx{renderer.program};
-    gl::UniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
+    programGuard.SetUniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     return renderer;
 }
 
 void RenderBox(BoxRenderer const& renderer, glm::mat4 const& centerMvp, glm::vec4 color) {
     auto programGuard = gl::UniformCtx(renderer.program);
-    gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &centerMvp[0][0]);
-    gl::UniformArray<4>(UNIFORM_COLOR_LOCATION, &color[0], 1);
-
-    auto vaoGuard = VaoCtx{renderer.vao};
+    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
+    programGuard.SetUniformArray<4>(UNIFORM_COLOR_LOCATION, glm::value_ptr(color), 1);
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    GLCALL(glDrawElements(GL_TRIANGLES, renderer.vao.IndexCount(), renderer.vao.IndexDataType(), 0));
+    RenderVao(renderer.vao);
 }
 
 } // namespace engine::gl

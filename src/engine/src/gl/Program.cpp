@@ -55,7 +55,7 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     GLint isCompiled;
     GLCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled));
     if (isCompiled == GL_TRUE) {
-        XLOG("Compiled shader {}", shader);
+        // XLOG("Compiled shader {}", shader);
         return shader; // success
     }
 

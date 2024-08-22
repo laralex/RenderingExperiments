@@ -155,21 +155,21 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "FrustumRenderer Indices");
     renderer.vao = gl::Vao::Allocate("FrustumRenderer");
     (void)gl::VaoMutableCtx{renderer.vao}
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,
              .valuesPerVertex = 4,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, isLeftRightBottomTop)})
-        .LinkVertexAttribute(
+        .MakeVertexAttribute(
             renderer.attributeBuffer,
             {.index           = ATTRIB_OTHER_WEIGHTS_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, isNear)})
-        .LinkIndices(renderer.indexBuffer, GL_UNSIGNED_BYTE);
+        .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
     constexpr static int32_t NUM_DEFINES        = 5;
     gl::ShaderDefine const defines[NUM_DEFINES] = {
@@ -195,7 +195,6 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
 void RenderFrustum(
     FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) {
     auto programGuard = gl::UniformCtx(renderer.program);
-    gl::UniformMatrix4(UNIFORM_MVP_LOCATION, &originMvp[0][0]);
     UboData ubo{
         .left      = frustum.left,
         .right     = frustum.right,
@@ -205,20 +204,20 @@ void RenderFrustum(
         .far       = frustum.far,
         .thickness = THICKNESS,
     };
-    gl::UniformArray<4>(UNIFORM_COLOR_LOCATION, &color[0], 1);
 
     renderer.ubo.Fill(&ubo.left, sizeof(ubo));
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, renderer.ubo.Id()));
     programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
 
-    auto vaoGuard = VaoCtx{renderer.vao};
+    programGuard.SetUniformArray<4>(UNIFORM_COLOR_LOCATION, glm::value_ptr(color), 1);
+    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(originMvp));
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    GLCALL(glDrawElements(GL_TRIANGLES, renderer.vao.IndexCount(), renderer.vao.IndexDataType(), 0));
+    RenderVao(renderer.vao);
 }
 
 } // namespace engine::gl

@@ -32,16 +32,17 @@ auto AllocateBillboardRenderer(GLuint fragmentShader) -> BillboardRenderer {
         "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram = std::move(*maybeProgram);
+    (void)UniformCtx{renderer.quadVaoProgram}
+        .SetUniformValue4(0, 1.0f, 0.42f, 1.0f, 1.0f);
 
     renderer.ubo =
-        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(BillboardRenderArgs::ShaderArgs), "BillboardRenderer UBO");
+        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(BillboardRenderArgs::ShaderArgs), "BillboardRenderer UBO");
     // TODO: customVaoProgram
     // TODO: provided fragment shader
     return renderer;
 }
 
 void RenderBillboard(BillboardRenderer const& renderer, BillboardRenderArgs const& args) {
-    // if (args.vao == DEFAULT_VAO)
     GpuProgram const& program = renderer.quadVaoProgram;
     auto programGuard = gl::UniformCtx(program);
 
@@ -49,14 +50,12 @@ void RenderBillboard(BillboardRenderer const& renderer, BillboardRenderArgs cons
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, renderer.ubo.Id()));
     programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
 
-    auto vaoGuard = VaoCtx{args.vao};
-
     GLCALL(glEnable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    //GLCALL(glDrawElements(GL_TRIANGLES, args.vao.IndexCount(), args.vao.IndexDataType(), 0));
+    RenderVao(args.vao);
 }
 
 } // namespace engine::gl

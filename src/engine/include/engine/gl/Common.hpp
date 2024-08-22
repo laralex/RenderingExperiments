@@ -2,6 +2,8 @@
 
 #include <cassert>
 #include <glad/gl.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace engine {
 template <typename T> struct CpuView;
@@ -11,12 +13,15 @@ namespace engine::gl {
 
 struct GpuProgram;
 struct ShaderDefine;
+struct Vao;
 
 auto LinkProgram [[nodiscard]] (std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {})
     -> std::optional<GpuProgram>;
 auto LinkProgramFromFiles [[nodiscard]] (
     std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<ShaderDefine const> defines,
     std::string_view name = {}) -> std::optional<GpuProgram>;
+
+void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
 
 // Wrapper for OpenGL object identifiers. Becomes 0 when moved away from
 // This helps to define move constructor/assignment of other high level wrappers as simply "=default"

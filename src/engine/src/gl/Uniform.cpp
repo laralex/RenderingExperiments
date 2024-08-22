@@ -25,22 +25,18 @@ void UniformCtx::SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const {
     GLCALL(glUniformBlockBinding(contextProgram_, programBinding, bufferBindingIdx));
 }
 
-void UniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+void UniformCtx::SetUniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix2fv(location, numMatrices, transpose, values));
 }
 
-void UniformMatrix3(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+void UniformCtx::SetUniformMatrix3(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix3fv(location, numMatrices, transpose, values));
 }
 
-void UniformMatrix4(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+void UniformCtx::SetUniformMatrix4(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix4fv(location, numMatrices, transpose, values));
 }
 
-void UniformTexture(GLint location, GLint textureSlot) { GLCALL(glUniform1i(location, textureSlot)); }
-
-void UniformBuffer(GpuProgram const& program, GLuint programBinding, GLuint bufferBindingIdx) {
-    GLCALL(glUniformBlockBinding(program.Id(), programBinding, bufferBindingIdx));
-}
+void UniformCtx::SetUniformTexture(GLint location, GLint textureSlot) { GLCALL(glUniform1i(location, textureSlot)); }
 
 } // namespace engine::gl

@@ -27,7 +27,7 @@ auto AllocateBlitter() -> engine::gl::GpuProgram {
     gl::GpuProgram blitProgram = std::move(*maybeProgram);
 
     auto programGuard = gl::UniformCtx(blitProgram);
-    gl::UniformTexture(BLIT_UNIFORM_TEXTURE_LOCATION, BLIT_TEXTURE_SLOT);
+    programGuard.SetUniformTexture(BLIT_UNIFORM_TEXTURE_LOCATION, BLIT_TEXTURE_SLOT);
 
     return blitProgram;
 }
@@ -38,17 +38,17 @@ namespace engine::gl {
 
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
-
+    XLOGE("CommonRenderers::Initialize", 0);
     axesRenderer_          = AllocateAxesRenderer();
     boxRenderer_           = AllocateBoxRenderer();
     frustumRenderer_       = AllocateFrustumRenderer();
     billboardRenderer_       = AllocateBillboardRenderer();
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
-    (void)VaoMutableCtx{datalessTriangleVao_}.LinkIndices(3);
+    (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
 
     datalessQuadVao_ = Vao::Allocate("Dataless Quad VAO");
-    (void)VaoMutableCtx{datalessQuadVao_}.LinkIndices(4);
+    (void)VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
 
     isInitialized_         = true;
     blitProgram_           = AllocateBlitter();
@@ -90,8 +90,7 @@ void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& f
 
 void CommonRenderers::RenderFulscreenTriangle() const {
     assert(IsInitialized() && "Bad call to RenderFulscreenTriangle, CommonRenderers isn't initialized");
-    auto vaoGuard = gl::VaoCtx{datalessTriangleVao_};
-    GLCALL(glDrawArrays(GL_TRIANGLES, 0, 3));
+    RenderVao(datalessTriangleVao_);
 }
 
 void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
