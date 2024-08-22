@@ -204,8 +204,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::vec2 billboardSize = glm::vec2{5.0f, 5.0f};
         glm::vec3 billboardPivotOffset = glm::vec3{0.5f, 0.0f, 0.0f};
         app->commonRenderers.RenderBillboard(gl::BillboardRenderArgs{
-            app->commonRenderers.VaoDatalessQuad(),
-            mvp, billboardPivotOffset, billboardSize
+            app->commonRenderers.VaoDatalessQuad(), GL_TRIANGLE_STRIP,
+            mvp, billboardSize, billboardPivotOffset
         });
     }
 

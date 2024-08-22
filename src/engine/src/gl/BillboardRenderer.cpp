@@ -55,7 +55,7 @@ void RenderBillboard(BillboardRenderer const& renderer, BillboardRenderArgs cons
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    RenderVao(args.vao);
+    RenderVao(args.vao, args.drawPrimitive);
 }
 
 } // namespace engine::gl

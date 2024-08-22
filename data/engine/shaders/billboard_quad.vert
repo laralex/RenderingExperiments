@@ -28,5 +28,5 @@ void main() {
     vec3 localSize = vec3(u_LocalSize, 0.0);
     ndc *= localSize;
     ndc += u_PivotPositionOffset * localSize;
-    gl_Position = u_PivotMVP * vec4(ndc, 1.0);
+    gl_Position = vec4(ndc, 1.0);
 }
