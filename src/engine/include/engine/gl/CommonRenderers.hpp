@@ -27,7 +27,7 @@ public:
     void Initialize();
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
 
-    void RenderAxes(glm::mat4 const& mvp, glm::vec3 scale = glm::vec3{1.0f}) const;
+    void RenderAxes(glm::mat4 const& mvp, float scale = 1.0f) const;
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}) const;

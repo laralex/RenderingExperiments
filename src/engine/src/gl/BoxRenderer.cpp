@@ -107,32 +107,32 @@ constexpr GLint UNIFORM_COLOR_LOCATION     = 2;
 
 namespace engine::gl {
 
-auto AllocateBoxRenderer() -> BoxRenderer {
+auto BoxRenderer::Allocate() -> BoxRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
 
     BoxRenderer renderer;
-    renderer.attributeBuffer = gl::GpuBuffer::Allocate(
+    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "BoxRenderer Vertices");
-    renderer.indexBuffer = gl::GpuBuffer::Allocate(
+    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "BoxRenderer Indices");
-    renderer.vao = gl::Vao::Allocate("BoxRenderer");
-    (void)gl::VaoMutableCtx{renderer.vao}
+    renderer.vao_ = gl::Vao::Allocate("BoxRenderer");
+    (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
-            renderer.attributeBuffer,
+            renderer.attributeBuffer_,
             {.index           = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, position)})
         .MakeVertexAttribute(
-            renderer.attributeBuffer,
+            renderer.attributeBuffer_,
             {.index           = ATTRIB_INNER_MARKER_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, innerMarker)})
-        .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
+        .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
     gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -148,16 +148,16 @@ auto AllocateBoxRenderer() -> BoxRenderer {
         "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
         "BoxRenderer");
     assert(maybeProgram);
-    renderer.program = std::move(*maybeProgram);
+    renderer.program_ = std::move(*maybeProgram);
 
-    auto programGuard = UniformCtx{renderer.program};
+    auto programGuard = UniformCtx{renderer.program_};
     programGuard.SetUniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     return renderer;
 }
 
-void RenderBox(BoxRenderer const& renderer, glm::mat4 const& centerMvp, glm::vec4 color) {
-    auto programGuard = gl::UniformCtx(renderer.program);
+void BoxRenderer::Render(glm::mat4 const& centerMvp, glm::vec4 color) const {
+    auto programGuard = gl::UniformCtx(program_);
     programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
     programGuard.SetUniformArray<4>(UNIFORM_COLOR_LOCATION, glm::value_ptr(color), 1);
 
@@ -166,7 +166,7 @@ void RenderBox(BoxRenderer const& renderer, glm::mat4 const& centerMvp, glm::vec
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    RenderVao(renderer.vao);
+    RenderVao(vao_);
 }
 
 } // namespace engine::gl

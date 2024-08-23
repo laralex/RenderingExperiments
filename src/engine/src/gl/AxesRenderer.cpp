@@ -111,27 +111,27 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
-    renderer.attributeBuffer = gl::GpuBuffer::Allocate(
+    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "AxesRenderer Vertices");
-    renderer.indexBuffer = gl::GpuBuffer::Allocate(
+    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "AxesRenderer Indices");
-    renderer.vao = gl::Vao::Allocate("AxesRenderer");
-    (void)gl::VaoMutableCtx{renderer.vao}
+    renderer.vao_ = gl::Vao::Allocate("AxesRenderer");
+    (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
-            renderer.attributeBuffer,
+            renderer.attributeBuffer_,
             {.index           = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = 0})
         .MakeVertexAttribute(
-            renderer.attributeBuffer,
+            renderer.attributeBuffer_,
             {.index           = ATTRIB_COLOR_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(Vertex),
              .offset          = 3 * sizeof(float)})
-        .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
+        .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
     gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -148,27 +148,27 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
         out = std::move(*maybeProgram);
     };
 
-    makeProgram(renderer.customizedProgram, "AxesRenderer");
-    makeProgram(renderer.defaultProgram, "AxesRenderer/Default");
-    (void)gl::UniformCtx{renderer.defaultProgram}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
+    makeProgram(renderer.customizedProgram_, "AxesRenderer");
+    makeProgram(renderer.defaultProgram_, "AxesRenderer/Default");
+    (void)gl::UniformCtx{renderer.defaultProgram_}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
 
     return renderer;
 }
 
-void AxesRenderer::Render(glm::mat4 const& mvp, glm::vec3 scale) const {
-    bool isCustom       = (scale.x != 1.0f | scale.y != 1.0f | scale.z != 1.0f);
-    auto const& program = isCustom ? customizedProgram : defaultProgram;
+void AxesRenderer::Render(glm::mat4 const& mvp, float scale) const {
+    bool isCustom       = scale != 1.0f;
+    auto const& program = isCustom ? customizedProgram_ : defaultProgram_;
 
     auto programGuard = gl::UniformCtx{program};
     programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
-    if (isCustom) { programGuard.SetUniformValue3(UNIFORM_SCALE_LOCATION, scale.x, scale.y, scale.z); }
+    if (isCustom) { programGuard.SetUniformValue3(UNIFORM_SCALE_LOCATION, scale, scale, scale); }
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    RenderVao(vao);
+    RenderVao(vao_);
 }
 
 } // namespace engine::gl

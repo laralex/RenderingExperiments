@@ -21,14 +21,14 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] () -> AxesRenderer;
-    void Render(glm::mat4 const& mvp, glm::vec3 scale = glm::vec3{1.0f}) const;
+    void Render(glm::mat4 const& mvp, float scale = 1.0f) const;
 
 private:
-    Vao vao;
-    GpuBuffer attributeBuffer;
-    GpuBuffer indexBuffer;
-    GpuProgram customizedProgram;
-    GpuProgram defaultProgram;
+    Vao vao_;
+    GpuBuffer attributeBuffer_;
+    GpuBuffer indexBuffer_;
+    GpuProgram customizedProgram_;
+    GpuProgram defaultProgram_;
 };
 
 } // namespace engine::gl

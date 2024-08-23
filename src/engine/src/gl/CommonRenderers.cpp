@@ -40,9 +40,9 @@ void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
     axesRenderer_      = AxesRenderer::Allocate();
-    boxRenderer_       = AllocateBoxRenderer();
-    frustumRenderer_   = AllocateFrustumRenderer();
-    billboardRenderer_ = AllocateBillboardRenderer();
+    boxRenderer_       = BoxRenderer::Allocate();
+    frustumRenderer_   = FrustumRenderer::Allocate();
+    billboardRenderer_ = BillboardRenderer::Allocate();
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -77,19 +77,19 @@ void CommonRenderers::Initialize() {
         GL_RGB, GL_UNSIGNED_BYTE, TEXTURE_DATA_STUB_COLOR, stubColorTexture_.Size());
 }
 
-void CommonRenderers::RenderAxes(glm::mat4 const& mvp, glm::vec3 scale) const {
+void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) const {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     axesRenderer_.Render(mvp, scale);
 }
 
 void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderBox, CommonRenderers isn't initialized");
-    gl::RenderBox(boxRenderer_, centerMvp, color);
+    boxRenderer_.Render(centerMvp, color);
 }
 
 void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
-    gl::RenderFrustum(frustumRenderer_, centerMvp, frustum, color);
+    frustumRenderer_.Render(centerMvp, frustum, color);
 }
 
 void CommonRenderers::RenderFulscreenTriangle() const {
@@ -99,7 +99,7 @@ void CommonRenderers::RenderFulscreenTriangle() const {
 
 void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
     assert(IsInitialized() && "Bad call to RenderBillboard, CommonRenderers isn't initialized");
-    gl::RenderBillboard(billboardRenderer_, args);
+    billboardRenderer_.Render(args);
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture) const {

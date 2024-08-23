@@ -20,7 +20,7 @@ struct UboData {
 
 namespace engine::gl {
 
-auto AllocateFlatRenderer() -> FlatRenderer {
+auto FlatRenderer::Allocate() -> FlatRenderer {
     FlatRenderer renderer;
 
     constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
@@ -39,27 +39,27 @@ auto AllocateFlatRenderer() -> FlatRenderer {
         "data/engine/shaders/lambert.vert", "data/engine/shaders/lambert.frag", CpuView{defines, std::size(defines)},
         "Lambert diffuse");
     assert(maybeProgram);
-    renderer.program = std::move(*maybeProgram);
+    renderer.program_ = std::move(*maybeProgram);
 
-    renderer.ubo =
+    renderer.ubo_ =
         gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboData), "FlatRenderer UBO");
 
     return renderer;
 }
 
-void RenderFlatMesh(
-    FlatRenderer const& renderer, Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model,
-    glm::mat4 const& camera, glm::vec3 lightPosition) {
+void FlatRenderer::Render(
+    Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model, glm::mat4 const& camera,
+    glm::vec3 lightPosition) const {
 
-    UboData ubo{
+    UboData data{
         .lightColor    = glm::vec4{0.3, 1.0, 0.1, 1.0},
         .lightPosition = glm::vec4{lightPosition, 0.0},
     };
 
-    renderer.ubo.Fill(&ubo, sizeof(ubo));
-    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, renderer.ubo.Id()));
+    ubo_.Fill(&data, sizeof(data));
+    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));
 
-    auto programGuard = gl::UniformCtx(renderer.program);
+    auto programGuard = gl::UniformCtx(program_);
     programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
 
     programGuard.SetUniformMatrix4(UNIFORM_MODEL_LOCATION, glm::value_ptr(model));

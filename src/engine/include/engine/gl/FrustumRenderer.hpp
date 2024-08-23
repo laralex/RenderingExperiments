@@ -24,19 +24,27 @@ struct Frustum final {
         , far(far) { }
 };
 
-struct FrustumRenderer final {
-    FrustumRenderer() = default;
-    Vao vao;
-    GpuBuffer attributeBuffer;
-    GpuBuffer indexBuffer;
-    GpuProgram program;
-    GpuBuffer ubo{};
+class FrustumRenderer final {
+
+public:
+#define Self FrustumRenderer
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
+#undef Self
+
+    static auto Allocate [[nodiscard]] () -> FrustumRenderer;
+    void Render(glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0)) const;
+
+private:
+    Vao vao_{};
+    GpuBuffer attributeBuffer_{};
+    GpuBuffer indexBuffer_{};
+    GpuProgram program_{};
+    GpuBuffer ubo_{};
 };
-
-auto AllocateFrustumRenderer [[nodiscard]] () -> FrustumRenderer;
-
-void RenderFrustum(
-    FrustumRenderer const& renderer, glm::mat4 const& originMvp, Frustum const& frustum,
-    glm::vec4 color = glm::vec4(1.0));
 
 } // namespace engine::gl

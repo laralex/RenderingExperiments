@@ -8,16 +8,26 @@
 
 namespace engine::gl {
 
-struct BoxRenderer final {
-    BoxRenderer() = default;
-    Vao vao;
-    GpuBuffer attributeBuffer;
-    GpuBuffer indexBuffer;
-    GpuProgram program;
+class BoxRenderer final {
+
+public:
+#define Self BoxRenderer
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
+#undef Self
+
+    static auto Allocate [[nodiscard]] () -> BoxRenderer;
+    void Render(glm::mat4 const& centerMvp, glm::vec4 color) const;
+
+private:
+    Vao vao_;
+    GpuBuffer attributeBuffer_;
+    GpuBuffer indexBuffer_;
+    GpuProgram program_;
 };
-
-auto AllocateBoxRenderer [[nodiscard]] () -> BoxRenderer;
-
-void RenderBox(BoxRenderer const& renderer, glm::mat4 const& centerMvp, glm::vec4 color);
 
 } // namespace engine::gl

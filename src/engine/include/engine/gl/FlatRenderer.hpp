@@ -8,16 +8,26 @@
 
 namespace engine::gl {
 
-struct FlatRenderer final {
-    FlatRenderer() = default;
-    GpuProgram program;
-    GpuBuffer ubo;
+class FlatRenderer final {
+
+public:
+#define Self FlatRenderer
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
+#undef Self
+
+    static auto Allocate [[nodiscard]] () -> FlatRenderer;
+    void Render(
+        Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model, glm::mat4 const& camera,
+        glm::vec3 lightPosition) const;
+
+private:
+    GpuProgram program_;
+    GpuBuffer ubo_;
 };
-
-auto AllocateFlatRenderer [[nodiscard]] () -> FlatRenderer;
-
-void RenderFlatMesh(
-    FlatRenderer const& renderer, Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model,
-    glm::mat4 const& camera, glm::vec3 lightPosition);
 
 } // namespace engine::gl
