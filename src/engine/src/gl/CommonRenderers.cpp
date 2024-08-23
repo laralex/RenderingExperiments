@@ -15,13 +15,13 @@ constexpr GLint BLIT_TEXTURE_SLOT             = 0; // TODO: 1 and above slots do
 
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
-    constexpr static int32_t NUM_DEFINES        = 1;
-    gl::ShaderDefine const defines[NUM_DEFINES] = {
+
+    gl::ShaderDefine const defines[] = {
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag", CpuView{defines, NUM_DEFINES},
+        "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag", CpuView{defines, std::size(defines)},
         "Blit");
     assert(maybeProgram);
     gl::GpuProgram blitProgram = std::move(*maybeProgram);
@@ -38,7 +38,7 @@ namespace engine::gl {
 
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
-    XLOGE("CommonRenderers::Initialize", 0);
+    XLOG("CommonRenderers::Initialize", 0);
     axesRenderer_          = AllocateAxesRenderer();
     boxRenderer_           = AllocateBoxRenderer();
     frustumRenderer_       = AllocateFrustumRenderer();

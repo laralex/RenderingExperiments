@@ -134,8 +134,7 @@ auto AllocateBoxRenderer() -> BoxRenderer {
              .offset          = offsetof(Vertex, innerMarker)})
         .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
-    constexpr static int32_t NUM_DEFINES        = 5;
-    gl::ShaderDefine const defines[NUM_DEFINES] = {
+    gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name  = "ATTRIB_INNER_MARKER_LOCATION",
          .value = ATTRIB_INNER_MARKER_LOCATION,
@@ -146,7 +145,7 @@ auto AllocateBoxRenderer() -> BoxRenderer {
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, NUM_DEFINES},
+        "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
         "BoxRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);

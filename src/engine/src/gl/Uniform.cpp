@@ -7,7 +7,7 @@ bool UniformCtx::hasInstances_{false};
 GlHandle UniformCtx::contextProgram_{GL_NONE};
 
 UniformCtx::UniformCtx(GpuProgram const& useProgram) {
-    assert(!hasInstances_);
+    assert(!hasInstances_ && "Attempt to start a new UniformCtx, while another is alive in the scope");
     contextProgram_.UnsafeAssign(useProgram.programId_);
     GLCALL(glUseProgram(contextProgram_));
     hasInstances_ = true;

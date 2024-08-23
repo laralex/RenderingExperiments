@@ -166,8 +166,7 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
              .offset          = offsetof(Vertex, isNear)})
         .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
-    constexpr static int32_t NUM_DEFINES        = 5;
-    gl::ShaderDefine const defines[NUM_DEFINES] = {
+    gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -176,7 +175,7 @@ auto AllocateFrustumRenderer() -> FrustumRenderer {
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag", CpuView{defines, NUM_DEFINES},
+        "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
         "FrustumRenderer");
     assert(maybeProgram);
     renderer.program = std::move(*maybeProgram);

@@ -1,4 +1,5 @@
-* render utils (lines, spheres)
+* render utils (billboard, lines, spheres)
+* inverted Y axis
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * camera
 * incremental compilation

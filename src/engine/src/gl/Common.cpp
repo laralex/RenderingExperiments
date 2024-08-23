@@ -32,11 +32,12 @@ auto LinkProgramFromFiles(
 void RenderVao(Vao const& vao, GLenum primitive) {
     auto vaoGuard = VaoCtx{vao};
     GLint firstIndex = vao.FirstIndex();
+    GLsizei numIndices = vao.IndexCount();
     if (vao.IsIndexed()) {
-        // TODO: crash when passing firstIndex instead of 0, the static buffers get updated
-        GLCALL(glDrawElements(primitive, vao.IndexCount(), vao.IndexDataType(), 0));
+        auto const* firstIndexPtr = reinterpret_cast<decltype(firstIndex) const*>(firstIndex);
+        GLCALL(glDrawElements(primitive, numIndices, vao.IndexDataType(), firstIndexPtr));
     } else {
-        GLCALL(glDrawArrays(primitive, firstIndex, vao.IndexCount()));
+        GLCALL(glDrawArrays(primitive, firstIndex, numIndices));
     }
 }
 

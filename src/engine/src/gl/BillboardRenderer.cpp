@@ -20,15 +20,14 @@ auto AllocateBillboardRenderer(GLuint fragmentShader) -> BillboardRenderer {
 
     BillboardRenderer renderer;
 
-    constexpr static int32_t NUM_DEFINES        = 3;
-    gl::ShaderDefine const defines[NUM_DEFINES] = {
+    gl::ShaderDefine const defines[] = {
         {.name = "UBO_BINDING", .value = UBO_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_COLOR_LOCATION", .value = 0, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/constant.frag", CpuView{defines, NUM_DEFINES},
+        "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
         "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram = std::move(*maybeProgram);

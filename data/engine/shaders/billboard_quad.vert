@@ -4,10 +4,18 @@
 
 out vec2 v_Uv;
 
+struct Screen {
+    float pixelsPerUnitX;
+    float pixelsPerUnitY;
+    float pixelsHeight;
+    float aspectRatio;
+};
+
 layout(std140, binding = UBO_BINDING) uniform Params {
-    vec2 u_LocalSize;
-    vec4 u_PivotPositionOffset; // vec3 in fact
     mat4 u_PivotMVP;
+    vec4 u_PivotPositionOffset; // vec3 position, last float aspect
+    vec2 u_LocalSize;
+    Screen u_Screen;
 };
 
 const vec2 VERTICES[] = vec2[](
@@ -24,8 +32,11 @@ void main() {
 #else
     v_Uv = ndc * vec2(0.5) + vec2(0.5);
 #endif //GL_EXT_some_extension
+    vec2 localSize = vec2(u_Screen.pixelsPerUnitY, u_Screen.pixelsPerUnitY * u_Screen.aspectRatio) * u_LocalSize;
+    vec4 modelPosition = vec4(ndc * localSize, 1.0, 1.0);
 
-    vec4 offset = vec4(u_PivotPositionOffset.xy * u_LocalSize, u_PivotPositionOffset.z, 0.0);
-    vec4 ndc4 = vec4(ndc * u_LocalSize, 0.0, 1.0) + offset;
-    gl_Position = ndc4;
+    vec3 pivotOffset = u_PivotPositionOffset.xyz;
+    vec3 ndcOffset = vec3(pivotOffset.xy /* * localSize*/, pivotOffset.z);
+    vec4 transformedPivot = u_PivotMVP * vec4(ndcOffset, 1.0);
+    gl_Position = transformedPivot + modelPosition;
 }

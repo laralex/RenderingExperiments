@@ -58,4 +58,26 @@ private:
     GLuint id_;
 };
 
+struct alignas(16) ScreenShaderArgs final {
+    float pixelsPerUnitX;
+    float pixelsPerUnitY;
+    float pixelsHeight;
+    float aspectRatio;
+};
+
+struct alignas(16) MouseShaderArgs final {
+    glm::vec2 ndcPosition;
+    float isPressed;
+};
+
+struct ModelViewProjShaderArgs final {
+    alignas(16) glm::mat4 modelView;
+    alignas(16) glm::mat4 modelViewProjection;
+};
+
+struct ViewProjShaderArgs final {
+    alignas(16) glm::mat4 viewProjection;
+    alignas(16) glm::mat4 invViewProjection;
+};
+
 } // namespace engine::gl

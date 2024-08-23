@@ -26,14 +26,15 @@ auto AllocateBillboardRenderer [[nodiscard]] (GLuint fragmentShader = GL_NONE) -
 
 // VAO must provide positions/uv
 struct BillboardRenderArgs final {
-    struct  ShaderArgs final {
-        alignas(16) glm::vec2 localSize{1.0f};
-        alignas(16) glm::vec3 localPivotOffset{0.0f};
+    struct ShaderArgs final {
         alignas(16) glm::mat4 pivotMvp{1.0f};
+        alignas(16) glm::vec3 localPivotOffset{0.0f};
+        alignas(16) glm::vec2 localSizeAndAspect{1.0f};
+        ScreenShaderArgs screenArgs;
     };
 
-    BillboardRenderArgs(Vao const& vao, GLenum primitive, glm::mat4 pivotMvp, glm::vec2 localSize = glm::vec2{1.0f,1.0f}, glm::vec3 localPivotOffset = glm::vec3{0.0f})
-        : shaderArgs({localSize, localPivotOffset, pivotMvp}), vao(vao), drawPrimitive(primitive) { }
+    BillboardRenderArgs(Vao const& vao, GLenum primitive, ScreenShaderArgs screen, glm::mat4 pivotMvp, glm::vec2 localSize = glm::vec2{1.0f,1.0f}, glm::vec3 localPivotOffset = glm::vec3{0.0f})
+        : shaderArgs({pivotMvp, localPivotOffset, localSize, screen}), vao(vao), drawPrimitive(primitive) { }
 
     ShaderArgs shaderArgs;
     Vao const& vao;

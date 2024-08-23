@@ -8,7 +8,7 @@
 
 namespace engine::gl {
 
-struct Frustum {
+struct Frustum final {
     float left;
     float right;
     float bottom;
