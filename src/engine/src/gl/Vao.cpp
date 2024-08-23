@@ -5,21 +5,23 @@ namespace engine::gl {
 
 bool VaoCtx::hasInstances_{false};
 
-VaoCtx::VaoCtx(Vao const& useVao) : contextVao_(useVao) {
+VaoCtx::VaoCtx(Vao const& useVao) noexcept
+    : contextVao_(useVao) {
     assert(!hasInstances_);
     GLCALL(glBindVertexArray(contextVao_.vaoId_));
     hasInstances_ = true;
 }
 
-VaoCtx::~VaoCtx() {
+VaoCtx::~VaoCtx() noexcept {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     GLCALL(glBindVertexArray(0U));
     hasInstances_ = false;
 }
 
-VaoMutableCtx::VaoMutableCtx(Vao& useVao) : contextVao_(useVao), context_(useVao) {}
-
+VaoMutableCtx::VaoMutableCtx(Vao& useVao) noexcept
+    : contextVao_(useVao)
+    , context_(useVao) { }
 
 void Vao::Dispose() {
     if (vaoId_ == GL_NONE) { return; }
@@ -40,8 +42,8 @@ auto Vao::Allocate(std::string_view name) -> Vao {
     return vao;
 }
 
-auto VaoMutableCtx::MakeVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized)
-    -> VaoMutableCtx&& {
+auto VaoMutableCtx::MakeVertexAttribute(
+    GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized) -> VaoMutableCtx&& {
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
@@ -59,7 +61,8 @@ auto VaoMutableCtx::MakeVertexAttribute(GpuBuffer const& attributeBuffer, Vao::A
     return std::move(*this);
 }
 
-auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset) -> VaoMutableCtx&& {
+auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset)
+    -> VaoMutableCtx&& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
     GLsizei bytesPerIndex = 1;
     switch (dataType) {
@@ -77,20 +80,22 @@ auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, G
         break;
     }
     XLOGW("VaoMutableCtx::LinkIndices Not implemented shared_ptr bookeeping", 0);
-    assert (indexBuffer.SizeBytes() % bytesPerIndex == 0 && "Index buffer has memory size not divisible by sizeof(dataType)");
-    contextVao_.indexBuffer_ = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
+    assert(
+        indexBuffer.SizeBytes() % bytesPerIndex == 0
+        && "Index buffer has memory size not divisible by sizeof(dataType)");
+    contextVao_.indexBuffer_         = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
     contextVao_.indexBufferDataType_ = dataType;
-    contextVao_.numIndices_ = indexBuffer.SizeBytes() / bytesPerIndex;
-    contextVao_.firstIndex_ = indexBufferOffset;
+    contextVao_.numIndices_          = indexBuffer.SizeBytes() / bytesPerIndex;
+    contextVao_.firstIndex_          = indexBufferOffset;
     return std::move(*this);
 }
 
 auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) -> VaoMutableCtx&& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0U));
-    contextVao_.indexBuffer_ = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
+    contextVao_.indexBuffer_         = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
     contextVao_.indexBufferDataType_ = GL_NONE;
-    contextVao_.numIndices_ = numVertexIds;
-    contextVao_.firstIndex_ = firstVertexId;
+    contextVao_.numIndices_          = numVertexIds;
+    contextVao_.firstIndex_          = firstVertexId;
     return std::move(*this);
 }
 

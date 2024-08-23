@@ -8,8 +8,8 @@ class GpuBuffer final {
 
 public:
 #define Self GpuBuffer
-    explicit Self() = default;
-    ~Self() { Dispose(); };
+    explicit Self() noexcept = default;
+    ~Self() noexcept { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -28,7 +28,7 @@ private:
     GlHandle bufferId_ = GlHandle{GL_NONE};
     GLenum targetType_ = 0xDEAD;
     GLenum usage_      = 0xDEAD;
-    int32_t sizeBytes_  = 0xDEAD;
+    int32_t sizeBytes_ = 0xDEAD;
 };
 
 } // namespace engine::gl

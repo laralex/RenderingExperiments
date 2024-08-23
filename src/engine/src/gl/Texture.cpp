@@ -7,15 +7,15 @@ bool TextureCtx::hasInstances_{false};
 GlHandle TextureCtx::contextTexture_{GL_NONE};
 GLenum TextureCtx::contextTarget_{GL_NONE};
 
-TextureCtx::TextureCtx(Texture const& useTexture) {
+TextureCtx::TextureCtx(Texture const& useTexture) noexcept {
     assert(!hasInstances_);
     contextTexture_.UnsafeAssign(useTexture.textureId_);
-    contextTarget_     = useTexture.TextureSlotTarget();
+    contextTarget_ = useTexture.TextureSlotTarget();
     GLCALL(glBindTexture(contextTarget_, contextTexture_));
     hasInstances_ = true;
 }
 
-TextureCtx::~TextureCtx() {
+TextureCtx::~TextureCtx() noexcept {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     contextTexture_.UnsafeReset();

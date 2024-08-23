@@ -6,14 +6,14 @@ namespace engine::gl {
 bool UniformCtx::hasInstances_{false};
 GlHandle UniformCtx::contextProgram_{GL_NONE};
 
-UniformCtx::UniformCtx(GpuProgram const& useProgram) {
+UniformCtx::UniformCtx(GpuProgram const& useProgram) noexcept {
     assert(!hasInstances_ && "Attempt to start a new UniformCtx, while another is alive in the scope");
     contextProgram_.UnsafeAssign(useProgram.programId_);
     GLCALL(glUseProgram(contextProgram_));
     hasInstances_ = true;
 }
 
-UniformCtx::~UniformCtx() {
+UniformCtx::~UniformCtx() noexcept {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     contextProgram_.UnsafeReset();

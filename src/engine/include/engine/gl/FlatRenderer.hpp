@@ -16,6 +16,8 @@ struct FlatRenderer final {
 
 auto AllocateFlatRenderer [[nodiscard]] () -> FlatRenderer;
 
-void RenderFlatMesh(FlatRenderer const& renderer, Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model, glm::mat4 const& camera, glm::vec3 lightPosition);
+void RenderFlatMesh(
+    FlatRenderer const& renderer, Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model,
+    glm::mat4 const& camera, glm::vec3 lightPosition);
 
 } // namespace engine::gl

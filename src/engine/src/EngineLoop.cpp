@@ -13,7 +13,7 @@ namespace engine {
 struct EngineCtx {
 #define Self EngineCtx
     explicit Self(WindowCtx&& windowCtx);
-    ~Self() { Dispose(); }
+    ~Self() noexcept { Dispose(); }
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

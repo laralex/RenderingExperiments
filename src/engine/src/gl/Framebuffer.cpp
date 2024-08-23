@@ -8,19 +8,19 @@ bool FramebufferCtx::hasInstances_{false};
 GlHandle FramebufferCtx::contextFramebuffer_{GL_NONE};
 GLenum FramebufferCtx::framebufferTarget_{GL_DRAW_FRAMEBUFFER};
 
-FramebufferCtx::FramebufferCtx(Framebuffer const& useFramebuffer, bool bindAsDraw)
+FramebufferCtx::FramebufferCtx(Framebuffer const& useFramebuffer, bool bindAsDraw) noexcept
     : FramebufferCtx(useFramebuffer.fbId_, bindAsDraw) { }
 
-FramebufferCtx::FramebufferCtx(GLuint useFramebuffer, bool bindAsDraw) {
+FramebufferCtx::FramebufferCtx(GLuint useFramebuffer, bool bindAsDraw) noexcept {
     // XLOG("FramebufferCtx ctor {}", useFramebuffer);
     assert(!hasInstances_);
     contextFramebuffer_ = GlHandle{useFramebuffer};
-    framebufferTarget_     = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
+    framebufferTarget_  = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
     GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
     hasInstances_ = true;
 }
 
-FramebufferCtx::~FramebufferCtx() {
+FramebufferCtx::~FramebufferCtx() noexcept {
     // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
     if (!hasInstances_) { return; }
     // assert(hasInstances_);

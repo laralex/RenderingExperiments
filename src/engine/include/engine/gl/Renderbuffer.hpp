@@ -10,8 +10,8 @@ class Renderbuffer final {
 
 public:
 #define Self Renderbuffer
-    explicit Self() = default;
-    ~Self() { Dispose(); };
+    explicit Self() noexcept = default;
+    ~Self() noexcept { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -45,8 +45,8 @@ private:
 class RenderbufferCtx final {
 public:
 #define Self RenderbufferCtx
-    explicit Self(Renderbuffer const& useRenderbuffer);
-    ~Self();
+    explicit Self(Renderbuffer const& useRenderbuffer) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

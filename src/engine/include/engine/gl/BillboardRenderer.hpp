@@ -33,8 +33,12 @@ struct BillboardRenderArgs final {
         ScreenShaderArgs screenArgs;
     };
 
-    BillboardRenderArgs(Vao const& vao, GLenum primitive, ScreenShaderArgs screen, glm::mat4 pivotMvp, glm::vec2 localSize = glm::vec2{1.0f,1.0f}, glm::vec3 localPivotOffset = glm::vec3{0.0f})
-        : shaderArgs({pivotMvp, localPivotOffset, localSize, screen}), vao(vao), drawPrimitive(primitive) { }
+    BillboardRenderArgs(
+        Vao const& vao, GLenum primitive, ScreenShaderArgs screen, glm::mat4 pivotMvp,
+        glm::vec2 localSize = glm::vec2{1.0f, 1.0f}, glm::vec3 localPivotOffset = glm::vec3{0.0f})
+        : shaderArgs({pivotMvp, localPivotOffset, localSize, screen})
+        , vao(vao)
+        , drawPrimitive(primitive) { }
 
     ShaderArgs shaderArgs;
     Vao const& vao;

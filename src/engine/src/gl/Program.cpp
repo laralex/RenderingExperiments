@@ -25,7 +25,7 @@ ENGINE_EXPORT auto GpuProgram::Allocate(GLuint vertexShader, GLuint fragmentShad
     GLCALL(glDetachShader(programId, fragmentShader));
 
     if (isLinked == GL_TRUE) {
-        auto program          = GpuProgram();
+        auto program       = GpuProgram();
         program.programId_ = GlHandle{programId};
         if (!name.empty()) {
             DebugLabel(program, name);
@@ -62,8 +62,8 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     static char infoLog[512];
     GLCALL(glGetShaderInfoLog(shader, 512, nullptr, infoLog));
     GLCALL(glDeleteShader(shader));
-    char const* typeLabel = (shaderType == GL_VERTEX_SHADER ? "vertex" : (
-        shaderType == GL_FRAGMENT_SHADER ? "fragment" : "compute"));
+    char const* typeLabel =
+        (shaderType == GL_VERTEX_SHADER ? "vertex" : (shaderType == GL_FRAGMENT_SHADER ? "fragment" : "compute"));
     XLOGE("Failed to compile {} shader:\n{}", typeLabel, infoLog);
 
     return GL_NONE;

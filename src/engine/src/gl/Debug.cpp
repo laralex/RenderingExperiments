@@ -187,7 +187,7 @@ void CheckOpenGlError(const char* stmt, const char* fname, int line, bool fatal)
 
 DebugGroupCtx::DebugGroupCtx(std::string_view label, GLuint userData) { PushDebugGroup(label, userData); }
 
-DebugGroupCtx::~DebugGroupCtx() { PopDebugGroup(); }
+DebugGroupCtx::~DebugGroupCtx() noexcept { PopDebugGroup(); }
 
 void PushDebugGroup(std::string_view label, GLuint userData) {
     assert(GlExtensions::IsInitialized());

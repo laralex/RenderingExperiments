@@ -8,7 +8,7 @@
 namespace {
 
 constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
-constexpr GLint UBO_SHADER_BINDING = 0; // local for shader
+constexpr GLint UBO_SHADER_BINDING  = 0; // local for shader
 
 } // namespace
 
@@ -23,19 +23,20 @@ auto AllocateBillboardRenderer(GLuint fragmentShader) -> BillboardRenderer {
     gl::ShaderDefine const defines[] = {
         {.name = "UBO_BINDING", .value = UBO_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_COLOR_LOCATION", .value = 0, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_TEXTURE_LOCATION", .value = BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name  = "UNIFORM_TEXTURE_LOCATION",
+         .value = BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION,
+         .type  = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
-        "BillboardRenderer - Quad");
+        "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/constant.frag",
+        CpuView{defines, std::size(defines)}, "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram = std::move(*maybeProgram);
-    (void)UniformCtx{renderer.quadVaoProgram}
-        .SetUniformValue4(0, 1.0f, 0.42f, 1.0f, 1.0f);
+    (void)UniformCtx{renderer.quadVaoProgram}.SetUniformValue4(0, 1.0f, 0.42f, 1.0f, 1.0f);
 
-    renderer.ubo =
-        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(BillboardRenderArgs::ShaderArgs), "BillboardRenderer UBO");
+    renderer.ubo = gl::GpuBuffer::Allocate(
+        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(BillboardRenderArgs::ShaderArgs), "BillboardRenderer UBO");
     // TODO: customVaoProgram
     // TODO: provided fragment shader
     return renderer;
@@ -43,7 +44,7 @@ auto AllocateBillboardRenderer(GLuint fragmentShader) -> BillboardRenderer {
 
 void RenderBillboard(BillboardRenderer const& renderer, BillboardRenderArgs const& args) {
     GpuProgram const& program = renderer.quadVaoProgram;
-    auto programGuard = gl::UniformCtx(program);
+    auto programGuard         = gl::UniformCtx(program);
 
     renderer.ubo.Fill(&args.shaderArgs, sizeof(args.shaderArgs));
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, renderer.ubo.Id()));

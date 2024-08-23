@@ -2,8 +2,8 @@
 #include <engine/EngineLoop.hpp>
 #include <engine/gl/Buffer.hpp>
 #include <engine/gl/CommonRenderers.hpp>
-#include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/FlatRenderer.hpp>
+#include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/Guard.hpp>
 #include <engine/gl/Init.hpp>
 #include <engine/gl/Program.hpp>
@@ -49,59 +49,59 @@ struct Vertex {
 };
 
 constexpr GLfloat vertexPositions[] = {
-    -0.5f, -0.5f, 0.5f, // 0
-    0.5f, -0.5f, 0.5f, // 1
-    0.5f, 0.5f, 0.5f, // 2
-    -0.5f, 0.5f, 0.5f, // 3
-    -0.5f, 0.5f, -0.5f, // 4
-    0.5f, 0.5f, -0.5f, // 5
-    0.5f, -0.5f, -0.5f, // 6
+    -0.5f, -0.5f, 0.5f,  // 0
+    0.5f,  -0.5f, 0.5f,  // 1
+    0.5f,  0.5f,  0.5f,  // 2
+    -0.5f, 0.5f,  0.5f,  // 3
+    -0.5f, 0.5f,  -0.5f, // 4
+    0.5f,  0.5f,  -0.5f, // 5
+    0.5f,  -0.5f, -0.5f, // 6
     -0.5f, -0.5f, -0.5f, // 7
 
-    -0.5f, -0.5f, 0.5f, // 8 (dup 0-7)
-    0.5f, -0.5f, 0.5f, // 9
-    0.5f, 0.5f, 0.5f, // 10
-    -0.5f, 0.5f, 0.5f, // 11
-    -0.5f, 0.5f, -0.5f, // 12
-    0.5f, 0.5f, -0.5f, // 13
-    0.5f, -0.5f, -0.5f, // 14
+    -0.5f, -0.5f, 0.5f,  // 8 (dup 0-7)
+    0.5f,  -0.5f, 0.5f,  // 9
+    0.5f,  0.5f,  0.5f,  // 10
+    -0.5f, 0.5f,  0.5f,  // 11
+    -0.5f, 0.5f,  -0.5f, // 12
+    0.5f,  0.5f,  -0.5f, // 13
+    0.5f,  -0.5f, -0.5f, // 14
     -0.5f, -0.5f, -0.5f, // 15
 
-    -0.5f, -0.5f, 0.5f, // 16 (dup 0-7)
-    0.5f, -0.5f, 0.5f, // 17
-    0.5f, 0.5f, 0.5f, // 18
-    -0.5f, 0.5f, 0.5f, // 19
-    -0.5f, 0.5f, -0.5f, // 20
-    0.5f, 0.5f, -0.5f, // 21
-    0.5f, -0.5f, -0.5f, // 22
+    -0.5f, -0.5f, 0.5f,  // 16 (dup 0-7)
+    0.5f,  -0.5f, 0.5f,  // 17
+    0.5f,  0.5f,  0.5f,  // 18
+    -0.5f, 0.5f,  0.5f,  // 19
+    -0.5f, 0.5f,  -0.5f, // 20
+    0.5f,  0.5f,  -0.5f, // 21
+    0.5f,  -0.5f, -0.5f, // 22
     -0.5f, -0.5f, -0.5f, // 23
 };
 
 constexpr Vertex vertexData[] = {
-    { { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }, // 0
-    { { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }, // 1
-    { { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } }, // 2
-    { { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } }, // 3
-    { { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } }, // 4
-    { { 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } }, // 5
-    { { 1.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } }, // 6
-    { { 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } }, // 7
-    { { 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f } }, // 8
-    { { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } }, // 9
-    { { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } }, // 10
-    { { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f } }, // 11
-    { { 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f } }, // 12
-    { { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } }, // 13
-    { { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } }, // 14
-    { { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f } }, // 15
-    { { 0.0f, 0.0f }, { 0.0f, -1.0f, 0.0f } }, // 16
-    { { 1.0f, 0.0f }, { 0.0f, -1.0f, 0.0f } }, // 17
-    { { 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } }, // 18
-    { { 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } }, // 19
-    { { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } }, // 20
-    { { 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } }, // 21
-    { { 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f } }, // 22
-    { { 0.0f, 1.0f }, { 0.0f, -1.0f, 0.0f } }, // 23
+    {{0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},  // 0
+    {{1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},  // 1
+    {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},  // 2
+    {{0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},  // 3
+    {{0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}}, // 4
+    {{1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}}, // 5
+    {{1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}}, // 6
+    {{0.0f, 1.0f}, {0.0f, 0.0f, -1.0f}}, // 7
+    {{0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}}, // 8
+    {{1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},  // 9
+    {{1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},  // 10
+    {{0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}}, // 11
+    {{0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}}, // 12
+    {{1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},  // 13
+    {{1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},  // 14
+    {{0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}}, // 15
+    {{0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}, // 16
+    {{1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}, // 17
+    {{1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},  // 18
+    {{0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},  // 19
+    {{0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},  // 20
+    {{1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},  // 21
+    {{1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}}, // 22
+    {{0.0f, 1.0f}, {0.0f, -1.0f, 0.0f}}, // 23
 };
 
 constexpr uint32_t Z_POS0 = 0, Z_POS1 = 1, Z_POS2 = 2, Z_POS3 = 3;
@@ -112,20 +112,11 @@ constexpr uint32_t Y_POS0 = 18, Y_POS1 = 21, Y_POS2 = 20, Y_POS3 = 19;
 constexpr uint32_t Y_NEG0 = 23, Y_NEG1 = 22, Y_NEG2 = 17, Y_NEG3 = 16;
 
 constexpr uint32_t indices[] = {
-    Z_POS0, Z_POS1, Z_POS2,
-    Z_POS0, Z_POS2, Z_POS3,
-    Z_NEG0, Z_NEG1, Z_NEG2,
-    Z_NEG0, Z_NEG2, Z_NEG3,
+    Z_POS0, Z_POS1, Z_POS2, Z_POS0, Z_POS2, Z_POS3, Z_NEG0, Z_NEG1, Z_NEG2, Z_NEG0, Z_NEG2, Z_NEG3,
 
-    X_POS0, X_POS1, X_POS2,
-    X_POS0, X_POS2, X_POS3,
-    X_NEG0, X_NEG1, X_NEG2,
-    X_NEG0, X_NEG2, X_NEG3,
+    X_POS0, X_POS1, X_POS2, X_POS0, X_POS2, X_POS3, X_NEG0, X_NEG1, X_NEG2, X_NEG0, X_NEG2, X_NEG3,
 
-    Y_POS0, Y_POS1, Y_POS2,
-    Y_POS0, Y_POS2, Y_POS3,
-    Y_NEG0, Y_NEG1, Y_NEG2,
-    Y_NEG0, Y_NEG2, Y_NEG3,
+    Y_POS0, Y_POS1, Y_POS2, Y_POS0, Y_POS2, Y_POS3, Y_NEG0, Y_NEG1, Y_NEG2, Y_NEG0, Y_NEG2, Y_NEG3,
 };
 
 constexpr uint8_t textureData[] = {
@@ -165,8 +156,8 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
-    app->positionBuffer =
-        gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexPositions, sizeof(vertexPositions), "Test positions VBO");
+    app->positionBuffer = gl::GpuBuffer::Allocate(
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexPositions, sizeof(vertexPositions), "Test positions VBO");
     app->attributeBuffer =
         gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test attributes VBO");
     app->indexBuffer =
@@ -276,12 +267,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 model = glm::mat4(1.0f);
         model           = glm::rotate(model, rotationSpeed, glm::vec3(0.5f, 0.2f, 1.0f));
         model           = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-        model           = glm::translate(model, glm::vec3(-2.0f-std::sin(ctx.timeSec), 0.0f, 0.0f));
-        glm::mat4 mvp                = camera * model;
+        model           = glm::translate(model, glm::vec3(-2.0f - std::sin(ctx.timeSec), 0.0f, 0.0f));
+        glm::mat4 mvp   = camera * model;
 
-        glm::vec3 lightPosition{0.0f, 1.0f*std::sin(ctx.timeSec), 0.0f};
+        glm::vec3 lightPosition{0.0f, 1.0f * std::sin(ctx.timeSec), 0.0f};
         glm::mat4 lightModel = glm::translate(glm::mat4(1.0f), lightPosition);
-        lightModel = glm::scale(lightModel, glm::vec3(0.1f, 0.1f, 0.1f));
+        lightModel           = glm::scale(lightModel, glm::vec3(0.1f, 0.1f, 0.1f));
 
         app->commonRenderers.RenderAxes(mvp);
         app->commonRenderers.RenderAxes(camera * lightModel);
@@ -292,7 +283,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthFunc(GL_LEQUAL));
         gl::RenderFlatMesh(app->flatRenderer, app->vao, GL_TRIANGLES, model, camera, lightPosition);
     }
-
 
     {
         // present
@@ -308,8 +298,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto fbGuard         = gl::FramebufferCtx{0U, true};
 
         glm::mat4 model{1.0};
-        model           = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
-        model           = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
 
         glm::mat4 mvp = camera * model;
         // app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
@@ -320,21 +310,24 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         {
             // glm::mat4 mvp = camera * model;
-            glm::vec2 billboardSize = glm::vec2{1.0f, 1.0f};
+            glm::vec2 billboardSize        = glm::vec2{1.0f, 1.0f};
             glm::vec3 billboardPivotOffset = glm::vec3{0.0f, 0.0f, 0.0f};
-            gl::ScreenShaderArgs screen {
+            gl::ScreenShaderArgs screen{
                 .pixelsPerUnitX = 0.001f * static_cast<float>(screenSize.x),
                 .pixelsPerUnitY = 0.001f * static_cast<float>(screenSize.y),
-                .pixelsHeight = static_cast<float>(screenSize.y),
-                .aspectRatio = aspectRatio
-            };
+                .pixelsHeight   = static_cast<float>(screenSize.y),
+                .aspectRatio    = aspectRatio};
             app->commonRenderers.RenderBillboard(gl::BillboardRenderArgs{
-                app->commonRenderers.VaoDatalessQuad(), GL_TRIANGLE_STRIP,
-                screen, mvp, billboardSize, billboardPivotOffset,
+                app->commonRenderers.VaoDatalessQuad(),
+                GL_TRIANGLE_STRIP,
+                screen,
+                mvp,
+                billboardSize,
+                billboardPivotOffset,
             });
         }
 
-        app->commonRenderers.RenderAxes(mvp);
+        app->commonRenderers.RenderAxes(mvp, glm::vec3{0.1f});
 
         gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
     }

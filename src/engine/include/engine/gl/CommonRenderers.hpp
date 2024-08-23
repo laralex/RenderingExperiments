@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/gl/AxesRenderer.hpp"
-#include "engine/gl/BoxRenderer.hpp"
 #include "engine/gl/BillboardRenderer.hpp"
+#include "engine/gl/BoxRenderer.hpp"
 #include "engine/gl/FrustumRenderer.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Sampler.hpp"
@@ -16,8 +16,8 @@ namespace engine::gl {
 class CommonRenderers final {
 public:
 #define Self CommonRenderers
-    explicit Self()              = default;
-    ~Self()                      = default;
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -27,7 +27,7 @@ public:
     void Initialize();
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
 
-    void RenderAxes(glm::mat4 const& mvp) const;
+    void RenderAxes(glm::mat4 const& mvp, glm::vec3 scale = glm::vec3{1.0f}) const;
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}) const;
@@ -38,10 +38,10 @@ public:
 
     auto VaoDatalessTriangle [[nodiscard]] () const -> Vao const& { return datalessTriangleVao_; }
     auto VaoDatalessQuad [[nodiscard]] () const -> Vao const& { return datalessQuadVao_; }
-    auto SamplerNearest[[nodiscard]]() const -> Sampler const& { return samplerNearest_; }
-    auto SamplerLinear[[nodiscard]]() const -> Sampler const& { return samplerLinear_; }
-    auto SamplerLinearMips[[nodiscard]]() const -> Sampler const& { return samplerLinearMip_; }
-    auto TextureStubColor[[nodiscard]]() const -> Texture const& { return stubColorTexture_; }
+    auto SamplerNearest [[nodiscard]] () const -> Sampler const& { return samplerNearest_; }
+    auto SamplerLinear [[nodiscard]] () const -> Sampler const& { return samplerLinear_; }
+    auto SamplerLinearMips [[nodiscard]] () const -> Sampler const& { return samplerLinearMip_; }
+    auto TextureStubColor [[nodiscard]] () const -> Texture const& { return stubColorTexture_; }
 
 private:
     AxesRenderer axesRenderer_;

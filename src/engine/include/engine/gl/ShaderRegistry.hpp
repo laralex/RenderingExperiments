@@ -26,8 +26,8 @@ enum class FragmentShaderId : std::size_t {
 class ShaderRegistry final {
 public:
 #define Self ShaderRegistry
-    explicit Self();
-    ~Self();
+    explicit Self() noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;

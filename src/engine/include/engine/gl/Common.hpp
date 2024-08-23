@@ -15,7 +15,8 @@ struct GpuProgram;
 struct ShaderDefine;
 struct Vao;
 
-auto LinkProgram [[nodiscard]] (std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {})
+auto LinkProgram
+    [[nodiscard]] (std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {})
     -> std::optional<GpuProgram>;
 auto LinkProgramFromFiles [[nodiscard]] (
     std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<ShaderDefine const> defines,
@@ -31,7 +32,7 @@ public:
 #define Self GlHandle
     explicit Self(GLuint id)
         : id_(id) { }
-    ~Self()                      = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&& other)
@@ -40,7 +41,7 @@ public:
     }
     Self& operator=(Self&& other) {
         assert(id_ == GL_NONE && "OpenGL resource leaked");
-        id_       = other.id_;
+        id_ = other.id_;
         other.UnsafeReset();
         return *this;
     }

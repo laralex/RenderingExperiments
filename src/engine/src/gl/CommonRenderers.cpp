@@ -21,8 +21,8 @@ auto AllocateBlitter() -> engine::gl::GpuProgram {
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag", CpuView{defines, std::size(defines)},
-        "Blit");
+        "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag",
+        CpuView{defines, std::size(defines)}, "Blit");
     assert(maybeProgram);
     gl::GpuProgram blitProgram = std::move(*maybeProgram);
 
@@ -39,10 +39,10 @@ namespace engine::gl {
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
-    axesRenderer_          = AllocateAxesRenderer();
-    boxRenderer_           = AllocateBoxRenderer();
-    frustumRenderer_       = AllocateFrustumRenderer();
-    billboardRenderer_       = AllocateBillboardRenderer();
+    axesRenderer_      = AxesRenderer::Allocate();
+    boxRenderer_       = AllocateBoxRenderer();
+    frustumRenderer_   = AllocateFrustumRenderer();
+    billboardRenderer_ = AllocateBillboardRenderer();
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -50,8 +50,8 @@ void CommonRenderers::Initialize() {
     datalessQuadVao_ = Vao::Allocate("Dataless Quad VAO");
     (void)VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
 
-    isInitialized_         = true;
-    blitProgram_           = AllocateBlitter();
+    isInitialized_ = true;
+    blitProgram_   = AllocateBlitter();
 
     samplerNearest_ = gl::Sampler::Allocate("Sampler nearset")
                           .WithLinearMagnify(false)
@@ -68,14 +68,18 @@ void CommonRenderers::Initialize() {
                             .WithAnisotropicFilter(8.0f)
                             .WithWrap(GL_CLAMP_TO_EDGE);
     stubColorTexture_ = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
-    constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = { 255, 42, 255, };
+    constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
+        255,
+        42,
+        255,
+    };
     (void)gl::TextureCtx{stubColorTexture_}.Fill2D(
         GL_RGB, GL_UNSIGNED_BYTE, TEXTURE_DATA_STUB_COLOR, stubColorTexture_.Size());
 }
 
-void CommonRenderers::RenderAxes(glm::mat4 const& mvp) const {
+void CommonRenderers::RenderAxes(glm::mat4 const& mvp, glm::vec3 scale) const {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
-    gl::RenderAxes(axesRenderer_, mvp);
+    axesRenderer_.Render(mvp, scale);
 }
 
 void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) const {

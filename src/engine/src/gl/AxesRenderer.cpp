@@ -100,13 +100,14 @@ constexpr uint8_t indices[] = {
     Z_ARROW_IDX_OFFSET + 4, Z_ARROW_IDX_OFFSET + 2, Z_ARROW_IDX_OFFSET + 3, Z_ARROW_IDX_OFFSET + 4,
 };
 
-constexpr GLint UNIFORM_MVP_LOCATION = 0;
+constexpr GLint UNIFORM_MVP_LOCATION   = 0;
+constexpr GLint UNIFORM_SCALE_LOCATION = 1;
 
 } // namespace
 
 namespace engine::gl {
 
-auto AllocateAxesRenderer() -> AxesRenderer {
+auto AxesRenderer::Allocate() -> AxesRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
@@ -133,30 +134,41 @@ auto AllocateAxesRenderer() -> AxesRenderer {
         .MakeIndexed(renderer.indexBuffer, GL_UNSIGNED_BYTE);
 
     gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_COLOR_LOCATION", .value = ATTRIB_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
-        "data/engine/shaders/axes.vert", "data/engine/shaders/color_varying.frag", CpuView{defines, std::size(defines)},
-        "AxesRenderer");
-    assert(maybeProgram);
-    renderer.program = std::move(*maybeProgram);
+    auto makeProgram = [=](GpuProgram& out, char const* name) {
+        auto maybeProgram = gl::LinkProgramFromFiles(
+            "data/engine/shaders/axes.vert", "data/engine/shaders/color_varying.frag",
+            CpuView{defines, std::size(defines)}, name);
+        assert(maybeProgram);
+        out = std::move(*maybeProgram);
+    };
+
+    makeProgram(renderer.customizedProgram, "AxesRenderer");
+    makeProgram(renderer.defaultProgram, "AxesRenderer/Default");
+    (void)gl::UniformCtx{renderer.defaultProgram}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
 
     return renderer;
 }
 
-void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp) {
-    auto programGuard = gl::UniformCtx{renderer.program};
+void AxesRenderer::Render(glm::mat4 const& mvp, glm::vec3 scale) const {
+    bool isCustom       = (scale.x != 1.0f | scale.y != 1.0f | scale.z != 1.0f);
+    auto const& program = isCustom ? customizedProgram : defaultProgram;
+
+    auto programGuard = gl::UniformCtx{program};
     programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
+    if (isCustom) { programGuard.SetUniformValue3(UNIFORM_SCALE_LOCATION, scale.x, scale.y, scale.z); }
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_TRUE));
     GLCALL(glDepthFunc(GL_LEQUAL));
 
-    RenderVao(renderer.vao);
+    RenderVao(vao);
 }
 
 } // namespace engine::gl

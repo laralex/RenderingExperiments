@@ -7,15 +7,15 @@ bool RenderbufferCtx::hasInstances_{false};
 GlHandle RenderbufferCtx::contextRenderbuffer_{GL_NONE};
 GLenum RenderbufferCtx::contextTarget_{GL_NONE};
 
-RenderbufferCtx::RenderbufferCtx(Renderbuffer const& useRenderbuffer) {
+RenderbufferCtx::RenderbufferCtx(Renderbuffer const& useRenderbuffer) noexcept {
     assert(!hasInstances_);
     contextRenderbuffer_.UnsafeAssign(useRenderbuffer.renderbufferId_);
-    contextTarget_          = useRenderbuffer.RenderbufferSlotTarget();
+    contextTarget_ = useRenderbuffer.RenderbufferSlotTarget();
     GLCALL(glBindRenderbuffer(contextTarget_, contextRenderbuffer_));
     hasInstances_ = true;
 }
 
-RenderbufferCtx::~RenderbufferCtx() {
+RenderbufferCtx::~RenderbufferCtx() noexcept {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     contextRenderbuffer_.UnsafeReset();

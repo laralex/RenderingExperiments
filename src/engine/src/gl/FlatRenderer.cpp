@@ -6,10 +6,10 @@
 
 namespace {
 
-constexpr GLint UNIFORM_MODEL_LOCATION   = 0;
-constexpr GLint UNIFORM_VIEWPROJ_LOCATION   = 1;
-constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
-constexpr GLint UBO_SHADER_BINDING = 0; // local for shader
+constexpr GLint UNIFORM_MODEL_LOCATION    = 0;
+constexpr GLint UNIFORM_VIEWPROJ_LOCATION = 1;
+constexpr GLint UBO_CONTEXT_BINDING       = 0; // global for GL
+constexpr GLint UBO_SHADER_BINDING        = 0; // local for shader
 
 struct UboData {
     alignas(16) glm::vec4 lightColor;
@@ -23,10 +23,10 @@ namespace engine::gl {
 auto AllocateFlatRenderer() -> FlatRenderer {
     FlatRenderer renderer;
 
-    constexpr static int32_t ATTRIB_POSITION_LOCATION        = 0;
-    constexpr static int32_t ATTRIB_UV_LOCATION        = 1;
-    constexpr static int32_t ATTRIB_NORMAL_LOCATION        = 2;
-    gl::ShaderDefine const defines[] = {
+    constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
+    constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
+    constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
+    gl::ShaderDefine const defines[]                  = {
         {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -47,10 +47,12 @@ auto AllocateFlatRenderer() -> FlatRenderer {
     return renderer;
 }
 
-void RenderFlatMesh(FlatRenderer const& renderer, Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model, glm::mat4 const& camera, glm::vec3 lightPosition) {
+void RenderFlatMesh(
+    FlatRenderer const& renderer, Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model,
+    glm::mat4 const& camera, glm::vec3 lightPosition) {
 
     UboData ubo{
-        .lightColor = glm::vec4{0.3, 1.0, 0.1, 1.0},
+        .lightColor    = glm::vec4{0.3, 1.0, 0.1, 1.0},
         .lightPosition = glm::vec4{lightPosition, 0.0},
     };
 

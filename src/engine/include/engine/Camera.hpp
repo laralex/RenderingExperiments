@@ -10,8 +10,8 @@ namespace engine {
 class Camera final {
 public:
 #define Self Camera
-    explicit Self()              = default;
-    ~Self()                      = default;
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

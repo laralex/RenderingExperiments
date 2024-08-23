@@ -32,7 +32,7 @@ class DebugGroupCtx final {
 public:
 #define Self DebugGroupCtx
     explicit Self(std::string_view label, GLuint userData = 0U);
-    ~Self();
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

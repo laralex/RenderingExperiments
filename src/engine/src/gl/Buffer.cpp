@@ -29,7 +29,7 @@ auto GpuBuffer::Allocate(
 
     gpuBuffer.targetType_ = targetType;
     gpuBuffer.usage_      = usage;
-    gpuBuffer.sizeBytes_ = dataSize;
+    gpuBuffer.sizeBytes_  = dataSize;
 
     if (!name.empty()) {
         DebugLabel(gpuBuffer, name);

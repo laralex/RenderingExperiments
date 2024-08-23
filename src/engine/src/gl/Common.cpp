@@ -1,8 +1,8 @@
 #include "engine/Assets.hpp"
 #include "engine/Prelude.hpp"
-#include "engine/gl/Vao.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Shader.hpp"
+#include "engine/gl/Vao.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
@@ -30,8 +30,8 @@ auto LinkProgramFromFiles(
 }
 
 void RenderVao(Vao const& vao, GLenum primitive) {
-    auto vaoGuard = VaoCtx{vao};
-    GLint firstIndex = vao.FirstIndex();
+    auto vaoGuard      = VaoCtx{vao};
+    GLint firstIndex   = vao.FirstIndex();
     GLsizei numIndices = vao.IndexCount();
     if (vao.IsIndexed()) {
         auto const* firstIndexPtr = reinterpret_cast<decltype(firstIndex) const*>(firstIndex);

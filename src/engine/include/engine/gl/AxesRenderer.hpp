@@ -8,16 +8,27 @@
 
 namespace engine::gl {
 
-struct AxesRenderer final {
-    AxesRenderer() = default;
+class AxesRenderer final {
+
+public:
+#define Self AxesRenderer
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
+#undef Self
+
+    static auto Allocate [[nodiscard]] () -> AxesRenderer;
+    void Render(glm::mat4 const& mvp, glm::vec3 scale = glm::vec3{1.0f}) const;
+
+private:
     Vao vao;
     GpuBuffer attributeBuffer;
     GpuBuffer indexBuffer;
-    GpuProgram program;
+    GpuProgram customizedProgram;
+    GpuProgram defaultProgram;
 };
-
-auto AllocateAxesRenderer [[nodiscard]] () -> AxesRenderer;
-
-void RenderAxes(AxesRenderer const& renderer, glm::mat4 const& mvp);
 
 } // namespace engine::gl

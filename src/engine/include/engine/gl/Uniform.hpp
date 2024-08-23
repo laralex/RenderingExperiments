@@ -10,8 +10,8 @@ namespace engine::gl {
 class UniformCtx final {
 public:
 #define Self UniformCtx
-    explicit Self(GpuProgram const& useProgram);
-    ~Self();
+    explicit Self(GpuProgram const& useProgram) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -113,7 +113,8 @@ public:
         GLCALL(setter(location, numValues, values));
     }
 
-    template <size_t NUM_COMPONENTS = 1> void SetUniformArray(GLint location, GLfloat const* values, GLsizei numValues) {
+    template <size_t NUM_COMPONENTS = 1>
+    void SetUniformArray(GLint location, GLfloat const* values, GLsizei numValues) {
         PFNGLUNIFORM1FVPROC setter = nullptr;
         if constexpr (NUM_COMPONENTS == 1) {
             setter = glUniform1fv;
@@ -133,7 +134,5 @@ private:
     static GlHandle contextProgram_;
     static bool hasInstances_;
 };
-
-
 
 } // namespace engine::gl

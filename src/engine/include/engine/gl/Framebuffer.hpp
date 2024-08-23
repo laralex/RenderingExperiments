@@ -12,8 +12,8 @@ class Framebuffer final {
 
 public:
 #define Self Framebuffer
-    explicit Self() = default;
-    ~Self() { Dispose(); };
+    explicit Self() noexcept = default;
+    ~Self() noexcept { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -41,9 +41,9 @@ private:
 class FramebufferCtx final {
 public:
 #define Self FramebufferCtx
-    explicit Self(Framebuffer const& useFramebuffer, bool draw = false);
-    explicit Self(GLuint useFramebuffer, bool draw = false);
-    ~Self();
+    explicit Self(Framebuffer const& useFramebuffer, bool draw = false) noexcept;
+    explicit Self(GLuint useFramebuffer, bool draw = false) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

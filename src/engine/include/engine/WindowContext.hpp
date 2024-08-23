@@ -14,7 +14,7 @@ class WindowCtx final {
 public:
 #define Self WindowCtx
     explicit Self(GLFWwindow* window);
-    ~Self()                      = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

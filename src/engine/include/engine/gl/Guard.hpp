@@ -9,8 +9,8 @@ class GlGuardAux final {
 public:
 #define Self GlGuardAux
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self();
-    ~Self();
+    explicit Self() noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -32,8 +32,8 @@ class GlGuardFramebuffer final {
 public:
 #define Self GlGuardFramebuffer
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self(bool restoreRare);
-    ~Self();
+    explicit Self(bool restoreRare) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -56,8 +56,8 @@ class GlGuardVertex final {
 public:
 #define Self GlGuardVertex
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self(bool restoreRare);
-    ~Self();
+    explicit Self(bool restoreRare) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -82,8 +82,8 @@ class GlGuardFlags final {
 public:
 #define Self GlGuardFlags
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self();
-    ~Self();
+    explicit Self() noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -102,8 +102,8 @@ class GlGuardColor final {
 public:
 #define Self GlGuardColor
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self();
-    ~Self();
+    explicit Self() noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -120,8 +120,8 @@ class GlGuardDepth final {
 public:
 #define Self GlGuardDepth
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self(bool restoreRare);
-    ~Self();
+    explicit Self(bool restoreRare) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -149,8 +149,8 @@ class GlGuardStencil final {
 public:
 #define Self GlGuardStencil
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self();
-    ~Self();
+    explicit Self() noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -181,8 +181,8 @@ class GlGuardBlend final {
 public:
 #define Self GlGuardBlend
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self(bool restoreRare);
-    ~Self();
+    explicit Self(bool restoreRare) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -209,8 +209,8 @@ class GlGuardViewport final {
 public:
 #define Self GlGuardViewport
     // NOTE: must only be created on rendering thread, with GL context present
-    explicit Self(bool restoreRare);
-    ~Self();
+    explicit Self(bool restoreRare) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;

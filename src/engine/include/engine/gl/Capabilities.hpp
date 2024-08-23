@@ -8,8 +8,8 @@ class GlCapabilities final {
 
 public:
 #define Self GlCapabilities
-    explicit Self()              = delete;
-    ~Self()                      = delete;
+    explicit Self() noexcept     = delete;
+    ~Self() noexcept             = delete;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;

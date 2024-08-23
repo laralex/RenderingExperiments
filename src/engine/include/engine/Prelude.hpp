@@ -58,9 +58,7 @@ template <typename T> struct CpuView {
     }
 
     explicit operator bool() const { return data != nullptr; }
-    auto NumElements() const -> size_t {
-        return (dataEnd - data) / byteStride;
-    }
+    auto NumElements() const -> size_t { return (dataEnd - data) / byteStride; }
 };
 
 } // namespace engine

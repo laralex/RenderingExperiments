@@ -8,8 +8,8 @@ class GpuProgram final {
 
 public:
 #define Self GpuProgram
-    explicit Self() = default;
-    ~Self() { Dispose(); };
+    explicit Self() noexcept = default;
+    ~Self() noexcept { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;

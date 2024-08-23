@@ -11,8 +11,8 @@ class Vao final {
 
 public:
 #define Self Vao
-    explicit Self() = default;
-    ~Self() { Dispose(); };
+    explicit Self() noexcept = default;
+    ~Self() noexcept { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -58,8 +58,8 @@ class VaoCtx final {
 
 public:
 #define Self VaoCtx
-    explicit Self(Vao const& useVao);
-    ~Self();
+    explicit Self(Vao const& useVao) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -75,8 +75,8 @@ class VaoMutableCtx final {
 
 public:
 #define Self VaoMutableCtx
-    explicit Self(Vao& useVao);
-    ~Self()                      = default;
+    explicit Self(Vao& useVao) noexcept;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
@@ -86,8 +86,10 @@ public:
     auto MakeVertexAttribute
         [[nodiscard]] (GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false)
         -> VaoMutableCtx&&;
-    auto MakeIndexed [[nodiscard]] (GpuBuffer const& indexBuffer, GLenum dataType, GLint firstVertexId = 0) -> VaoMutableCtx&&;
+    auto MakeIndexed [[nodiscard]] (GpuBuffer const& indexBuffer, GLenum dataType, GLint firstVertexId = 0)
+    -> VaoMutableCtx&&;
     auto MakeUnindexed [[nodiscard]] (GLsizei numVertexIds, GLint firstVertexId = 0) -> VaoMutableCtx&&;
+
 private:
     Vao& contextVao_;
     VaoCtx context_;

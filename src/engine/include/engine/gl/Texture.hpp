@@ -10,8 +10,8 @@ class Texture final {
 
 public:
 #define Self Texture
-    explicit Self() = default;
-    ~Self() { Dispose(); };
+    explicit Self() noexcept = default;
+    ~Self() noexcept { Dispose(); };
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -58,8 +58,8 @@ private:
 class TextureCtx final {
 public:
 #define Self TextureCtx
-    explicit Self(Texture const& useTexture);
-    ~Self();
+    explicit Self(Texture const& useTexture) noexcept;
+    ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
