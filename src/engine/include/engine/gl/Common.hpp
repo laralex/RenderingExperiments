@@ -81,4 +81,7 @@ struct ViewProjShaderArgs final {
     alignas(16) glm::mat4 invViewProjection;
 };
 
+void UndoTransformScale(glm::mat4& transform);
+auto UndoTransformScale(glm::mat4 const& transform) -> glm::mat4;
+
 } // namespace engine::gl

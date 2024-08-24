@@ -16,7 +16,7 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
-    int64_t frameIdx;
+    int64_t frameIdx{0};
     int64_t timeNs{0};
     float timeSec{0.0f};
     int64_t prevTimeNs{0};

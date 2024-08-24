@@ -8,6 +8,8 @@
 
 namespace engine::gl {
 
+struct FlatRenderArgs;
+
 class FlatRenderer final {
 
 public:
@@ -21,13 +23,19 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] () -> FlatRenderer;
-    void Render(
-        Vao const& vaoWithNormal, GLenum primitive, glm::mat4 const& model, glm::mat4 const& camera,
-        glm::vec3 lightPosition) const;
+    void Render(FlatRenderArgs const&) const;
 
 private:
     GpuProgram program_;
     GpuBuffer ubo_;
+};
+
+struct FlatRenderArgs {
+    glm::vec3 lightWorldPosition;
+    GLenum primitive;
+    Vao const& vaoWithNormal;
+    glm::mat4 const& mvp;
+    glm::mat4 const& invModel;
 };
 
 } // namespace engine::gl

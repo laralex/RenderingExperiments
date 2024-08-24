@@ -41,4 +41,16 @@ void RenderVao(Vao const& vao, GLenum primitive) {
     }
 }
 
+void UndoTransformScale(glm::mat4& transform) {
+    auto invThenTransposed = glm::inverse(transform);
+    invThenTransposed = glm::transpose(invThenTransposed);
+    transform = invThenTransposed * transform;
+}
+
+auto UndoTransformScale(glm::mat4 const& transform) -> glm::mat4 {
+    auto invThenTransposed = glm::inverse(transform);
+    invThenTransposed = glm::transpose(invThenTransposed);
+    return invThenTransposed * transform;
+}
+
 } // namespace engine::gl

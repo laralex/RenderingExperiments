@@ -213,33 +213,39 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    float rotationSpeed = ctx.timeSec * 0.5f;
+    glm::ivec2 renderSize = app->outputColor.Size();
+    glm::ivec2 screenSize = windowCtx.WindowSize();
+    float rotationSpeed   = ctx.timeSec * 0.5f;
 
-    glm::mat4 cameraModel = glm::translate(glm::mat4{1.0f}, glm::vec3(1.0f, glm::sin(ctx.timeSec), 2.0f));
-    cameraModel           = glm::rotate(cameraModel, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
+    float cameraRadius = 10.0f;
+    glm::mat4 cameraModel = glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius*glm::cos(ctx.timeSec), cameraRadius*glm::sin(ctx.timeSec), 3.0f));
+    // cameraModel           = glm::rotate(cameraModel, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glm::vec4 cameraPosition{0.0f, 0.0f, 0.0f, 1.0f};
-    cameraPosition = cameraModel * cameraPosition;
-    if (ctx.frameIdx % 100 == 0) { XLOG("camera pos {} {} {}", cameraPosition.x, cameraPosition.y, cameraPosition.z); }
+    glm::vec4 cameraPosition = cameraModel * glm::vec4{0.0f, 0.0f, 0.0f, 1.0f};
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraUp     = glm::vec3(0.0f, 0.0f, 1.0f);
-    glm::ivec2 renderSize  = app->outputColor.Size();
-    glm::ivec2 screenSize  = windowCtx.WindowSize();
-    float aspectRatio      = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
-    glm::mat4 proj         = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 100.0f);
     glm::mat4 view         = glm::lookAtRH(glm::vec3{cameraPosition}, cameraTarget, cameraUp);
-    glm::mat4 camera       = proj * view;
+
+    float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
+    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 100.0f);
+
+    glm::mat4 camera = proj * view;
+
+    if (ctx.frameIdx % 100 == 0) { XLOG("camera pos {} {} {}", cameraPosition.x, cameraPosition.y, cameraPosition.z); }
 
     {
+        // textured box
+
+        auto fbGuard = gl::FramebufferCtx{app->outputFramebuffer, true};
+        fbGuard      = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
+        GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
+
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.001f));
+        model = glm::scale(model, glm::vec3(2.5f, 2.5f, 0.001f));
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
-        glViewport(0, 0, renderSize.x, renderSize.y);
-        auto fbGuard = gl::FramebufferCtx{app->outputFramebuffer, true};
-        fbGuard      = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
 
         auto programGuard = gl::UniformCtx(app->program);
 
@@ -254,48 +260,60 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         } else {
             gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearMips().Id());
         }
+
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-        GLCALL(glUseProgram(app->program.Id()));
+
         gl::RenderVao(app->vao);
 
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
     }
 
     {
-        glViewport(0, 0, renderSize.x, renderSize.y);
+        // lighted box
+        GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
         auto fbGuard = gl::FramebufferCtx{app->outputFramebuffer, true};
 
-        glm::mat4 lightModel = glm::translate(glm::mat4{1.0f}, glm::vec3(1.0f, 1.0f, 1.0f));
-        lightModel           = glm::rotate(lightModel, rotationSpeed * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-        glm::vec4 lightPosition{0.0f, 0.0f, 0.0f, 1.0f};
-        lightPosition = lightModel * lightPosition;
+        glm::mat4 lightModel = glm::mat4{1.0f};
+        lightModel           = glm::rotate(lightModel, rotationSpeed*5.5f, glm::vec3(0.0f, 0.0f, 1.0f));
+        lightModel = glm::translate(lightModel, glm::vec3(1.0f, 1.0f, 2.0f*glm::sin(ctx.timeSec) + 1.0f));
+        glm::vec4 lightPosition = lightModel * glm::vec4{1.0f, 1.0f, 0.0f, 1.0f};
 
         glm::mat4 model = glm::mat4(1.0f);
-        // model           = glm::rotate(model, rotationSpeed, glm::vec3(0.5f, 0.2f, 1.0f));
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-        // model           = glm::translate(model, glm::vec3(-2.0f - std::sin(ctx.timeSec), 0.0f, 0.0f));
+        model = glm::rotate(model, glm::pi<float>()*0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+        // model = glm::rotate(model, rotationSpeed * 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        // model = glm::scale(model, glm::vec3(0.1f, 0.5f, 0.6f));
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp = camera * model;
 
-        app->commonRenderers.RenderAxes(mvp);
-        app->commonRenderers.RenderAxes(camera * lightModel, 0.2f);
+        app->commonRenderers.RenderAxes(mvp, 1.1f);
+        app->commonRenderers.RenderAxes(camera, 0.4f);
+        app->commonRenderers.RenderAxes(camera * lightModel, 0.5f);
 
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
-        app->flatRenderer.Render(app->vao, GL_TRIANGLES, model, camera, lightPosition);
+
+        app->flatRenderer.Render(gl::FlatRenderArgs{
+            .lightWorldPosition = lightPosition,
+            .primitive = GL_TRIANGLES,
+            .vaoWithNormal = app->vao,
+            .mvp = mvp,
+            .invModel = invModel,
+        });
     }
 
     {
         // present
         glViewport(0, 0, screenSize.x, screenSize.y);
-        GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
         auto dstGuard                   = gl::FramebufferCtx{0U, true}.ClearDepthStencil(1.0f, 0);
+        // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
         // .Invalidate(1, invalidateAttachments);
         app->commonRenderers.Blit2D(app->outputColor.Id());
     }
@@ -306,7 +324,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(0.6f, 0.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(1.6f, 0.0f, 0.0f));
 
         glm::mat4 mvp = camera * model;
         // app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
@@ -334,7 +352,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             });
         }
 
-        app->commonRenderers.RenderAxes(mvp, 0.1f);
+        app->commonRenderers.RenderAxes(mvp, 0.5f);
 
         gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
     }
