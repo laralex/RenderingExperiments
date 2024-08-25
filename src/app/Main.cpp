@@ -3,12 +3,12 @@
 #include <engine/EngineLoop.hpp>
 #include <engine/IcosphereMesh.hpp>
 #include <engine/gl/Buffer.hpp>
-#include <engine/gl/ProceduralMeshes.hpp>
 #include <engine/gl/CommonRenderers.hpp>
 #include <engine/gl/FlatRenderer.hpp>
 #include <engine/gl/Framebuffer.hpp>
 #include <engine/gl/Guard.hpp>
 #include <engine/gl/Init.hpp>
+#include <engine/gl/ProceduralMeshes.hpp>
 #include <engine/gl/Program.hpp>
 #include <engine/gl/Renderbuffer.hpp>
 #include <engine/gl/Sampler.hpp>
@@ -33,6 +33,7 @@ struct Application final {
 
     engine::gl::GpuMesh boxMesh{};
     engine::gl::GpuMesh sphereMesh{};
+    engine::gl::GpuMesh sphereMesh2{};
     engine::gl::GpuProgram program{};
     engine::gl::Texture texture{};
     engine::gl::Framebuffer outputFramebuffer{};
@@ -41,14 +42,14 @@ struct Application final {
     engine::gl::Renderbuffer renderbuffer{};
     engine::gl::CommonRenderers commonRenderers{};
     engine::gl::FlatRenderer flatRenderer{};
-    engine::gl::SamplersCache::CacheKey samplerNearestRepeat{};
+    engine::gl::SamplersCache::CacheKey samplerNearestWrap{};
 
     bool isInitialized = false;
 };
 
 constexpr uint8_t textureData[] = {
     80,  40,  40,  // 01
-    80,  120,  80,  // 03
+    80,  120, 80,  // 03
     120, 120, 160, // 11
     200, 160, 160, // 13
 };
@@ -65,12 +66,12 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     glm::ivec2 screenSize = INTERMEDITE_RENDER_RESOLUTION;
     gl::InitializeOpenGl();
     app->commonRenderers.Initialize();
-    app->samplerNearestRepeat = app->commonRenderers.CacheSampler(
+    app->samplerNearestWrap = app->commonRenderers.CacheSampler(
         "repeat/nearest",
         gl::Sampler::Allocate("Sampler/NearestRepeat")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
-            .WithWrap(GL_REPEAT));
+            .WithWrap(GL_MIRRORED_REPEAT));
 
     gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -85,19 +86,37 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
-    auto boxCpuMesh        = BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f}, false);
-    app->boxMesh = gl::AllocateBoxMesh(boxCpuMesh, gl::GpuMesh::AttributesLayout {
-        .positionLocation = ATTRIB_POSITION_LOCATION,
-        .uvLocation = ATTRIB_UV_LOCATION,
-        .normalLocation = ATTRIB_NORMAL_LOCATION,
-    });
+    auto boxCpuMesh = BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f}, false);
+    app->boxMesh    = gl::AllocateBoxMesh(
+        boxCpuMesh,
+        gl::GpuMesh::AttributesLayout{
+               .positionLocation = ATTRIB_POSITION_LOCATION,
+               .uvLocation       = ATTRIB_UV_LOCATION,
+               .normalLocation   = ATTRIB_NORMAL_LOCATION,
+        });
 
-    auto sphereCpuMesh = IcosphereMesh::Generate(2, false);
-    app->sphereMesh = gl::AllocateIcosphereMesh(sphereCpuMesh, gl::GpuMesh::AttributesLayout {
-        .positionLocation = ATTRIB_POSITION_LOCATION,
-        .uvLocation = ATTRIB_UV_LOCATION,
-        .normalLocation = ATTRIB_NORMAL_LOCATION,
-    });
+    app->sphereMesh = gl::AllocateIcosphereMesh(
+        IcosphereMesh::Generate({
+            .numSubdivisions    = 1,
+            .duplicateSeam      = true,
+            .clockWiseTriangles = false,
+        }),
+        gl::GpuMesh::AttributesLayout{
+            .positionLocation = ATTRIB_POSITION_LOCATION,
+            .uvLocation       = ATTRIB_UV_LOCATION,
+            .normalLocation   = ATTRIB_NORMAL_LOCATION,
+        });
+    app->sphereMesh2 = gl::AllocateIcosphereMesh(
+        IcosphereMesh::Generate({
+            .numSubdivisions    = 1,
+            .duplicateSeam      = false,
+            .clockWiseTriangles = false,
+        }),
+        gl::GpuMesh::AttributesLayout{
+            .positionLocation = ATTRIB_POSITION_LOCATION,
+            .uvLocation       = ATTRIB_UV_LOCATION,
+            .normalLocation   = ATTRIB_NORMAL_LOCATION,
+        });
 
     app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(2, 2, 0), GL_RGB8, "Test texture");
     (void)gl::TextureCtx{app->texture}
@@ -168,12 +187,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
-        if (windowCtx.MouseInsideWindow()) {
-            gl::GlTextureUnits::BindSampler(
-                TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestRepeat).Id());
-        } else {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
-        }
+        gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
 
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
@@ -187,7 +201,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
         model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
         programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
-        gl::RenderVao(app->sphereMesh.Vao());
+
+        if (windowCtx.MouseInsideWindow()) {
+            gl::RenderVao(app->sphereMesh.Vao());
+        } else {
+            gl::RenderVao(app->sphereMesh2.Vao());
+        }
 
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
     }
@@ -206,8 +225,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
         // model = glm::rotate(model, rotationSpeed * 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
         float modelScale = 0.5f;
-        model = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
+        model            = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
+        model            = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
         glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp     = camera * model;

@@ -19,7 +19,12 @@ struct IcosphereMesh final {
         glm::vec3 normal{};
     };
 
-    static auto Generate(int32_t numSubdivisions = 3, bool clockWiseTriangles = false) -> IcosphereMesh;
+    struct GenerationArgs final {
+        int32_t numSubdivisions = 3;
+        bool duplicateSeam      = true;
+        bool clockWiseTriangles = false;
+    };
+    static auto Generate(GenerationArgs args) -> IcosphereMesh;
 
     std::vector<glm::vec3> vertexPositions{};
     std::vector<Vertex> vertexData{};

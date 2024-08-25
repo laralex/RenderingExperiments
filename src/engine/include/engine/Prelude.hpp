@@ -76,8 +76,7 @@ struct string_hash {
     std::size_t operator()(std::string const& str) const { return hash_type{}(str); }
 };
 
-template<typename IntT>
-void InvertTriangleWinding(std::vector<IntT>& triangleIndices) {
+template <typename IntT> void InvertTriangleWinding(std::vector<IntT>& triangleIndices) {
     int32_t const numIndices = std::size(triangleIndices);
     for (int32_t t = 0; t < numIndices; t += 3) {
         std::swap(triangleIndices[t + 1], triangleIndices[t + 2]);

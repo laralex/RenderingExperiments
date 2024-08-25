@@ -12,8 +12,8 @@ struct IcosphereMesh;
 
 namespace engine::gl {
 
-auto AllocateBoxMesh[[nodiscard]](BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
+auto AllocateBoxMesh [[nodiscard]] (BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
 
-auto AllocateIcosphereMesh[[nodiscard]](IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
+auto AllocateIcosphereMesh [[nodiscard]] (IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
 
 } // namespace engine::gl

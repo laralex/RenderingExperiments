@@ -110,7 +110,8 @@ auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockWiseTriangles) -> BoxMesh
     // adjust triangle winding
     if (clockWiseTriangles) {
         InvertTriangleWinding(mesh.indices);
-        InvertTriangleNormals(mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
+        InvertTriangleNormals(
+            mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
     }
 
     mesh.isClockwiseWinding = clockWiseTriangles;

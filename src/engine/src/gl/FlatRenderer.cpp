@@ -54,8 +54,8 @@ void FlatRenderer::Render(FlatRenderArgs const& args) const {
     towardsLight = glm::normalize(towardsLight);
 
     UboData data{
-        .ambientColor       = glm::vec4{0.1, 0.1, 0.05, 1.0},
-        .lightColor         = glm::vec4{0.3, 1.0, 0.1, 1.0},
+        .ambientColor          = glm::vec4{0.1, 0.1, 0.05, 1.0},
+        .lightColor            = glm::vec4{0.3, 1.0, 0.1, 1.0},
         .lightTowardsDirection = towardsLight,
     };
 
