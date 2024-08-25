@@ -2,7 +2,6 @@
 #include "engine/Assets.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Guard.hpp"
-#include "engine/gl/Program.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/TextureUnits.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -53,20 +52,24 @@ void CommonRenderers::Initialize() {
     isInitialized_ = true;
     blitProgram_   = AllocateBlitter();
 
-    samplerNearest_ = gl::Sampler::Allocate("Sampler nearset")
-                          .WithLinearMagnify(false)
-                          .WithLinearMinify(false)
-                          .WithWrap(GL_CLAMP_TO_EDGE);
-    samplerLinear_ = gl::Sampler::Allocate("Sampler linear")
-                         .WithLinearMagnify(true)
-                         .WithLinearMinify(true)
-                         .WithWrap(GL_CLAMP_TO_EDGE);
-    samplerLinearMip_ = gl::Sampler::Allocate("Sampler linear+mips")
-                            .WithLinearMagnify(true)
-                            .WithLinearMinify(true)
-                            .WithLinearMinifyOverMips(true, true)
-                            .WithAnisotropicFilter(8.0f)
-                            .WithWrap(GL_CLAMP_TO_EDGE);
+    samplerNearest_ = samplersCache_.Cache(
+        "clamp/nearest",
+        gl::Sampler::Allocate("Sampler/Nearset")
+            .WithLinearMagnify(false)
+            .WithLinearMinify(false)
+            .WithWrap(GL_CLAMP_TO_EDGE));
+    samplerLinear_ = samplersCache_.Cache(
+        "clamp/linear",
+        gl::Sampler::Allocate("Sampler/Linear")
+            .WithLinearMagnify(true)
+            .WithLinearMinify(true)
+            .WithWrap(GL_CLAMP_TO_EDGE));
+    samplerLinearRepeat_ = samplersCache_.Cache(
+        "repeat/linear",
+        gl::Sampler::Allocate("Sampler/LinearRepeat")
+            .WithLinearMagnify(true)
+            .WithLinearMinify(true)
+            .WithWrap(GL_REPEAT));
     stubColorTexture_ = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
     constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
         255,
@@ -114,6 +117,14 @@ void CommonRenderers::Blit2D(GLuint srcTexture) const {
     GLCALL(glDepthMask(GL_FALSE));
 
     RenderFulscreenTriangle();
+}
+
+auto CommonRenderers::CacheSampler(std::string_view name, Sampler&& sampler) -> SamplersCache::CacheKey {
+    return samplersCache_.Cache(name, std::move(sampler));
+}
+
+auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> Sampler const& {
+    return samplersCache_.GetSampler(sampler);
 }
 
 } // namespace engine::gl

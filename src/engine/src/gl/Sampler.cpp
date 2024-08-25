@@ -31,7 +31,7 @@ auto Sampler::Allocate(std::string_view name) -> Sampler {
     return sampler;
 }
 
-auto Sampler::WithDepthCompare(bool enable, GLenum compareFunc) -> Sampler&& {
+auto Sampler::WithDepthCompare(bool enable, GLenum compareFunc) && -> Sampler&& {
     {
         GLenum f = compareFunc;
         assert(
@@ -43,19 +43,19 @@ auto Sampler::WithDepthCompare(bool enable, GLenum compareFunc) -> Sampler&& {
     return std::move(*this);
 }
 
-auto Sampler::WithBorderColor(glm::vec4 color) -> Sampler&& {
+auto Sampler::WithBorderColor(glm::vec4 color) && -> Sampler&& {
     GLfloat colorArr[] = {color.r, color.g, color.b, color.a};
     GLCALL(glSamplerParameterfv(samplerId_, GL_TEXTURE_BORDER_COLOR, colorArr));
     return std::move(*this);
 }
 
-auto Sampler::WithLinearMagnify(bool filterLinear) -> Sampler&& {
+auto Sampler::WithLinearMagnify(bool filterLinear) && -> Sampler&& {
     magnificationFilter_ = filterLinear ? GL_LINEAR : GL_NEAREST;
     GLCALL(glSamplerParameteri(samplerId_, GL_TEXTURE_MAG_FILTER, magnificationFilter_));
     return std::move(*this);
 }
 
-auto Sampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mipsLinear) -> Sampler&& {
+auto Sampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mipsLinear) && -> Sampler&& {
     if (useMips) {
         if (minifyLinear) {
             minificationFilter_ = mipsLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
@@ -69,25 +69,25 @@ auto Sampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mipsLi
     return std::move(*this);
 }
 
-auto Sampler::WithLinearMinify(bool filterLinear) -> Sampler&& {
+auto Sampler::WithLinearMinify(bool filterLinear) && -> Sampler&& {
     filterLinearMinify_ = filterLinear;
-    return SetMinificationFilter(filterLinearMinify_, filterUsingMips_, filterLinearMips_);
+    return std::move(*this).SetMinificationFilter(filterLinearMinify_, filterUsingMips_, filterLinearMips_);
 }
 
-auto Sampler::WithLinearMinifyOverMips(bool filterUsingMips, bool filterLinear) -> Sampler&& {
+auto Sampler::WithLinearMinifyOverMips(bool filterUsingMips, bool filterLinear) && -> Sampler&& {
     filterUsingMips_  = filterUsingMips;
     filterLinearMips_ = filterLinear;
-    return SetMinificationFilter(filterLinearMinify_, filterUsingMips_, filterLinearMips_);
+    return std::move(*this).SetMinificationFilter(filterLinearMinify_, filterUsingMips_, filterLinearMips_);
 }
 
-auto Sampler::WithMipConfig(GLfloat minMip, GLfloat maxMip, GLfloat bias) -> Sampler&& {
+auto Sampler::WithMipConfig(GLfloat minMip, GLfloat maxMip, GLfloat bias) && -> Sampler&& {
     GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MIN_LOD, minMip));
     GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_LOD, maxMip));
     GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_LOD_BIAS, bias));
     return std::move(*this);
 }
 
-auto Sampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) -> Sampler&& {
+auto Sampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) && -> Sampler&& {
     auto assertInput = [](GLenum wrap) {
         assert(
             wrap == GL_CLAMP_TO_EDGE | wrap == GL_MIRRORED_REPEAT | wrap == GL_REPEAT
@@ -102,9 +102,9 @@ auto Sampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) -> Sampler&& {
     return std::move(*this);
 }
 
-auto Sampler::WithWrap(GLenum wrapXYZ) -> Sampler&& { return WithWrap(wrapXYZ, wrapXYZ, wrapXYZ); }
+auto Sampler::WithWrap(GLenum wrapXYZ) && -> Sampler&& { return std::move(*this).WithWrap(wrapXYZ, wrapXYZ, wrapXYZ); }
 
-auto Sampler::WithAnisotropicFilter(GLfloat maxAnisotropy) -> Sampler&& {
+auto Sampler::WithAnisotropicFilter(GLfloat maxAnisotropy) && -> Sampler&& {
     assert(GlExtensions::IsInitialized());
     if (GlExtensions::Supports(GlExtensions::EXT_texture_filter_anisotropic)) {
         GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy));

@@ -61,4 +61,19 @@ template <typename T> struct CpuView {
     auto NumElements() const -> size_t { return (dataEnd - data) / byteStride; }
 };
 
+struct string_equal {
+    using is_transparent = std::true_type;
+
+    bool operator()(std::string_view l, std::string_view r) const noexcept { return l == r; }
+};
+
+struct string_hash {
+    using hash_type      = std::hash<std::string_view>;
+    using is_transparent = void;
+
+    std::size_t operator()(const char* str) const { return hash_type{}(str); }
+    std::size_t operator()(std::string_view str) const { return hash_type{}(str); }
+    std::size_t operator()(std::string const& str) const { return hash_type{}(str); }
+};
+
 } // namespace engine

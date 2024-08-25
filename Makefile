@@ -28,7 +28,8 @@ CLANG_FORMAT=clang-format-17
 obj_app_ = Main.o
 
 obj_engine_ = \
-	Assets.o EngineLoop.o \
+	Assets.o BoxMesh.o \
+	EngineLoop.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
 	gl/BoxRenderer.o gl/BillboardRenderer.o \
@@ -39,7 +40,8 @@ obj_engine_ = \
 	gl/Init.o \
 	gl/Extensions.o gl/Framebuffer.o \
 	gl/Program.o \
-	gl/Renderbuffer.o gl/Sampler.o \
+	gl/Renderbuffer.o \
+	gl/Sampler.o gl/SamplersCache.o \
 	gl/Shader.o gl/Texture.o \
 	gl/TextureUnits.o gl/Uniform.o \
 	gl/Vao.o

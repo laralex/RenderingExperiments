@@ -5,7 +5,7 @@
 #include "engine/gl/BoxRenderer.hpp"
 #include "engine/gl/FrustumRenderer.hpp"
 #include "engine/gl/Program.hpp"
-#include "engine/gl/Sampler.hpp"
+#include "engine/gl/SamplersCache.hpp"
 #include "engine/gl/Texture.hpp"
 
 #include <glad/gl.h>
@@ -14,6 +14,7 @@
 namespace engine::gl {
 
 class CommonRenderers final {
+
 public:
 #define Self CommonRenderers
     explicit Self() noexcept     = default;
@@ -21,7 +22,7 @@ public:
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = delete;
-    Self& operator=(Self&&)      = default;
+    Self& operator=(Self&&)      = delete;
 #undef Self
 
     void Initialize();
@@ -38,24 +39,30 @@ public:
 
     auto VaoDatalessTriangle [[nodiscard]] () const -> Vao const& { return datalessTriangleVao_; }
     auto VaoDatalessQuad [[nodiscard]] () const -> Vao const& { return datalessQuadVao_; }
-    auto SamplerNearest [[nodiscard]] () const -> Sampler const& { return samplerNearest_; }
-    auto SamplerLinear [[nodiscard]] () const -> Sampler const& { return samplerLinear_; }
-    auto SamplerLinearMips [[nodiscard]] () const -> Sampler const& { return samplerLinearMip_; }
     auto TextureStubColor [[nodiscard]] () const -> Texture const& { return stubColorTexture_; }
+    auto SamplerNearest [[nodiscard]] () const -> Sampler const& { return samplersCache_.GetSampler(samplerNearest_); }
+    auto SamplerLinear [[nodiscard]] () const -> Sampler const& { return samplersCache_.GetSampler(samplerLinear_); }
+    auto SamplerLinearRepeat [[nodiscard]] () const -> Sampler const& {
+        return samplersCache_.GetSampler(samplerLinearRepeat_);
+    }
+
+    auto CacheSampler [[nodiscard]] (std::string_view name, Sampler&& sampler) -> SamplersCache::CacheKey;
+    auto FindSampler [[nodiscard]] (SamplersCache::CacheKey sampler) const -> Sampler const&;
 
 private:
-    AxesRenderer axesRenderer_;
-    BoxRenderer boxRenderer_;
-    FrustumRenderer frustumRenderer_;
-    BillboardRenderer billboardRenderer_;
-    Vao datalessTriangleVao_;
-    Vao datalessQuadVao_;
-    GpuProgram blitProgram_;
-    bool isInitialized_;
-    Sampler samplerNearest_;
-    Sampler samplerLinear_;
-    Sampler samplerLinearMip_;
-    Texture stubColorTexture_;
+    AxesRenderer axesRenderer_{};
+    BoxRenderer boxRenderer_{};
+    FrustumRenderer frustumRenderer_{};
+    BillboardRenderer billboardRenderer_{};
+    Vao datalessTriangleVao_{};
+    Vao datalessQuadVao_{};
+    GpuProgram blitProgram_{};
+    SamplersCache::CacheKey samplerNearest_{};
+    SamplersCache::CacheKey samplerLinear_{};
+    SamplersCache::CacheKey samplerLinearRepeat_{};
+    SamplersCache samplersCache_{};
+    Texture stubColorTexture_{};
+    bool isInitialized_ = false;
 };
 
 } // namespace engine::gl

@@ -41,15 +41,20 @@ void RenderVao(Vao const& vao, GLenum primitive) {
     }
 }
 
-void UndoTransformScale(glm::mat4& transform) {
-    auto invThenTransposed = glm::inverse(transform);
-    invThenTransposed = glm::transpose(invThenTransposed);
-    transform = invThenTransposed * transform;
+auto TransformOrigin(glm::mat4& transform, bool isRowMajor) -> glm::vec3 {
+    if (isRowMajor) { return glm::vec3{transform[0][3], transform[1][3], transform[2][3]}; }
+    return glm::vec3{transform[3][0], transform[3][1], transform[3][2]};
 }
 
-auto UndoTransformScale(glm::mat4 const& transform) -> glm::mat4 {
+void UndoAffineScale(glm::mat4& transform) {
     auto invThenTransposed = glm::inverse(transform);
-    invThenTransposed = glm::transpose(invThenTransposed);
+    invThenTransposed      = glm::transpose(invThenTransposed);
+    transform              = invThenTransposed * transform;
+}
+
+auto UndoAffineScale(glm::mat4 const& transform) -> glm::mat4 {
+    auto invThenTransposed = glm::inverse(transform);
+    invThenTransposed      = glm::transpose(invThenTransposed);
     return invThenTransposed * transform;
 }
 

@@ -1,4 +1,5 @@
 #include <engine/Assets.hpp>
+#include <engine/BoxMesh.hpp>
 #include <engine/EngineLoop.hpp>
 #include <engine/gl/Buffer.hpp>
 #include <engine/gl/CommonRenderers.hpp>
@@ -9,6 +10,7 @@
 #include <engine/gl/Program.hpp>
 #include <engine/gl/Renderbuffer.hpp>
 #include <engine/gl/Sampler.hpp>
+#include <engine/gl/SamplersCache.hpp>
 #include <engine/gl/Shader.hpp>
 #include <engine/gl/Texture.hpp>
 #include <engine/gl/TextureUnits.hpp>
@@ -39,84 +41,9 @@ struct Application final {
     engine::gl::Renderbuffer renderbuffer{};
     engine::gl::CommonRenderers commonRenderers{};
     engine::gl::FlatRenderer flatRenderer{};
+    engine::gl::SamplersCache::CacheKey samplerNearestRepeat{};
 
     bool isInitialized = false;
-};
-
-struct Vertex {
-    glm::vec2 uv;
-    glm::vec3 normal;
-};
-
-constexpr GLfloat vertexPositions[] = {
-    -0.5f, -0.5f, 0.5f,  // 0
-    0.5f,  -0.5f, 0.5f,  // 1
-    0.5f,  0.5f,  0.5f,  // 2
-    -0.5f, 0.5f,  0.5f,  // 3
-    -0.5f, 0.5f,  -0.5f, // 4
-    0.5f,  0.5f,  -0.5f, // 5
-    0.5f,  -0.5f, -0.5f, // 6
-    -0.5f, -0.5f, -0.5f, // 7
-
-    -0.5f, -0.5f, 0.5f,  // 8 (dup 0-7)
-    0.5f,  -0.5f, 0.5f,  // 9
-    0.5f,  0.5f,  0.5f,  // 10
-    -0.5f, 0.5f,  0.5f,  // 11
-    -0.5f, 0.5f,  -0.5f, // 12
-    0.5f,  0.5f,  -0.5f, // 13
-    0.5f,  -0.5f, -0.5f, // 14
-    -0.5f, -0.5f, -0.5f, // 15
-
-    -0.5f, -0.5f, 0.5f,  // 16 (dup 0-7)
-    0.5f,  -0.5f, 0.5f,  // 17
-    0.5f,  0.5f,  0.5f,  // 18
-    -0.5f, 0.5f,  0.5f,  // 19
-    -0.5f, 0.5f,  -0.5f, // 20
-    0.5f,  0.5f,  -0.5f, // 21
-    0.5f,  -0.5f, -0.5f, // 22
-    -0.5f, -0.5f, -0.5f, // 23
-};
-
-constexpr Vertex vertexData[] = {
-    {{0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},  // 0
-    {{1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},  // 1
-    {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},  // 2
-    {{0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},  // 3
-    {{0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}}, // 4
-    {{1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}}, // 5
-    {{1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}}, // 6
-    {{0.0f, 1.0f}, {0.0f, 0.0f, -1.0f}}, // 7
-    {{0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}}, // 8
-    {{1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},  // 9
-    {{1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},  // 10
-    {{0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}}, // 11
-    {{0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}}, // 12
-    {{1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},  // 13
-    {{1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},  // 14
-    {{0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}}, // 15
-    {{0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}, // 16
-    {{1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}, // 17
-    {{1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},  // 18
-    {{0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},  // 19
-    {{0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},  // 20
-    {{1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},  // 21
-    {{1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}}, // 22
-    {{0.0f, 1.0f}, {0.0f, -1.0f, 0.0f}}, // 23
-};
-
-constexpr uint32_t Z_POS0 = 0, Z_POS1 = 1, Z_POS2 = 2, Z_POS3 = 3;
-constexpr uint32_t Z_NEG0 = 4, Z_NEG1 = 5, Z_NEG2 = 6, Z_NEG3 = 7;
-constexpr uint32_t X_POS0 = 10, X_POS1 = 9, X_POS2 = 14, X_POS3 = 13;
-constexpr uint32_t X_NEG0 = 11, X_NEG1 = 12, X_NEG2 = 15, X_NEG3 = 8;
-constexpr uint32_t Y_POS0 = 18, Y_POS1 = 21, Y_POS2 = 20, Y_POS3 = 19;
-constexpr uint32_t Y_NEG0 = 23, Y_NEG1 = 22, Y_NEG2 = 17, Y_NEG3 = 16;
-
-constexpr uint32_t indices[] = {
-    Z_POS0, Z_POS1, Z_POS2, Z_POS0, Z_POS2, Z_POS3, Z_NEG0, Z_NEG1, Z_NEG2, Z_NEG0, Z_NEG2, Z_NEG3,
-
-    X_POS0, X_POS1, X_POS2, X_POS0, X_POS2, X_POS3, X_NEG0, X_NEG1, X_NEG2, X_NEG0, X_NEG2, X_NEG3,
-
-    Y_POS0, Y_POS1, Y_POS2, Y_POS0, Y_POS2, Y_POS3, Y_NEG0, Y_NEG1, Y_NEG2, Y_NEG0, Y_NEG2, Y_NEG3,
 };
 
 constexpr uint8_t textureData[] = {
@@ -142,6 +69,12 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     glm::ivec2 screenSize = INTERMEDITE_RENDER_RESOLUTION;
     gl::InitializeOpenGl();
     app->commonRenderers.Initialize();
+    app->samplerNearestRepeat = app->commonRenderers.CacheSampler(
+        "repeat/nearest",
+        gl::Sampler::Allocate("Sampler/NearestRepeat")
+            .WithLinearMagnify(false)
+            .WithLinearMinify(false)
+            .WithWrap(GL_REPEAT));
 
     gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
@@ -156,12 +89,16 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
+    auto boxMesh        = BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f});
     app->positionBuffer = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexPositions, sizeof(vertexPositions), "Test positions VBO");
-    app->attributeBuffer =
-        gl::GpuBuffer::Allocate(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "Test attributes VBO");
-    app->indexBuffer =
-        gl::GpuBuffer::Allocate(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "Test EBO");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, boxMesh.vertexPositions.data(),
+        std::size(boxMesh.vertexPositions) * sizeof(boxMesh.vertexPositions[0]), "Test positions VBO");
+    app->attributeBuffer = gl::GpuBuffer::Allocate(
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, boxMesh.vertexData.data(),
+        std::size(boxMesh.vertexData) * sizeof(boxMesh.vertexData[0]), "Test attributes VBO");
+    app->indexBuffer = gl::GpuBuffer::Allocate(
+        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, boxMesh.indices.data(),
+        std::size(boxMesh.indices) * sizeof(boxMesh.indices[0]), "Test EBO");
     app->vao = gl::Vao::Allocate("Test VAO");
     (void)gl::VaoMutableCtx{app->vao}
         .MakeVertexAttribute(
@@ -176,16 +113,16 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             {.index           = ATTRIB_UV_LOCATION,
              .valuesPerVertex = 2,
              .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, uv)})
+             .stride          = sizeof(BoxMesh::Vertex),
+             .offset          = offsetof(BoxMesh::Vertex, uv)})
         .MakeVertexAttribute(
             app->attributeBuffer,
             {.index           = ATTRIB_NORMAL_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, normal)})
-        .MakeIndexed(app->indexBuffer, GL_UNSIGNED_INT);
+             .stride          = sizeof(BoxMesh::Vertex),
+             .offset          = offsetof(BoxMesh::Vertex, normal)})
+        .MakeIndexed(app->indexBuffer, GL_UNSIGNED_BYTE);
 
     app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
     (void)gl::TextureCtx{app->texture}
@@ -217,14 +154,15 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::ivec2 screenSize = windowCtx.WindowSize();
     float rotationSpeed   = ctx.timeSec * 0.5f;
 
-    float cameraRadius = 10.0f;
-    glm::mat4 cameraModel = glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius*glm::cos(ctx.timeSec), cameraRadius*glm::sin(ctx.timeSec), 3.0f));
+    float cameraRadius    = 15.0f;
+    glm::mat4 cameraModel = glm::translate(
+        glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(ctx.timeSec), cameraRadius * glm::sin(ctx.timeSec), 3.0f));
     // cameraModel           = glm::rotate(cameraModel, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glm::vec4 cameraPosition = cameraModel * glm::vec4{0.0f, 0.0f, 0.0f, 1.0f};
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraUp     = glm::vec3(0.0f, 0.0f, 1.0f);
-    glm::mat4 view         = glm::lookAtRH(glm::vec3{cameraPosition}, cameraTarget, cameraUp);
+    glm::vec3 cameraPosition = gl::TransformOrigin(cameraModel);
+    glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 cameraUp       = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::mat4 view           = glm::lookAtRH(glm::vec3{cameraPosition}, cameraTarget, cameraUp);
 
     float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
     glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 100.0f);
@@ -242,7 +180,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(2.5f, 2.5f, 0.001f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 0.001f));
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
@@ -256,9 +194,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
         if (windowCtx.MouseInsideWindow()) {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerNearest().Id());
+            gl::GlTextureUnits::BindSampler(
+                TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestRepeat).Id());
         } else {
-            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearMips().Id());
+            gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
         }
 
         GLCALL(glEnable(GL_CULL_FACE));
@@ -278,20 +217,20 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto fbGuard = gl::FramebufferCtx{app->outputFramebuffer, true};
 
         glm::mat4 lightModel = glm::mat4{1.0f};
-        lightModel           = glm::rotate(lightModel, rotationSpeed*5.5f, glm::vec3(0.0f, 0.0f, 1.0f));
-        lightModel = glm::translate(lightModel, glm::vec3(1.0f, 1.0f, 2.0f*glm::sin(ctx.timeSec) + 1.0f));
-        glm::vec4 lightPosition = lightModel * glm::vec4{1.0f, 1.0f, 0.0f, 1.0f};
+        lightModel           = glm::rotate(lightModel, rotationSpeed * 5.5f, glm::vec3(0.0f, 0.0f, 1.0f));
+        lightModel           = glm::translate(lightModel, glm::vec3(2.0f, 2.0f, 2.0f * glm::sin(ctx.timeSec) + 1.0f));
+        glm::vec3 lightPosition = gl::TransformOrigin(lightModel);
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::pi<float>()*0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+        model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
         // model = glm::rotate(model, rotationSpeed * 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        // model = glm::scale(model, glm::vec3(0.1f, 0.5f, 0.6f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.6f));
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
         glm::mat invModel = glm::inverse(model);
-        glm::mat4 mvp = camera * model;
+        glm::mat4 mvp     = camera * model;
 
-        app->commonRenderers.RenderAxes(mvp, 1.1f);
+        app->commonRenderers.RenderAxes(mvp, 1.3f);
         app->commonRenderers.RenderAxes(camera, 0.4f);
         app->commonRenderers.RenderAxes(camera * lightModel, 0.5f);
 
@@ -302,17 +241,17 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition = lightPosition,
-            .primitive = GL_TRIANGLES,
-            .vaoWithNormal = app->vao,
-            .mvp = mvp,
-            .invModel = invModel,
+            .primitive          = GL_TRIANGLES,
+            .vaoWithNormal      = app->vao,
+            .mvp                = mvp,
+            .invModel           = invModel,
         });
     }
 
     {
         // present
         glViewport(0, 0, screenSize.x, screenSize.y);
-        auto dstGuard                   = gl::FramebufferCtx{0U, true}.ClearDepthStencil(1.0f, 0);
+        auto dstGuard = gl::FramebufferCtx{0U, true}.ClearDepthStencil(1.0f, 0);
         // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
         // .Invalidate(1, invalidateAttachments);
         app->commonRenderers.Blit2D(app->outputColor.Id());
