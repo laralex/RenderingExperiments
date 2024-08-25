@@ -2,6 +2,7 @@
 #include <engine/BoxMesh.hpp>
 #include <engine/EngineLoop.hpp>
 #include <engine/IcosphereMesh.hpp>
+#include <engine/UvSphereMesh.hpp>
 #include <engine/gl/Buffer.hpp>
 #include <engine/gl/CommonRenderers.hpp>
 #include <engine/gl/FlatRenderer.hpp>
@@ -95,10 +96,10 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
                .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    app->sphereMesh = gl::AllocateIcosphereMesh(
-        IcosphereMesh::Generate({
-            .numSubdivisions    = 1,
-            .duplicateSeam      = true,
+    app->sphereMesh = gl::AllocateUvSphereMesh(
+        UvSphereMesh::Generate({
+            .numMeridians    = 20,
+            .numParallels    = 20,
             .clockWiseTriangles = false,
         }),
         gl::GpuMesh::AttributesLayout{
@@ -198,7 +199,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::RenderVao(app->boxMesh.Vao());
 
         model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
         model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
         programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
 

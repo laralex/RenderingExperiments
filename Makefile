@@ -30,6 +30,7 @@ obj_app_ = Main.o
 obj_engine_ = \
 	Assets.o BoxMesh.o \
 	EngineLoop.o IcosphereMesh.o \
+	UvSphereMesh.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
 	gl/BoxRenderer.o gl/ProceduralMeshes.o \
