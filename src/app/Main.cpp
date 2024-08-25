@@ -1,7 +1,9 @@
 #include <engine/Assets.hpp>
 #include <engine/BoxMesh.hpp>
 #include <engine/EngineLoop.hpp>
+#include <engine/IcosphereMesh.hpp>
 #include <engine/gl/Buffer.hpp>
+#include <engine/gl/ProceduralMeshes.hpp>
 #include <engine/gl/CommonRenderers.hpp>
 #include <engine/gl/FlatRenderer.hpp>
 #include <engine/gl/Framebuffer.hpp>
@@ -29,11 +31,9 @@ struct Application final {
         engine::gl::DisposeOpenGl();
     }
 
+    engine::gl::GpuMesh boxMesh{};
+    engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuProgram program{};
-    engine::gl::Vao vao{};
-    engine::gl::GpuBuffer attributeBuffer{};
-    engine::gl::GpuBuffer positionBuffer{};
-    engine::gl::GpuBuffer indexBuffer{};
     engine::gl::Texture texture{};
     engine::gl::Framebuffer outputFramebuffer{};
     engine::gl::Texture outputColor{};
@@ -47,14 +47,10 @@ struct Application final {
 };
 
 constexpr uint8_t textureData[] = {
-    20,  20,  20,  // 00
-    40,  40,  40,  // 01
-    60,  60,  60,  // 02
-    80,  80,  80,  // 03
-    100, 100, 100, // 10
-    120, 120, 120, // 11
-    140, 140, 140, // 12
-    160, 160, 160, // 13
+    80,  40,  40,  // 01
+    80,  120,  80,  // 03
+    120, 120, 160, // 11
+    200, 160, 160, // 13
 };
 
 constexpr GLint ATTRIB_POSITION_LOCATION           = 0;
@@ -89,42 +85,21 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
-    auto boxMesh        = BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f});
-    app->positionBuffer = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, boxMesh.vertexPositions.data(),
-        std::size(boxMesh.vertexPositions) * sizeof(boxMesh.vertexPositions[0]), "Test positions VBO");
-    app->attributeBuffer = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, boxMesh.vertexData.data(),
-        std::size(boxMesh.vertexData) * sizeof(boxMesh.vertexData[0]), "Test attributes VBO");
-    app->indexBuffer = gl::GpuBuffer::Allocate(
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, boxMesh.indices.data(),
-        std::size(boxMesh.indices) * sizeof(boxMesh.indices[0]), "Test EBO");
-    app->vao = gl::Vao::Allocate("Test VAO");
-    (void)gl::VaoMutableCtx{app->vao}
-        .MakeVertexAttribute(
-            app->positionBuffer,
-            {.index           = ATTRIB_POSITION_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(glm::vec3),
-             .offset          = 0})
-        .MakeVertexAttribute(
-            app->attributeBuffer,
-            {.index           = ATTRIB_UV_LOCATION,
-             .valuesPerVertex = 2,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(BoxMesh::Vertex),
-             .offset          = offsetof(BoxMesh::Vertex, uv)})
-        .MakeVertexAttribute(
-            app->attributeBuffer,
-            {.index           = ATTRIB_NORMAL_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(BoxMesh::Vertex),
-             .offset          = offsetof(BoxMesh::Vertex, normal)})
-        .MakeIndexed(app->indexBuffer, GL_UNSIGNED_BYTE);
+    auto boxCpuMesh        = BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f}, false);
+    app->boxMesh = gl::AllocateBoxMesh(boxCpuMesh, gl::GpuMesh::AttributesLayout {
+        .positionLocation = ATTRIB_POSITION_LOCATION,
+        .uvLocation = ATTRIB_UV_LOCATION,
+        .normalLocation = ATTRIB_NORMAL_LOCATION,
+    });
 
-    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(4, 2, 0), GL_RGB8, "Test texture");
+    auto sphereCpuMesh = IcosphereMesh::Generate(2, false);
+    app->sphereMesh = gl::AllocateIcosphereMesh(sphereCpuMesh, gl::GpuMesh::AttributesLayout {
+        .positionLocation = ATTRIB_POSITION_LOCATION,
+        .uvLocation = ATTRIB_UV_LOCATION,
+        .normalLocation = ATTRIB_NORMAL_LOCATION,
+    });
+
+    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(2, 2, 0), GL_RGB8, "Test texture");
     (void)gl::TextureCtx{app->texture}
         .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData, app->texture.Size())
         .GenerateMipmaps();
@@ -206,7 +181,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        gl::RenderVao(app->vao);
+        gl::RenderVao(app->boxMesh.Vao());
+
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
+        gl::RenderVao(app->sphereMesh.Vao());
 
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
     }
@@ -224,25 +205,28 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 model = glm::mat4(1.0f);
         model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
         // model = glm::rotate(model, rotationSpeed * 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.6f));
+        float modelScale = 0.5f;
+        model = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
         glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp     = camera * model;
 
-        app->commonRenderers.RenderAxes(mvp, 1.3f);
+        app->commonRenderers.RenderAxes(mvp, 1.5f);
         app->commonRenderers.RenderAxes(camera, 0.4f);
         app->commonRenderers.RenderAxes(camera * lightModel, 0.5f);
 
+        gl::GpuMesh const& mesh = app->sphereMesh;
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
+        GLCALL(glFrontFace(mesh.FrontFace()));
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition = lightPosition,
             .primitive          = GL_TRIANGLES,
-            .vaoWithNormal      = app->vao,
+            .vaoWithNormal      = mesh.Vao(),
             .mvp                = mvp,
             .invModel           = invModel,
         });

@@ -10,7 +10,7 @@ layout(location=0) out vec4 out_FragColor;
 
 struct Light {
     highp vec4 color;
-    highp vec4 position; // only xyz used
+    highp vec4 towardsLight; // only xyz used
 };
 
 layout(std140, binding = UBO_BINDING) uniform Params {
@@ -22,10 +22,9 @@ const mediump float PI = 3.14159265;
 const mediump float INV_PI = 0.318309886184;
 
 void main() {
-    vec3 towardsLight = u_Light.position.xyz - v_Position;
-    float cos = max(0.0, dot(v_Normal, towardsLight));
+    float cos = max(0.0, dot(v_Normal, u_Light.towardsLight.xyz));
     out_FragColor = u_AmbientColor + u_Light.color * INV_PI * cos;
-    // out_FragColor = vec4(u_Light.position.xyz, 1.0);
+    // out_FragColor = vec4(towardsLight, 1.0);
     // out_FragColor = vec4(v_Normal, 1.0);
 }
 

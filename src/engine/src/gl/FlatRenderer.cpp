@@ -9,7 +9,7 @@ namespace {
 struct UboData {
     alignas(16) glm::vec4 ambientColor;
     alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec4 lightModelPosition;
+    alignas(16) glm::vec4 lightTowardsDirection;
 };
 
 constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
@@ -48,13 +48,15 @@ auto FlatRenderer::Allocate() -> FlatRenderer {
 }
 
 void FlatRenderer::Render(FlatRenderArgs const& args) const {
-    glm::vec4 lightModelPosition = args.invModel * glm::vec4{args.lightWorldPosition, 1.0f};
-    lightModelPosition /= lightModelPosition.w;
+    // direction towards light in model space
+    glm::vec4 towardsLight = args.invModel * glm::vec4{args.lightWorldPosition, 1.0f};
+    towardsLight /= towardsLight.w;
+    towardsLight = glm::normalize(towardsLight);
 
     UboData data{
         .ambientColor       = glm::vec4{0.1, 0.1, 0.05, 1.0},
         .lightColor         = glm::vec4{0.3, 1.0, 0.1, 1.0},
-        .lightModelPosition = lightModelPosition,
+        .lightTowardsDirection = towardsLight,
     };
 
     ubo_.Fill(&data, sizeof(data));

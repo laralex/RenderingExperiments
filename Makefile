@@ -29,10 +29,11 @@ obj_app_ = Main.o
 
 obj_engine_ = \
 	Assets.o BoxMesh.o \
-	EngineLoop.o \
+	EngineLoop.o IcosphereMesh.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
-	gl/BoxRenderer.o gl/BillboardRenderer.o \
+	gl/BoxRenderer.o gl/ProceduralMeshes.o \
+	gl/BillboardRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
 	gl/Common.o gl/CommonRenderers.o \
 	gl/Debug.o gl/FlatRenderer.o \

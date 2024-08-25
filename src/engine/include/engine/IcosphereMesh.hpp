@@ -4,8 +4,8 @@
 
 namespace engine {
 
-struct BoxMesh final {
-#define Self BoxMesh
+struct IcosphereMesh final {
+#define Self IcosphereMesh
     explicit Self() noexcept     = default;
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
@@ -19,11 +19,11 @@ struct BoxMesh final {
         glm::vec3 normal{};
     };
 
-    static auto Generate(glm::vec3 bakedScale = glm::vec3{1.0f}, bool clockWiseTriangles = false) -> BoxMesh;
+    static auto Generate(int32_t numSubdivisions = 3, bool clockWiseTriangles = false) -> IcosphereMesh;
 
     std::vector<glm::vec3> vertexPositions{};
     std::vector<Vertex> vertexData{};
-    std::vector<uint8_t> indices{};
+    std::vector<uint16_t> indices{};
     bool isClockwiseWinding = false;
 };
 

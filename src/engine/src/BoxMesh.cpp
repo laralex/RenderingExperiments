@@ -65,6 +65,7 @@ constexpr uint32_t X_NEG0 = 11, X_NEG1 = 12, X_NEG2 = 15, X_NEG3 = 8;
 constexpr uint32_t Y_POS0 = 18, Y_POS1 = 21, Y_POS2 = 20, Y_POS3 = 19;
 constexpr uint32_t Y_NEG0 = 23, Y_NEG1 = 22, Y_NEG2 = 17, Y_NEG3 = 16;
 
+// NOTE: counter clock wise winding
 constexpr uint8_t MESH_INDICES[] = {
     Z_POS0, Z_POS1, Z_POS2, Z_POS0, Z_POS2, Z_POS3, Z_NEG0, Z_NEG1, Z_NEG2, Z_NEG0, Z_NEG2, Z_NEG3,
 
@@ -77,15 +78,17 @@ constexpr uint8_t MESH_INDICES[] = {
 
 namespace engine {
 
-auto BoxMesh::Generate(glm::vec3 bakedScale) -> BoxMesh {
+auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockWiseTriangles) -> BoxMesh {
     BoxMesh mesh;
     int32_t numVerts = std::size(VERTEX_POSITIONS);
     mesh.vertexPositions.resize(numVerts);
     mesh.vertexData.resize(numVerts);
-    for (auto i = 0; i < numVerts; ++i) {
+
+    for (int32_t i = 0; i < numVerts; ++i) {
         mesh.vertexPositions[i] = VERTEX_POSITIONS[i] * bakedScale;
         mesh.vertexData[i]      = VERTEX_DATA[i];
 
+        // scale UVs to prevent texture stretch
         glm::vec3 perpendicular = glm::abs(VERTEX_DATA[i].normal);
         glm::vec2 uvScale;
         if (VERTEX_DATA[i].normal.x != 0.0f) {
@@ -103,6 +106,14 @@ auto BoxMesh::Generate(glm::vec3 bakedScale) -> BoxMesh {
 
     mesh.indices.resize(std::size(MESH_INDICES));
     std::copy(std::begin(MESH_INDICES), std::end(MESH_INDICES), mesh.indices.begin());
+
+    // adjust triangle winding
+    if (clockWiseTriangles) {
+        InvertTriangleWinding(mesh.indices);
+        InvertTriangleNormals(mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
+    }
+
+    mesh.isClockwiseWinding = clockWiseTriangles;
     return mesh;
 }
 
