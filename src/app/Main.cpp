@@ -20,9 +20,9 @@
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
 
-#include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <stb_image.h>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -45,6 +45,7 @@ struct Application final {
     engine::gl::CommonRenderers commonRenderers{};
     engine::gl::FlatRenderer flatRenderer{};
     engine::gl::SamplersCache::CacheKey samplerNearestWrap{};
+    engine::LineRendererInput debugLines{};
 
     bool isInitialized = false;
 };
@@ -97,12 +98,23 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
                .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
+    auto uvSphere = UvSphereMesh::Generate({
+        .numMeridians       = 20,
+        .numParallels       = 20,
+        .clockWiseTriangles = false,
+    });
+    app->debugLines.SetColor(ColorCode::GREEN);
+    for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
+        app->debugLines.PushRay(uvSphere.vertexPositions[i], uvSphere.vertexData[i].normal * 0.2f);
+    }
+    app->debugLines.SetColor(ColorCode::RED);
+    for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
+        app->debugLines.PushRay(
+            uvSphere.vertexPositions[i],
+            glm::cross(uvSphere.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
+    }
     app->sphereMesh = gl::AllocateUvSphereMesh(
-        UvSphereMesh::Generate({
-            .numMeridians    = 20,
-            .numParallels    = 20,
-            .clockWiseTriangles = false,
-        }),
+        uvSphere,
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
@@ -120,16 +132,18 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    int x,y,numChannels;
+    int x, y, numChannels;
     // TODO: cwd relative path
-    auto uvCheckerData = stbi_load("build/install/data/engine/textures/utils/uv_checker_512_512.jpg", &x, &y, &numChannels, 3);
+    auto uvCheckerData =
+        stbi_load("build/install/data/engine/textures/utils/uv_checker_512_512.jpg", &x, &y, &numChannels, 3);
+    if (stbi_failure_reason()) { XLOGE("STB IMAGE: {}", stbi_failure_reason()); }
+    // assert(uvCheckerData != nullptr);
     XLOGE("Texture {} {} {}", x, y, numChannels);
-    assert(uvCheckerData != nullptr);
-    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
-    (void)gl::TextureCtx{app->texture}
-        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
-        .GenerateMipmaps();
-    stbi_image_free(uvCheckerData);
+    // app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
+    // (void)gl::TextureCtx{app->texture}
+    //     .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
+    //     .GenerateMipmaps();
+    // stbi_image_free(uvCheckerData);
 
     app->outputColor =
         gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
@@ -204,7 +218,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        gl::RenderVao(app->boxMesh.Vao());
+        // gl::RenderVao(app->boxMesh.Vao());
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
@@ -272,6 +286,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
+
+        app->commonRenderers.RenderLines(camera, app->debugLines.Data());
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));

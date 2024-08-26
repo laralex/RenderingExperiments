@@ -38,14 +38,14 @@ auto GpuBuffer::Allocate(
     return gpuBuffer;
 }
 
-void GpuBuffer::Fill(GLvoid const* data, GLsizeiptr dataSize) const {
-    assert(dataSize <= sizeBytes_ && "Provided data is too big for GpuBuffer allocated storage");
+void GpuBuffer::Fill(GLvoid const* cpuData, GLsizeiptr dataNumBytes, GLintptr gpuByteOffset) const {
+    assert(dataNumBytes <= sizeBytes_ && "Provided data is too big for GpuBuffer allocated storage");
     if (bufferId_ == GL_NONE) {
         XLOGE("Failed to fill GL buffer, GlBuffer is not initialized", 0);
         return;
     }
     GLCALL(glBindBuffer(targetType_, bufferId_));
-    GLCALL(glBufferSubData(targetType_, 0, dataSize, data));
+    GLCALL(glBufferSubData(targetType_, gpuByteOffset, dataNumBytes, cpuData));
     GLCALL(glBindBuffer(targetType_, 0));
 }
 

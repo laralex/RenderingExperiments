@@ -20,8 +20,8 @@ struct UvSphereMesh final {
     };
 
     struct GenerationArgs final {
-        int32_t numMeridians = 10;
-        int32_t numParallels = 10;
+        int32_t numMeridians    = 10;
+        int32_t numParallels    = 10;
         bool duplicateSeam      = true;
         bool clockWiseTriangles = false;
     };

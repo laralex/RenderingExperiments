@@ -31,23 +31,23 @@ constexpr Vertex vertexData[] = {
     {{ LINE_END, 0.0f, -THICKNESS, }, 0},
     {{ LINE_END, 0.0f, THICKNESS, }, 0},
     // Y-axis body
-    {{ -THICKNESS, BIAS+THICKNESS, BIAS, }, 2},
-    {{ THICKNESS, -BIAS+THICKNESS, BIAS, }, 2},
-    {{ -THICKNESS, LINE_END, 0.0f, }, 2},
-    {{ THICKNESS, LINE_END, 0.0f, }, 2},
-    {{ -BIAS, BIAS+THICKNESS, -THICKNESS, }, 2},
-    {{ -BIAS, -BIAS+THICKNESS, THICKNESS, }, 2},
-    {{ 0.0f, LINE_END, -THICKNESS, }, 2},
-    {{ 0.0f, LINE_END, THICKNESS, }, 2},
+    {{ -THICKNESS, BIAS+THICKNESS, BIAS, }, 1},
+    {{ THICKNESS, -BIAS+THICKNESS, BIAS, }, 1},
+    {{ -THICKNESS, LINE_END, 0.0f, }, 1},
+    {{ THICKNESS, LINE_END, 0.0f, }, 1},
+    {{ -BIAS, BIAS+THICKNESS, -THICKNESS, }, 1},
+    {{ -BIAS, -BIAS+THICKNESS, THICKNESS, }, 1},
+    {{ 0.0f, LINE_END, -THICKNESS, }, 1},
+    {{ 0.0f, LINE_END, THICKNESS, }, 1},
     // Z-axis body
-    {{ -THICKNESS, BIAS, BIAS+THICKNESS, }, 1},
-    {{ THICKNESS, BIAS, -BIAS+THICKNESS, }, 1},
-    {{ -THICKNESS, 0.0f, LINE_END, }, 1},
-    {{ THICKNESS, 0.0f, LINE_END, }, 1},
-    {{ -BIAS, -THICKNESS, BIAS+THICKNESS, }, 1},
-    {{ -BIAS, THICKNESS, -BIAS+THICKNESS, }, 1},
-    {{ 0.0f, -THICKNESS, LINE_END, }, 1},
-    {{ 0.0f, THICKNESS, LINE_END, }, 1},
+    {{ -THICKNESS, BIAS, BIAS+THICKNESS, }, 2},
+    {{ THICKNESS, BIAS, -BIAS+THICKNESS, }, 2},
+    {{ -THICKNESS, 0.0f, LINE_END, }, 2},
+    {{ THICKNESS, 0.0f, LINE_END, }, 2},
+    {{ -BIAS, -THICKNESS, BIAS+THICKNESS, }, 2},
+    {{ -BIAS, THICKNESS, -BIAS+THICKNESS, }, 2},
+    {{ 0.0f, -THICKNESS, LINE_END, }, 2},
+    {{ 0.0f, THICKNESS, LINE_END, }, 2},
     // X-axis arrow
     {{ LINE_END, -ARROW_WIDTH, -ARROW_WIDTH, }, 0}, // 0
     {{ LINE_END, ARROW_WIDTH, -ARROW_WIDTH, }, 0}, // 1
@@ -55,17 +55,17 @@ constexpr Vertex vertexData[] = {
     {{ LINE_END, ARROW_WIDTH, ARROW_WIDTH, }, 0}, // 3
     {{ LENGTH, 0.0f, 0.0f, }, 0}, // 4
     // Y-axis arrow
-    {{ -ARROW_WIDTH, LINE_END, -ARROW_WIDTH, }, 2},
-    {{ ARROW_WIDTH, LINE_END, -ARROW_WIDTH, }, 2},
-    {{ -ARROW_WIDTH,LINE_END,ARROW_WIDTH, }, 2},
-    {{ ARROW_WIDTH, LINE_END, ARROW_WIDTH, }, 2},
-    {{ 0.0f, LENGTH, 0.0f, }, 2},
+    {{ -ARROW_WIDTH, LINE_END, -ARROW_WIDTH, }, 1},
+    {{ ARROW_WIDTH, LINE_END, -ARROW_WIDTH, }, 1},
+    {{ -ARROW_WIDTH,LINE_END,ARROW_WIDTH, }, 1},
+    {{ ARROW_WIDTH, LINE_END, ARROW_WIDTH, }, 1},
+    {{ 0.0f, LENGTH, 0.0f, }, 1},
     // Z-axis arrow
-    {{ -ARROW_WIDTH, -ARROW_WIDTH, LINE_END, }, 1},
-    {{ ARROW_WIDTH, -ARROW_WIDTH, LINE_END, }, 1},
-    {{ -ARROW_WIDTH, ARROW_WIDTH, LINE_END, }, 1},
-    {{ ARROW_WIDTH, ARROW_WIDTH, LINE_END, }, 1},
-    {{ 0.0f, 0.0f, LENGTH, }, 1},
+    {{ -ARROW_WIDTH, -ARROW_WIDTH, LINE_END, }, 2},
+    {{ ARROW_WIDTH, -ARROW_WIDTH, LINE_END, }, 2},
+    {{ -ARROW_WIDTH, ARROW_WIDTH, LINE_END, }, 2},
+    {{ ARROW_WIDTH, ARROW_WIDTH, LINE_END, }, 2},
+    {{ 0.0f, 0.0f, LENGTH, }, 2},
 };
 // clang-format on
 
@@ -123,14 +123,14 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
-             .offset          = 0})
+             .offset          = offsetof(Vertex, position)})
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
             {.index           = ATTRIB_COLOR_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(Vertex),
-             .offset          = 3 * sizeof(float)})
+             .offset          = offsetof(Vertex, colorIdx)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
     gl::ShaderDefine const defines[] = {
@@ -142,7 +142,7 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
 
     auto makeProgram = [=](GpuProgram& out, char const* name) {
         auto maybeProgram = gl::LinkProgramFromFiles(
-            "data/engine/shaders/axes.vert", "data/engine/shaders/color_varying.frag",
+            "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
             CpuView{defines, std::size(defines)}, name);
         assert(maybeProgram);
         out = std::move(*maybeProgram);

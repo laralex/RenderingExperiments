@@ -38,10 +38,12 @@ namespace engine::gl {
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
-    axesRenderer_      = AxesRenderer::Allocate();
-    boxRenderer_       = BoxRenderer::Allocate();
-    frustumRenderer_   = FrustumRenderer::Allocate();
-    billboardRenderer_ = BillboardRenderer::Allocate();
+    axesRenderer_              = AxesRenderer::Allocate();
+    boxRenderer_               = BoxRenderer::Allocate();
+    frustumRenderer_           = FrustumRenderer::Allocate();
+    billboardRenderer_         = BillboardRenderer::Allocate();
+    constexpr size_t MAX_LINES = 10'000;
+    lineRenderer_              = LineRenderer::Allocate(MAX_LINES);
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -103,6 +105,11 @@ void CommonRenderers::RenderFulscreenTriangle() const {
 void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
     assert(IsInitialized() && "Bad call to RenderBillboard, CommonRenderers isn't initialized");
     billboardRenderer_.Render(args);
+}
+
+void CommonRenderers::RenderLines(glm::mat4 const& camera, std::vector<LineRendererInput::Line> const& lines) const {
+    assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
+    lineRenderer_.Render(camera, lines);
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture) const {

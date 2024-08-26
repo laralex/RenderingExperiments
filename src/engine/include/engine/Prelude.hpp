@@ -36,6 +36,28 @@ constexpr bool DEBUG_BUILD = true;
 constexpr bool DEBUG_BUILD = false;
 #endif // XDEBUG
 
+enum class ColorCode : int32_t {
+    RED = 0,
+    GREEN,
+    BLUE,
+    ORANGE,
+    YELLOW,
+    CYAN,
+    PURPLE,
+    PINK,
+    BROWN,
+    WHITE,
+    GRAY,
+    BLACK,
+    NUM_COLORS
+};
+
+constexpr glm::vec3 COLOR_PALETTE[]{
+    {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},
+    {1.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 1.0f},
+    {1.0f, 0.0f, 1.0f}, {0.2f, 0.1f, 0.0f}, {0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 0.0f},
+};
+
 // aka simplified std::ranges::views::strided_view from C++23
 // NOTE: currently only works with pointers to const (T = const Foo)
 template <typename T> struct CpuView {

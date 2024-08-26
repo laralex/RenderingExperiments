@@ -7,9 +7,8 @@ layout(location = ATTRIB_COLOR) in int in_ColorIdx;
 flat out int v_ColorIdx;
 
 layout(location = UNIFORM_MVP) uniform mat4 u_MVP;
-layout(location = UNIFORM_SCALE) uniform vec3 u_Scale;
 
 void main() {
     v_ColorIdx = in_ColorIdx;
-    gl_Position = u_MVP * vec4(in_Pos*u_Scale, 1.0);
+    gl_Position = u_MVP * vec4(in_Pos, 1.0);
 }

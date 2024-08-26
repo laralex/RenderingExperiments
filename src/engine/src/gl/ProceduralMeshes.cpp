@@ -3,9 +3,7 @@
 #include "engine/IcosphereMesh.hpp"
 #include "engine/UvSphereMesh.hpp"
 
-namespace {
-
-} // namespace anonymous
+namespace { } // namespace
 
 namespace engine::gl {
 

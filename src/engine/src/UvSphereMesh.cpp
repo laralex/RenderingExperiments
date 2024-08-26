@@ -2,7 +2,7 @@
 
 namespace {
 
-constexpr float PI               = glm::pi<float>();
+constexpr float PI = glm::pi<float>();
 
 auto ComputeEquirectangularSphereUv [[nodiscard]] (glm::vec3 unitSpherePosition) -> glm::vec2 {
     float u = (std::atan2(unitSpherePosition.x, unitSpherePosition.z) / (2.0f * PI)) + 0.5f;
@@ -26,7 +26,7 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     if (args.numParallels <= 2) args.numParallels = 3;
 
     // +2 mean two poles
-    mesh.vertexPositions.reserve((args.numMeridians - 1)*args.numParallels + 2);
+    mesh.vertexPositions.reserve((args.numMeridians - 1) * args.numParallels + 2);
 
     // north pole
     int32_t const northPoleIdx = std::size(mesh.vertexPositions);
@@ -35,12 +35,11 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     // inner vertices
     for (int32_t m = 0; m < args.numMeridians; ++m) {
         auto phi = (PI * (m + 1)) / args.numMeridians;
-        for (int32_t p = 0; p < args.numParallels; ++p)
-        {
+        for (int32_t p = 0; p < args.numParallels; ++p) {
             auto theta = (2.0f * PI * p) / args.numParallels;
-            auto x = std::sin(phi) * std::cos(theta);
-            auto y = std::sin(phi) * std::sin(theta);
-            auto z = std::cos(phi);
+            auto x     = std::sin(phi) * std::cos(theta);
+            auto y     = std::sin(phi) * std::sin(theta);
+            auto z     = std::cos(phi);
             mesh.vertexPositions.emplace_back(x, y, z);
             mesh.vertexData.emplace_back();
         }
@@ -66,10 +65,9 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
 
     // inner triangles
     for (int32_t p = 0; p < args.numParallels - 2; ++p) {
-        auto curParallel = p * args.numParallels + 1;
+        auto curParallel  = p * args.numParallels + 1;
         auto nextParallel = (p + 1) * args.numMeridians + 1;
-        for (int32_t m = 0; m < args.numMeridians; ++m)
-        {
+        for (int32_t m = 0; m < args.numMeridians; ++m) {
             auto i0 = curParallel + m;
             auto i1 = curParallel + (m + 1) % args.numMeridians;
             auto i2 = nextParallel + (m + 1) % args.numMeridians;
