@@ -33,7 +33,7 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     mesh.vertexPositions.emplace_back(0.0f, 0.0f, 1.0f);
 
     // inner vertices
-    for (int32_t m = 0; m < args.numMeridians - 1; ++m) {
+    for (int32_t m = 0; m < args.numMeridians; ++m) {
         auto phi = (PI * (m + 1)) / args.numMeridians;
         for (int32_t p = 0; p < args.numParallels; ++p)
         {

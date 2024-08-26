@@ -9,7 +9,8 @@ THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
 	${BUILD_DIR}/third_party/glfw/src/libglfw3.a \
 	${BUILD_DIR}/third_party/glad/gl.o \
-	${BUILD_DIR}/third_party/glm_install/glm/libglm.a
+	${BUILD_DIR}/third_party/glm_install/glm/libglm.a \
+	${BUILD_DIR}/third_party/stb/stb_image.o
 
 .PHONY: all
 all: build_engine
@@ -21,6 +22,7 @@ INCLUDE_DIR+=-I src/engine/include
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
 INCLUDE_DIR+=-I third_party/glm/
+INCLUDE_DIR+=-I third_party/stb/
 INCLUDE_DIR+=-I data
 LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
@@ -86,6 +88,7 @@ build_engine: ${BUILD_DIR}/engine/src/gl ${BUILD_DIR}/engine/libengine.a
 .PHONY: ${INSTALL_DIR}/run_app
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(vert\|frag\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
+	find data -name 'uv_checker_512_512.jpg' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	cp ${APP_EXE} $@
 
 ${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${BUILD_DIR}/engine/libengine.a
@@ -116,7 +119,6 @@ ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 
 ${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
 	cmake -S third_party/glfw -B $(dir $@) && cmake --build $(dir $@)
-#cp $(dir $@)/src/libglfw3.a $(dir $@)
 
 ${BUILD_DIR}/third_party/glad/gl.o:
 	mkdir -p $(dir $@)
@@ -130,6 +132,10 @@ ${BUILD_DIR}/third_party/glm_install/glm/libglm.a:
 		-B ${BUILD_DIR}/third_party/glm .
 	cmake --build ${BUILD_DIR}/third_party/glm -- all
 	cmake --build ${BUILD_DIR}/third_party/glm -- install
+
+${BUILD_DIR}/third_party/stb/stb_image.o:
+	mkdir -p $(dir $@)
+	$(CC) ${COMPILE_FLAGS} -I third_party/stb -c src/third_party/StbImage.cpp -o $@
 
 ${BUILD_DIR}/app ${BUILD_DIR}/engine/src/gl ${INSTALL_DIR}:
 	mkdir -p $@

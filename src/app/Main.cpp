@@ -1,25 +1,26 @@
-#include <engine/Assets.hpp>
-#include <engine/BoxMesh.hpp>
-#include <engine/EngineLoop.hpp>
-#include <engine/IcosphereMesh.hpp>
-#include <engine/UvSphereMesh.hpp>
-#include <engine/gl/Buffer.hpp>
-#include <engine/gl/CommonRenderers.hpp>
-#include <engine/gl/FlatRenderer.hpp>
-#include <engine/gl/Framebuffer.hpp>
-#include <engine/gl/Guard.hpp>
-#include <engine/gl/Init.hpp>
-#include <engine/gl/ProceduralMeshes.hpp>
-#include <engine/gl/Program.hpp>
-#include <engine/gl/Renderbuffer.hpp>
-#include <engine/gl/Sampler.hpp>
-#include <engine/gl/SamplersCache.hpp>
-#include <engine/gl/Shader.hpp>
-#include <engine/gl/Texture.hpp>
-#include <engine/gl/TextureUnits.hpp>
-#include <engine/gl/Uniform.hpp>
-#include <engine/gl/Vao.hpp>
+#include "engine/Assets.hpp"
+#include "engine/BoxMesh.hpp"
+#include "engine/EngineLoop.hpp"
+#include "engine/IcosphereMesh.hpp"
+#include "engine/UvSphereMesh.hpp"
+#include "engine/gl/Buffer.hpp"
+#include "engine/gl/CommonRenderers.hpp"
+#include "engine/gl/FlatRenderer.hpp"
+#include "engine/gl/Framebuffer.hpp"
+#include "engine/gl/Guard.hpp"
+#include "engine/gl/Init.hpp"
+#include "engine/gl/ProceduralMeshes.hpp"
+#include "engine/gl/Program.hpp"
+#include "engine/gl/Renderbuffer.hpp"
+#include "engine/gl/Sampler.hpp"
+#include "engine/gl/SamplersCache.hpp"
+#include "engine/gl/Shader.hpp"
+#include "engine/gl/Texture.hpp"
+#include "engine/gl/TextureUnits.hpp"
+#include "engine/gl/Uniform.hpp"
+#include "engine/gl/Vao.hpp"
 
+#include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -119,10 +120,16 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(2, 2, 0), GL_RGB8, "Test texture");
+    int x,y,numChannels;
+    // TODO: cwd relative path
+    auto uvCheckerData = stbi_load("build/install/data/engine/textures/utils/uv_checker_512_512.jpg", &x, &y, &numChannels, 3);
+    XLOGE("Texture {} {} {}", x, y, numChannels);
+    assert(uvCheckerData != nullptr);
+    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
     (void)gl::TextureCtx{app->texture}
-        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, textureData, app->texture.Size())
+        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
         .GenerateMipmaps();
+    stbi_image_free(uvCheckerData);
 
     app->outputColor =
         gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
@@ -189,6 +196,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
+        gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
 
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
