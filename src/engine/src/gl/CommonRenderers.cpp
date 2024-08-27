@@ -107,9 +107,14 @@ void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
     billboardRenderer_.Render(args);
 }
 
-void CommonRenderers::RenderLines(glm::mat4 const& camera, std::vector<LineRendererInput::Line> const& lines) const {
+void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) const {
+    assert(IsInitialized() && "Bad call to FlushLinesToGpu, CommonRenderers isn't initialized");
+    lineRenderer_.Fill(lines);
+}
+
+void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
-    lineRenderer_.Render(camera, lines);
+    lineRenderer_.Render(camera);
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture) const {

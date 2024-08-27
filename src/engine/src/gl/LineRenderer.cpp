@@ -51,11 +51,14 @@ auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
     return renderer;
 }
 
-void LineRenderer::Render(glm::mat4 const& camera, std::vector<LineRendererInput::Line> const& lines) const {
-    attributeBuffer_.Fill(lines.data(), std::size(lines) * sizeof(LineRendererInput::Line));
+void LineRenderer::Render(glm::mat4 const& camera) const {
     auto programGuard = UniformCtx{program_};
     programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVao(vao_, GL_LINES);
+}
+
+void LineRenderer::Fill(std::vector<LineRendererInput::Line> const& lines) const {
+    attributeBuffer_.Fill(lines.data(), std::size(lines) * sizeof(LineRendererInput::Line));
 }
 
 } // namespace engine::gl

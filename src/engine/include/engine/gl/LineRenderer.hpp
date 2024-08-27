@@ -24,7 +24,8 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] (size_t maxLines) -> LineRenderer;
-    void Render(glm::mat4 const& camera, std::vector<LineRendererInput::Line> const& lines) const;
+    void Fill(std::vector<LineRendererInput::Line> const& lines) const;
+    void Render(glm::mat4 const& camera) const;
 
 private:
     struct ColorCtx final {

@@ -29,7 +29,13 @@ public:
         Vertex end;
     };
 
-    auto Data [[nodiscard]] () const -> std::vector<Line> const& { return lines_; }
+    auto IsDataDirty [[nodiscard]] () -> bool { return isDirty_; }
+    auto Data [[nodiscard]] () -> std::vector<Line> const& {
+        isDirty_ = false;
+        return lines_;
+    }
+    void SetTransform(glm::mat4 const& transform);
+    void SetTransform();
     void SetColor(ColorCode color);
     void PushLine(glm::vec3 worldBegin, glm::vec3 worldEnd);
     void PushRay(glm::vec3 worldBegin, glm::vec3 worldDirection);
@@ -45,6 +51,9 @@ private:
     size_t maxLines_{};
     std::vector<Line> lines_{};
     std::stack<ColorCtx> colorContexts_{};
+    glm::mat4 customTransform_{};
+    bool isDirty_{false};
+    bool hasTransform_{false};
 };
 
 } // namespace engine

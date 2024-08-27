@@ -17,6 +17,17 @@ void LineRendererInput::Clear() {
     lines_.clear();
     std::stack<ColorCtx> emptyStack{};
     colorContexts_.swap(emptyStack);
+    isDirty_ = false;
+    hasTransform_ = false;
+}
+
+void LineRendererInput::SetTransform(glm::mat4 const& transform) {
+    customTransform_ = transform;
+    hasTransform_ = true;
+}
+
+void LineRendererInput::SetTransform() {
+    hasTransform_ = false;
 }
 
 void LineRendererInput::SetColor(ColorCode color) {
@@ -34,7 +45,14 @@ void LineRendererInput::PushLine(glm::vec3 worldBegin, glm::vec3 worldEnd) {
         XLOGW("LineRenderer too many lines are rendered {}", std::size(lines_));
     }
     int32_t colorIdx = colorContexts_.top().colorIdx;
+    if (hasTransform_) {
+        glm::vec4 homo = customTransform_ * glm::vec4{worldBegin, 1.0f};
+        worldBegin = glm::vec3{homo} / homo.w;
+        homo = customTransform_ * glm::vec4{worldEnd, 1.0f};
+        worldEnd = glm::vec3{homo} / homo.w;
+    }
     lines_.emplace_back(Line{Vertex{worldBegin, colorIdx}, Vertex{worldEnd, colorIdx}});
+    isDirty_ = true;
 }
 
 void LineRendererInput::PushRay(glm::vec3 worldBegin, glm::vec3 worldDirection) {

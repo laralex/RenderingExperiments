@@ -34,7 +34,8 @@ public:
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderBillboard(BillboardRenderArgs const& args) const;
-    void RenderLines(glm::mat4 const& camera, std::vector<LineRendererInput::Line> const& lines) const;
+    void RenderLines(glm::mat4 const& camera) const;
+    void FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) const;
 
     void RenderFulscreenTriangle() const;
     void Blit2D(GLuint srcTexture) const;

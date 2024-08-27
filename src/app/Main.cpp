@@ -107,6 +107,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
         app->debugLines.PushRay(uvSphere.vertexPositions[i], uvSphere.vertexData[i].normal * 0.2f);
     }
+    app->debugLines.SetTransform(glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0.0f, 0.0f}));
     app->debugLines.SetColor(ColorCode::RED);
     for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
         app->debugLines.PushRay(
@@ -287,7 +288,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
 
-        app->commonRenderers.RenderLines(camera, app->debugLines.Data());
+        if (app->debugLines.IsDataDirty()) {
+            app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
+            app->debugLines.Clear();
+        }
+        app->commonRenderers.RenderLines(camera);
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
