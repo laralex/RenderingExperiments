@@ -23,21 +23,21 @@ auto AllocateBoxMesh(BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -
     (void)VaoMutableCtx{vao}
         .MakeVertexAttribute(
             positions,
-            {.index           = layout.positionLocation,
+            {.location        = layout.positionLocation,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(glm::vec3),
              .offset          = 0})
         .MakeVertexAttribute(
             attributes,
-            {.index           = layout.uvLocation,
+            {.location        = layout.uvLocation,
              .valuesPerVertex = 2,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(BoxMesh::Vertex),
              .offset          = offsetof(BoxMesh::Vertex, uv)})
         .MakeVertexAttribute(
             attributes,
-            {.index           = layout.normalLocation,
+            {.location        = layout.normalLocation,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(BoxMesh::Vertex),
@@ -65,21 +65,21 @@ auto AllocateIcosphereMesh(IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayo
     (void)VaoMutableCtx{vao}
         .MakeVertexAttribute(
             positions,
-            {.index           = layout.positionLocation,
+            {.location        = layout.positionLocation,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(glm::vec3),
              .offset          = 0})
         .MakeVertexAttribute(
             attributes,
-            {.index           = layout.uvLocation,
+            {.location        = layout.uvLocation,
              .valuesPerVertex = 2,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(IcosphereMesh::Vertex),
              .offset          = offsetof(IcosphereMesh::Vertex, uv)})
         .MakeVertexAttribute(
             attributes,
-            {.index           = layout.normalLocation,
+            {.location        = layout.normalLocation,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(IcosphereMesh::Vertex),
@@ -107,21 +107,21 @@ auto AllocateUvSphereMesh(UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout
     (void)VaoMutableCtx{vao}
         .MakeVertexAttribute(
             positions,
-            {.index           = layout.positionLocation,
+            {.location        = layout.positionLocation,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(glm::vec3),
              .offset          = 0})
         .MakeVertexAttribute(
             attributes,
-            {.index           = layout.uvLocation,
+            {.location        = layout.uvLocation,
              .valuesPerVertex = 2,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(UvSphereMesh::Vertex),
              .offset          = offsetof(UvSphereMesh::Vertex, uv)})
         .MakeVertexAttribute(
             attributes,
-            {.index           = layout.normalLocation,
+            {.location        = layout.normalLocation,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(UvSphereMesh::Vertex),

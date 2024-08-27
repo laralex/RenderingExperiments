@@ -152,14 +152,14 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,
+            {.location        = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,
              .valuesPerVertex = 4,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, isLeftRightBottomTop)})
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_OTHER_WEIGHTS_LOCATION,
+            {.location        = ATTRIB_OTHER_WEIGHTS_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),

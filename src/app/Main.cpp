@@ -27,6 +27,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#define ENABLE_RENDERDOC 1
+
 struct Application final {
     ~Application() {
         XLOG("Disposing application", 0);
@@ -46,6 +48,7 @@ struct Application final {
     engine::gl::FlatRenderer flatRenderer{};
     engine::gl::SamplersCache::CacheKey samplerNearestWrap{};
     engine::LineRendererInput debugLines{};
+    engine::SphereRendererInput debugSpheres{};
 
     bool isInitialized = false;
 };
@@ -101,11 +104,13 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     auto uvSphere = UvSphereMesh::Generate({
         .numMeridians       = 20,
         .numParallels       = 20,
-        .clockWiseTriangles = false,
+        .clockwiseTriangles = false,
     });
+
     app->debugLines.SetColor(ColorCode::GREEN);
     for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
-        app->debugLines.PushRay(uvSphere.vertexPositions[i], uvSphere.vertexData[i].normal * 0.2f);
+        auto ii = i % uvSphere.vertexData.size();
+        app->debugLines.PushRay(uvSphere.vertexPositions[ii], uvSphere.vertexData[ii].normal * 0.2f);
     }
     app->debugLines.SetTransform(glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0.0f, 0.0f}));
     app->debugLines.SetColor(ColorCode::RED);
@@ -113,6 +118,11 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         app->debugLines.PushRay(
             uvSphere.vertexPositions[i],
             glm::cross(uvSphere.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
+    }
+    // app->debugSpheres.PushSphere(glm::vec3{0.0f, 0.5f, 0.0f}, 1.0f);
+    for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
+        app->debugSpheres.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
+        app->debugSpheres.PushSphere(uvSphere.vertexPositions[i] * 2.0f, 0.03f);
     }
     app->sphereMesh = gl::AllocateUvSphereMesh(
         uvSphere,
@@ -125,7 +135,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         IcosphereMesh::Generate({
             .numSubdivisions    = 1,
             .duplicateSeam      = false,
-            .clockWiseTriangles = false,
+            .clockwiseTriangles = false,
         }),
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
@@ -138,13 +148,16 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     auto uvCheckerData =
         stbi_load("build/install/data/engine/textures/utils/uv_checker_512_512.jpg", &x, &y, &numChannels, 3);
     if (stbi_failure_reason()) { XLOGE("STB IMAGE: {}", stbi_failure_reason()); }
-    // assert(uvCheckerData != nullptr);
     XLOGE("Texture {} {} {}", x, y, numChannels);
-    // app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
-    // (void)gl::TextureCtx{app->texture}
-    //     .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
-    //     .GenerateMipmaps();
-    // stbi_image_free(uvCheckerData);
+
+#if ENABLE_RENDERDOC == 0
+    assert(uvCheckerData != nullptr);
+    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
+    (void)gl::TextureCtx{app->texture}
+        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
+        .GenerateMipmaps();
+    stbi_image_free(uvCheckerData);
+#endif
 
     app->outputColor =
         gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
@@ -219,7 +232,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        // gl::RenderVao(app->boxMesh.Vao());
+        gl::RenderVao(app->boxMesh.Vao());
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
@@ -293,6 +306,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             app->debugLines.Clear();
         }
         app->commonRenderers.RenderLines(camera);
+
+        if (app->debugSpheres.IsDataDirty()) {
+            app->commonRenderers.FlushSpheresToGpu(app->debugSpheres.Data());
+            app->debugSpheres.Clear();
+        }
+        app->commonRenderers.RenderSpheres(camera);
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));

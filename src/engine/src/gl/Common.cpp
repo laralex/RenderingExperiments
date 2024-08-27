@@ -41,6 +41,18 @@ void RenderVao(Vao const& vao, GLenum primitive) {
     }
 }
 
+void RenderVaoInstanced(Vao const& vao, GLsizei numInstances, GLenum primitive) {
+    auto vaoGuard      = VaoCtx{vao};
+    GLint firstIndex   = vao.FirstIndex();
+    GLsizei numIndices = vao.IndexCount();
+    if (vao.IsIndexed()) {
+        auto const* firstIndexPtr = reinterpret_cast<decltype(firstIndex) const*>(firstIndex);
+        GLCALL(glDrawElementsInstanced(primitive, numIndices, vao.IndexDataType(), firstIndexPtr, numInstances));
+    } else {
+        GLCALL(glDrawArraysInstanced(primitive, firstIndex, numIndices, numInstances));
+    }
+}
+
 auto TransformOrigin(glm::mat4& transform, bool isRowMajor) -> glm::vec3 {
     if (isRowMajor) { return glm::vec3{transform[0][3], transform[1][3], transform[2][3]}; }
     return glm::vec3{transform[3][0], transform[3][1], transform[3][2]};

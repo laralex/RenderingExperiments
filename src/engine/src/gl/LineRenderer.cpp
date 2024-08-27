@@ -18,18 +18,18 @@ auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
     LineRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, nullptr, maxLines * sizeof(LineRendererInput::Line), "LineRenderer Vertices");
-    renderer.vao_ = gl::Vao::Allocate("LineRenderer");
+    renderer.vao_ = gl::Vao::Allocate("LineRenderer VAO");
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_POSITION_LOCATION,
+            {.location        = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(LineRendererInput::Vertex),
              .offset          = offsetof(LineRendererInput::Vertex, position)})
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_COLOR_LOCATION,
+            {.location        = ATTRIB_COLOR_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(LineRendererInput::Vertex),
@@ -58,7 +58,9 @@ void LineRenderer::Render(glm::mat4 const& camera) const {
 }
 
 void LineRenderer::Fill(std::vector<LineRendererInput::Line> const& lines) const {
-    attributeBuffer_.Fill(lines.data(), std::size(lines) * sizeof(LineRendererInput::Line));
+    using T       = typename std::decay<decltype(*lines.begin())>::type;
+    auto numBytes = std::min(attributeBuffer_.SizeBytes(), static_cast<int32_t>(std::size(lines) * sizeof(T)));
+    attributeBuffer_.Fill(lines.data(), numBytes);
 }
 
 } // namespace engine::gl

@@ -48,15 +48,21 @@ auto VaoMutableCtx::MakeVertexAttribute(
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
     // NOTE: safe int->ptr cast, because info.offset is of type intptr_t
-    auto* offset = reinterpret_cast<GLsizei*>(info.offset);
-    if (info.datatype == GL_BYTE || info.datatype == GL_UNSIGNED_BYTE || info.datatype == GL_SHORT
-        || info.datatype == GL_UNSIGNED_SHORT || info.datatype == GL_INT || info.datatype == GL_UNSIGNED_INT) {
-        GLCALL(glVertexAttribIPointer(info.index, info.valuesPerVertex, info.datatype, info.stride, offset));
-    } else {
-        GLCALL(glVertexAttribPointer(
-            info.index, info.valuesPerVertex, info.datatype, normalized ? GL_TRUE : GL_FALSE, info.stride, offset));
+
+    auto offset = info.offset;
+    for (auto loc = info.location; loc < info.location + info.numLocations; ++loc) {
+        auto* offsetPtr = reinterpret_cast<GLsizei*>(offset);
+        if (info.datatype == GL_BYTE || info.datatype == GL_UNSIGNED_BYTE || info.datatype == GL_SHORT
+            || info.datatype == GL_UNSIGNED_SHORT || info.datatype == GL_INT || info.datatype == GL_UNSIGNED_INT) {
+            GLCALL(glVertexAttribIPointer(loc, info.valuesPerVertex, info.datatype, info.stride, offsetPtr));
+        } else {
+            GLCALL(glVertexAttribPointer(
+                loc, info.valuesPerVertex, info.datatype, normalized ? GL_TRUE : GL_FALSE, info.stride, offsetPtr));
+        }
+        GLCALL(glEnableVertexAttribArray(loc));
+        GLCALL(glVertexAttribDivisor(loc, info.instanceDivisor));
+        offset += info.offsetAdvance;
     }
-    GLCALL(glEnableVertexAttribArray(info.index));
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
     return std::move(*this);
 }

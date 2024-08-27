@@ -194,13 +194,13 @@ auto IcosphereMesh::Generate(GenerationArgs args) -> IcosphereMesh {
     //     fixPoleUv(SOUTH_POLE_IDX);
     // }
 
-    if (args.clockWiseTriangles) {
+    if (args.clockwiseTriangles) {
         InvertTriangleWinding(mesh.indices);
         InvertTriangleNormals(
             mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
     }
 
-    mesh.isClockwiseWinding = args.clockWiseTriangles;
+    mesh.isClockwiseWinding = args.clockwiseTriangles;
     return mesh;
 }
 

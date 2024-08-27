@@ -20,11 +20,15 @@ public:
 #undef Self
 
     struct AttributeInfo {
-        GLuint index          = 0U;
-        GLint valuesPerVertex = 0U;
+        GLuint location       = 0U;
+        GLuint numLocations   = 1U;
+        GLint valuesPerVertex = 0;
         GLenum datatype       = GL_FLOAT;
-        GLsizei stride        = 0U;
-        intptr_t offset       = 0U;
+        GLsizei stride        = 0;
+        intptr_t offset       = 0;
+        // each location in range [location, location+numLocations] will advance offset by this amount
+        intptr_t offsetAdvance = 0;
+        GLuint instanceDivisor = 0U;
     };
 
     static auto Allocate [[nodiscard]] (std::string_view name = {}) -> Vao;

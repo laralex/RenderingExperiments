@@ -38,12 +38,14 @@ namespace engine::gl {
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
-    axesRenderer_              = AxesRenderer::Allocate();
-    boxRenderer_               = BoxRenderer::Allocate();
-    frustumRenderer_           = FrustumRenderer::Allocate();
-    billboardRenderer_         = BillboardRenderer::Allocate();
-    constexpr size_t MAX_LINES = 10'000;
-    lineRenderer_              = LineRenderer::Allocate(MAX_LINES);
+    axesRenderer_                = AxesRenderer::Allocate();
+    boxRenderer_                 = BoxRenderer::Allocate();
+    frustumRenderer_             = FrustumRenderer::Allocate();
+    billboardRenderer_           = BillboardRenderer::Allocate();
+    constexpr size_t MAX_LINES   = 10'000;
+    lineRenderer_                = LineRenderer::Allocate(MAX_LINES);
+    constexpr size_t MAX_SPHERES = 10'000;
+    debugSphereRenderer_         = DebugSphereRenderer::Allocate(MAX_SPHERES);
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -107,14 +109,24 @@ void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
     billboardRenderer_.Render(args);
 }
 
+void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
+    assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
+    lineRenderer_.Render(camera);
+}
+
 void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) const {
     assert(IsInitialized() && "Bad call to FlushLinesToGpu, CommonRenderers isn't initialized");
     lineRenderer_.Fill(lines);
 }
 
-void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
-    assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
-    lineRenderer_.Render(camera);
+void CommonRenderers::RenderSpheres(glm::mat4 const& camera) const {
+    assert(IsInitialized() && "Bad call to RenderSpheres, CommonRenderers isn't initialized");
+    debugSphereRenderer_.Render(camera);
+}
+
+void CommonRenderers::FlushSpheresToGpu(std::vector<SphereRendererInput::Sphere> const& spheres) {
+    assert(IsInitialized() && "Bad call to FlushSpheresToGpu, CommonRenderers isn't initialized");
+    debugSphereRenderer_.Fill(spheres);
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture) const {

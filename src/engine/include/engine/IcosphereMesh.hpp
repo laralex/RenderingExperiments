@@ -22,7 +22,7 @@ struct IcosphereMesh final {
     struct GenerationArgs final {
         int32_t numSubdivisions = 3;
         bool duplicateSeam      = true;
-        bool clockWiseTriangles = false;
+        bool clockwiseTriangles = false;
     };
     static auto Generate(GenerationArgs args) -> IcosphereMesh;
 

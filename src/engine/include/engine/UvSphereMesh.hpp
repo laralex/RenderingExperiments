@@ -23,7 +23,7 @@ struct UvSphereMesh final {
         int32_t numMeridians    = 10;
         int32_t numParallels    = 10;
         bool duplicateSeam      = true;
-        bool clockWiseTriangles = false;
+        bool clockwiseTriangles = false;
     };
     static auto Generate(GenerationArgs args) -> UvSphereMesh;
 

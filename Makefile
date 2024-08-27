@@ -32,13 +32,15 @@ obj_app_ = Main.o
 obj_engine_ = \
 	Assets.o BoxMesh.o \
 	EngineLoop.o IcosphereMesh.o \
-	LineRendererInput.o UvSphereMesh.o \
+	LineRendererInput.o SphereRendererInput.o \
+	UvSphereMesh.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
 	gl/BoxRenderer.o gl/ProceduralMeshes.o \
 	gl/BillboardRenderer.o \
 	gl/Buffer.o gl/Capabilities.o \
 	gl/Common.o gl/CommonRenderers.o \
+	gl/DebugSphereRenderer.o \
 	gl/Debug.o gl/FlatRenderer.o \
 	gl/FrustumRenderer.o gl/Guard.o \
 	gl/Init.o gl/LineRenderer.o \

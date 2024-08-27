@@ -19,7 +19,7 @@ struct BoxMesh final {
         glm::vec3 normal{};
     };
 
-    static auto Generate(glm::vec3 bakedScale = glm::vec3{1.0f}, bool clockWiseTriangles = false) -> BoxMesh;
+    static auto Generate(glm::vec3 bakedScale = glm::vec3{1.0f}, bool clockwiseTriangles = false) -> BoxMesh;
 
     std::vector<glm::vec3> vertexPositions{};
     std::vector<Vertex> vertexData{};

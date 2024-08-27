@@ -120,14 +120,14 @@ auto BoxRenderer::Allocate() -> BoxRenderer {
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_POSITION_LOCATION,
+            {.location        = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, position)})
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_INNER_MARKER_LOCATION,
+            {.location        = ATTRIB_INNER_MARKER_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),

@@ -78,7 +78,7 @@ constexpr uint8_t MESH_INDICES[] = {
 
 namespace engine {
 
-auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockWiseTriangles) -> BoxMesh {
+auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockwiseTriangles) -> BoxMesh {
     BoxMesh mesh;
     int32_t numVerts = std::size(VERTEX_POSITIONS);
     mesh.vertexPositions.resize(numVerts);
@@ -108,13 +108,13 @@ auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockWiseTriangles) -> BoxMesh
     std::copy(std::begin(MESH_INDICES), std::end(MESH_INDICES), mesh.indices.begin());
 
     // adjust triangle winding
-    if (clockWiseTriangles) {
+    if (clockwiseTriangles) {
         InvertTriangleWinding(mesh.indices);
         InvertTriangleNormals(
             mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
     }
 
-    mesh.isClockwiseWinding = clockWiseTriangles;
+    mesh.isClockwiseWinding = clockwiseTriangles;
     return mesh;
 }
 

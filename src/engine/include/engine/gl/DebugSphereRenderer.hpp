@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/LineRendererInput.hpp"
 #include "engine/Prelude.hpp"
+#include "engine/SphereRendererInput.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Vao.hpp"
@@ -11,10 +11,10 @@
 
 namespace engine::gl {
 
-class LineRenderer final {
+class DebugSphereRenderer final {
 
 public:
-#define Self LineRenderer
+#define Self DebugSphereRenderer
     explicit Self() noexcept     = default;
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
@@ -23,14 +23,18 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (size_t maxLines) -> LineRenderer;
-    void Fill(std::vector<LineRendererInput::Line> const& lines) const;
+    static auto Allocate [[nodiscard]] (size_t maxSpheres) -> DebugSphereRenderer;
+    void Fill(std::vector<SphereRendererInput::Sphere> const&);
     void Render(glm::mat4 const& camera) const;
 
 private:
     Vao vao_{};
-    GpuBuffer attributeBuffer_{};
+    GpuBuffer meshPositionsBuffer_{};
+    GpuBuffer meshAttributesBuffer_{};
+    GpuBuffer instancesBuffer_{};
+    GpuBuffer indexBuffer_{};
     GpuProgram program_{};
+    GLsizei numInstances_{0};
 };
 
 } // namespace engine::gl

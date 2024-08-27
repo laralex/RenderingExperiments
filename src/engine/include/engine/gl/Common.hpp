@@ -23,6 +23,7 @@ auto LinkProgramFromFiles [[nodiscard]] (
     std::string_view name = {}) -> std::optional<GpuProgram>;
 
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
+void RenderVaoInstanced(Vao const& vao, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);
 
 // Wrapper for OpenGL object identifiers. Becomes 0 when moved away from
 // This helps to define move constructor/assignment of other high level wrappers as simply "=default"

@@ -90,13 +90,13 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
         mesh.vertexData[i].normal = position;
     }
 
-    if (args.clockWiseTriangles) {
+    if (args.clockwiseTriangles) {
         InvertTriangleWinding(mesh.indices);
         InvertTriangleNormals(
             mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
     }
 
-    mesh.isClockwiseWinding = args.clockWiseTriangles;
+    mesh.isClockwiseWinding = args.clockwiseTriangles;
     return mesh;
 }
 

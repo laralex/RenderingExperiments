@@ -3,6 +3,7 @@
 #include "engine/gl/AxesRenderer.hpp"
 #include "engine/gl/BillboardRenderer.hpp"
 #include "engine/gl/BoxRenderer.hpp"
+#include "engine/gl/DebugSphereRenderer.hpp"
 #include "engine/gl/FrustumRenderer.hpp"
 #include "engine/gl/LineRenderer.hpp"
 #include "engine/gl/Program.hpp"
@@ -35,7 +36,9 @@ public:
     void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderBillboard(BillboardRenderArgs const& args) const;
     void RenderLines(glm::mat4 const& camera) const;
-    void FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) const;
+    void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&) const;
+    void RenderSpheres(glm::mat4 const& camera) const;
+    void FlushSpheresToGpu(std::vector<SphereRendererInput::Sphere> const&);
 
     void RenderFulscreenTriangle() const;
     void Blit2D(GLuint srcTexture) const;
@@ -58,6 +61,7 @@ private:
     FrustumRenderer frustumRenderer_{};
     BillboardRenderer billboardRenderer_{};
     LineRenderer lineRenderer_{};
+    DebugSphereRenderer debugSphereRenderer_{};
     Vao datalessTriangleVao_{};
     Vao datalessQuadVao_{};
     GpuProgram blitProgram_{};

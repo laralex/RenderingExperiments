@@ -119,14 +119,14 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_POSITION_LOCATION,
+            {.location        = ATTRIB_POSITION_LOCATION,
              .valuesPerVertex = 3,
              .datatype        = GL_FLOAT,
              .stride          = sizeof(Vertex),
              .offset          = offsetof(Vertex, position)})
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
-            {.index           = ATTRIB_COLOR_LOCATION,
+            {.location        = ATTRIB_COLOR_LOCATION,
              .valuesPerVertex = 1,
              .datatype        = GL_UNSIGNED_INT,
              .stride          = sizeof(Vertex),

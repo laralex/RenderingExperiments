@@ -6,11 +6,11 @@
 
 namespace engine {
 
-class LineRendererInput final {
+class SphereRendererInput final {
 
 public:
-#define Self LineRendererInput
-    explicit Self(size_t maxLines = 10'000) noexcept;
+#define Self SphereRendererInput
+    explicit Self(size_t maxSpheres = 10'000) noexcept;
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
@@ -18,26 +18,18 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    struct Vertex final {
-        glm::vec3 position;
+    struct Sphere final {
+        glm::mat4 transform;
         int32_t colorIdx;
     };
 
-    struct Line final {
-        Vertex begin;
-        Vertex end;
-    };
-
     auto IsDataDirty [[nodiscard]] () -> bool { return isDirty_; }
-    auto Data [[nodiscard]] () -> std::vector<Line> const& {
+    auto Data [[nodiscard]] () -> std::vector<Sphere> const& {
         isDirty_ = false;
-        return lines_;
+        return spheres_;
     }
-    void SetTransform(glm::mat4 const& transform);
-    void SetTransform();
     void SetColor(ColorCode color);
-    void PushLine(glm::vec3 worldBegin, glm::vec3 worldEnd);
-    void PushRay(glm::vec3 worldBegin, glm::vec3 worldDirection);
+    void PushSphere(glm::vec3 worldPosition, float scale = 1.0f);
     void Clear();
 
 private:
@@ -46,12 +38,10 @@ private:
         int32_t colorIdx;
     };
 
-    size_t maxLines_{};
-    std::vector<Line> lines_{};
+    size_t maxSpheres_{};
+    std::vector<Sphere> spheres_{};
     std::stack<ColorCtx> colorContexts_{};
-    glm::mat4 customTransform_{};
     bool isDirty_{false};
-    bool hasTransform_{false};
 };
 
 } // namespace engine
