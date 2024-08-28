@@ -84,10 +84,10 @@ void DebugLabel(Renderbuffer const& renderbuffer, std::string_view label);
 auto GetDebugLabel [[nodiscard]] (Renderbuffer const& renderbuffer, char* outBuffer, size_t outBufferSize) -> size_t;
 void LogDebugLabel(Renderbuffer const& renderbuffer, char const* message);
 
-class Sampler;
-void DebugLabel(Sampler const& sampler, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (Sampler const& sampler, char* outBuffer, size_t outBufferSize) -> size_t;
-void LogDebugLabel(Sampler const& sampler, char const* message);
+class GpuSampler;
+void DebugLabel(GpuSampler const& sampler, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GpuSampler const& sampler, char* outBuffer, size_t outBufferSize) -> size_t;
+void LogDebugLabel(GpuSampler const& sampler, char const* message);
 
 class Framebuffer;
 void DebugLabel(Framebuffer const& fb, std::string_view label);

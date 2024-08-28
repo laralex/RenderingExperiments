@@ -9,12 +9,11 @@ SphereRendererInput::SphereRendererInput(size_t maxSpheres) noexcept
 }
 
 void SphereRendererInput::Clear() {
-    colorContexts_.push({
+    spheres_.clear();
+    std::stack<ColorCtx> emptyStack{{{
         .color    = COLOR_PALETTE[static_cast<size_t>(ColorCode::WHITE)],
         .colorIdx = static_cast<int32_t>(ColorCode::WHITE),
-    });
-    spheres_.clear();
-    std::stack<ColorCtx> emptyStack{};
+    }}};
     colorContexts_.swap(emptyStack);
     isDirty_ = false;
 }

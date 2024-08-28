@@ -294,15 +294,15 @@ void LogDebugLabel(Renderbuffer const& renderbuffer, char const* message) {
     ::LogDebugLabel(GL_RENDERBUFFER, GL_RENDERBUFFER, renderbuffer.Id(), message);
 }
 
-void DebugLabel(Sampler const& sampler, std::string_view label) {
+void DebugLabel(GpuSampler const& sampler, std::string_view label) {
     ::DebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), label);
 }
 
-auto GetDebugLabel(Sampler const& sampler, char* outBuffer, size_t outBufferSize) -> size_t {
+auto GetDebugLabel(GpuSampler const& sampler, char* outBuffer, size_t outBufferSize) -> size_t {
     return ::GetDebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), outBuffer, outBufferSize);
 }
 
-void LogDebugLabel(Sampler const& sampler, char const* message) {
+void LogDebugLabel(GpuSampler const& sampler, char const* message) {
     ::LogDebugLabel(GL_SAMPLER, GL_SAMPLER, sampler.Id(), message);
 }
 

@@ -58,19 +58,19 @@ void CommonRenderers::Initialize() {
 
     samplerNearest_ = samplersCache_.Cache(
         "clamp/nearest",
-        gl::Sampler::Allocate("Sampler/Nearset")
+        gl::GpuSampler::Allocate("Sampler/Nearset")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
             .WithWrap(GL_CLAMP_TO_EDGE));
     samplerLinear_ = samplersCache_.Cache(
         "clamp/linear",
-        gl::Sampler::Allocate("Sampler/Linear")
+        gl::GpuSampler::Allocate("Sampler/Linear")
             .WithLinearMagnify(true)
             .WithLinearMinify(true)
             .WithWrap(GL_CLAMP_TO_EDGE));
     samplerLinearRepeat_ = samplersCache_.Cache(
         "repeat/linear",
-        gl::Sampler::Allocate("Sampler/LinearRepeat")
+        gl::GpuSampler::Allocate("Sampler/LinearRepeat")
             .WithLinearMagnify(true)
             .WithLinearMinify(true)
             .WithWrap(GL_REPEAT));
@@ -143,11 +143,11 @@ void CommonRenderers::Blit2D(GLuint srcTexture) const {
     RenderFulscreenTriangle();
 }
 
-auto CommonRenderers::CacheSampler(std::string_view name, Sampler&& sampler) -> SamplersCache::CacheKey {
+auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey {
     return samplersCache_.Cache(name, std::move(sampler));
 }
 
-auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> Sampler const& {
+auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuSampler const& {
     return samplersCache_.GetSampler(sampler);
 }
 

@@ -21,20 +21,20 @@ public:
 
     using CacheKey = size_t;
 
-    auto FindSampler(std::string_view name) const -> Sampler const&;
+    auto FindSampler(std::string_view name) const -> GpuSampler const&;
 
-    auto GetSampler [[nodiscard]] (CacheKey id) const -> Sampler const&;
+    auto GetSampler [[nodiscard]] (CacheKey id) const -> GpuSampler const&;
 
-    auto Cache [[nodiscard]] (std::string_view name, Sampler&& sampler) -> CacheKey;
+    auto Cache [[nodiscard]] (std::string_view name, GpuSampler&& sampler) -> CacheKey;
 
     void Clear();
 
 private:
     // TODO(a.larionov): std::unordered_map doens't support std::string_view lookup
     std::map<std::string, CacheKey, std::less<>> nameToId_;
-    std::vector<Sampler> idToSampler_;
+    std::vector<GpuSampler> idToSampler_;
 
-    static const Sampler nullSampler_;
+    static const GpuSampler nullSampler_;
 };
 
 } // namespace engine::gl

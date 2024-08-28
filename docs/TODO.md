@@ -1,4 +1,5 @@
-* render utils (billboard, planes, spheres)
+* render utils (billboard, planes)
+* fix stb uses paths relative to CWD
 * inverted Y axis
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * camera

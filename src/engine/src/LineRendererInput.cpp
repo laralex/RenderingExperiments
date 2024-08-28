@@ -9,12 +9,11 @@ LineRendererInput::LineRendererInput(size_t maxLines) noexcept
 }
 
 void LineRendererInput::Clear() {
-    colorContexts_.push({
+    lines_.clear();
+    std::stack<ColorCtx> emptyStack{{{
         .color    = COLOR_PALETTE[static_cast<size_t>(ColorCode::WHITE)],
         .colorIdx = static_cast<int32_t>(ColorCode::WHITE),
-    });
-    lines_.clear();
-    std::stack<ColorCtx> emptyStack{};
+    }}};
     colorContexts_.swap(emptyStack);
     isDirty_      = false;
     hasTransform_ = false;

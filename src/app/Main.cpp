@@ -27,7 +27,15 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#define ENABLE_RENDERDOC 1
+#define ENABLE_RENDERDOC 0
+
+struct UboDataSamplerTiling {
+    GLint albedoIdx = 0;
+    GLint normalIdx = 0;
+    GLint specularIdx = 0;
+    GLint __pad0 = 0;
+    glm::vec4 uvScaleOffsets[256U];
+};
 
 struct Application final {
     ~Application() {
@@ -40,6 +48,8 @@ struct Application final {
     engine::gl::GpuMesh sphereMesh2{};
     engine::gl::GpuProgram program{};
     engine::gl::Texture texture{};
+    engine::gl::GpuBuffer uboSamplerTiling{};
+    UboDataSamplerTiling uboDataSamplerTiling{};
     engine::gl::Framebuffer outputFramebuffer{};
     engine::gl::Texture outputColor{};
     engine::gl::Texture outputDepth{};
@@ -65,6 +75,8 @@ constexpr GLint ATTRIB_UV_LOCATION                 = 1;
 constexpr GLint ATTRIB_NORMAL_LOCATION             = 2;
 constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
 constexpr GLint UNIFORM_MVP_LOCATION               = 10;
+constexpr GLint UBO_SAMPLER_TILING_SHADER_BINDING = 0;
+constexpr GLint UBO_SAMPLER_TILING_CONTEXT_BINDING = 0;
 constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
 static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
@@ -74,7 +86,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     app->commonRenderers.Initialize();
     app->samplerNearestWrap = app->commonRenderers.CacheSampler(
         "repeat/nearest",
-        gl::Sampler::Allocate("Sampler/NearestRepeat")
+        gl::GpuSampler::Allocate("Sampler/NearestRepeat")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
             .WithWrap(GL_MIRRORED_REPEAT));
@@ -84,6 +96,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
+        {.name = "UBO_SAMPLER_TILING", .value = UBO_SAMPLER_TILING_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
@@ -107,19 +120,18 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         .clockwiseTriangles = false,
     });
 
-    app->debugLines.SetColor(ColorCode::GREEN);
     for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
         auto ii = i % uvSphere.vertexData.size();
+        app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
         app->debugLines.PushRay(uvSphere.vertexPositions[ii], uvSphere.vertexData[ii].normal * 0.2f);
     }
     app->debugLines.SetTransform(glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0.0f, 0.0f}));
-    app->debugLines.SetColor(ColorCode::RED);
     for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
+        // app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
         app->debugLines.PushRay(
             uvSphere.vertexPositions[i],
             glm::cross(uvSphere.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
     }
-    // app->debugSpheres.PushSphere(glm::vec3{0.0f, 0.5f, 0.0f}, 1.0f);
     for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
         app->debugSpheres.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
         app->debugSpheres.PushSphere(uvSphere.vertexPositions[i] * 2.0f, 0.03f);
@@ -158,6 +170,13 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         .GenerateMipmaps();
     stbi_image_free(uvCheckerData);
 #endif
+
+    app->uboSamplerTiling =
+        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
+    app->uboDataSamplerTiling.albedoIdx = 0;
+    engine::gl::SamplerTiling albedoTiling{glm::vec2{3.3f}, glm::vec2{0.3f}};
+    app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
+    app->uboSamplerTiling.Fill(&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling), 0);
 
     app->outputColor =
         gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
@@ -221,6 +240,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         constexpr GLint TEXTURE_SLOT = 0;
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
+        GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_CONTEXT_BINDING, app->uboSamplerTiling.Id()));
+        programGuard.SetUbo(UBO_SAMPLER_TILING_SHADER_BINDING, UBO_SAMPLER_TILING_CONTEXT_BINDING);
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());

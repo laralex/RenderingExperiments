@@ -46,14 +46,16 @@ public:
     auto VaoDatalessTriangle [[nodiscard]] () const -> Vao const& { return datalessTriangleVao_; }
     auto VaoDatalessQuad [[nodiscard]] () const -> Vao const& { return datalessQuadVao_; }
     auto TextureStubColor [[nodiscard]] () const -> Texture const& { return stubColorTexture_; }
-    auto SamplerNearest [[nodiscard]] () const -> Sampler const& { return samplersCache_.GetSampler(samplerNearest_); }
-    auto SamplerLinear [[nodiscard]] () const -> Sampler const& { return samplersCache_.GetSampler(samplerLinear_); }
-    auto SamplerLinearRepeat [[nodiscard]] () const -> Sampler const& {
+    auto SamplerNearest [[nodiscard]] () const -> GpuSampler const& {
+        return samplersCache_.GetSampler(samplerNearest_);
+    }
+    auto SamplerLinear [[nodiscard]] () const -> GpuSampler const& { return samplersCache_.GetSampler(samplerLinear_); }
+    auto SamplerLinearRepeat [[nodiscard]] () const -> GpuSampler const& {
         return samplersCache_.GetSampler(samplerLinearRepeat_);
     }
 
-    auto CacheSampler [[nodiscard]] (std::string_view name, Sampler&& sampler) -> SamplersCache::CacheKey;
-    auto FindSampler [[nodiscard]] (SamplersCache::CacheKey sampler) const -> Sampler const&;
+    auto CacheSampler [[nodiscard]] (std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey;
+    auto FindSampler [[nodiscard]] (SamplersCache::CacheKey sampler) const -> GpuSampler const&;
 
 private:
     AxesRenderer axesRenderer_{};
