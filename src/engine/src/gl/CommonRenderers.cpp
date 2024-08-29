@@ -84,7 +84,13 @@ void CommonRenderers::Initialize() {
         GL_RGB, GL_UNSIGNED_BYTE, TEXTURE_DATA_STUB_COLOR, stubColorTexture_.Size());
 }
 
-void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) const {
+void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {
+    assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
+    axesRenderer_.Render(mvp, scale);
+    debugSpheres_.PushSphere(glm::scale(mvp, glm::vec3{scale * 0.1f}), color);
+}
+
+void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     axesRenderer_.Render(mvp, scale);
 }
@@ -114,19 +120,44 @@ void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
     lineRenderer_.Render(camera);
 }
 
-void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) const {
+void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) {
     assert(IsInitialized() && "Bad call to FlushLinesToGpu, CommonRenderers isn't initialized");
-    lineRenderer_.Fill(lines);
+    auto linesOffset = 0;
+    {
+        linesOffset += debugLines_.DataSize();
+        if (debugLines_.IsDataDirty()) {
+            lineRenderer_.Fill(debugLines_.Data(), debugLines_.DataSize(), 0);
+            debugLines_.Clear();
+        }
+    }
+    {
+        lineRenderer_.Fill(lines, std::size(lines), linesOffset);
+        linesOffset += std::size(lines);
+    }
 }
 
 void CommonRenderers::RenderSpheres(glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderSpheres, CommonRenderers isn't initialized");
-    debugSphereRenderer_.Render(camera);
+    debugSphereRenderer_.Render(glm::mat4{1.0f}, 0, debugSphereFirstExternal_);
+    debugSphereRenderer_.Render(camera, debugSphereFirstExternal_);
 }
 
 void CommonRenderers::FlushSpheresToGpu(std::vector<SphereRendererInput::Sphere> const& spheres) {
     assert(IsInitialized() && "Bad call to FlushSpheresToGpu, CommonRenderers isn't initialized");
-    debugSphereRenderer_.Fill(spheres);
+    auto spheresOffset = 0;
+    {
+        spheresOffset += debugSpheres_.DataSize();
+        if (debugSpheres_.IsDataDirty()) {
+            debugSphereRenderer_.Fill(debugSpheres_.Data(), debugSpheres_.DataSize(), 0);
+            debugSpheres_.Clear();
+        }
+    }
+    debugSphereFirstExternal_ = spheresOffset;
+    {
+        debugSphereRenderer_.Fill(spheres, std::size(spheres), spheresOffset);
+        spheresOffset += std::size(spheres);
+    }
+    debugSphereRenderer_.LimitInstances(spheresOffset);
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture) const {
@@ -149,6 +180,22 @@ auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) 
 
 auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuSampler const& {
     return samplersCache_.GetSampler(sampler);
+}
+
+void CommonRenderers::OnFrameEnd() {
+    if (debugSpheres_.IsDataDirty()) {
+        if (debugSpheres_.DataSize() > debugSphereFirstExternal_) {
+            XLOGW(
+                "Too many internal spheres, some will be ignored (actual={}, limit={})", debugSpheres_.DataSize(),
+                debugSphereFirstExternal_);
+        }
+        debugSphereRenderer_.Fill(debugSpheres_.Data(), debugSphereFirstExternal_, 0);
+        debugSpheres_.Clear();
+    }
+    // if (debugLines_.IsDataDirty()) {
+    //     lineRenderer_.Fill(debugLines_.Data());
+    debugLines_.Clear();
+    // }
 }
 
 } // namespace engine::gl

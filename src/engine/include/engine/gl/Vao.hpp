@@ -87,12 +87,13 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
-    auto MakeVertexAttribute
-        [[nodiscard]] (GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false)
-        -> VaoMutableCtx&&;
-    auto MakeIndexed [[nodiscard]] (GpuBuffer const& indexBuffer, GLenum dataType, GLint firstVertexId = 0)
-    -> VaoMutableCtx&&;
-    auto MakeUnindexed [[nodiscard]] (GLsizei numVertexIds, GLint firstVertexId = 0) -> VaoMutableCtx&&;
+    // NOTE: nodiscard is not required
+    auto
+    MakeVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false) const
+        -> VaoMutableCtx const&;
+    auto MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint firstVertexId = 0) const
+        -> VaoMutableCtx const&;
+    auto MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId = 0) const -> VaoMutableCtx const&;
 
 private:
     Vao& contextVao_;

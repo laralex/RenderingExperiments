@@ -8,6 +8,7 @@ namespace engine {
 struct BoxMesh;
 struct IcosphereMesh;
 struct UvSphereMesh;
+struct PlaneMesh;
 
 } // namespace engine
 
@@ -18,5 +19,7 @@ auto AllocateBoxMesh [[nodiscard]] (BoxMesh const& cpuMesh, GpuMesh::AttributesL
 auto AllocateIcosphereMesh [[nodiscard]] (IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
 
 auto AllocateUvSphereMesh [[nodiscard]] (UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
+
+auto AllocatePlaneMesh [[nodiscard]] (PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
 
 } // namespace engine::gl

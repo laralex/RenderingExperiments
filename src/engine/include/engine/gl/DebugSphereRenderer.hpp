@@ -24,8 +24,11 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] (size_t maxSpheres) -> DebugSphereRenderer;
-    void Fill(std::vector<SphereRendererInput::Sphere> const&);
-    void Render(glm::mat4 const& camera) const;
+    void Fill(std::vector<SphereRendererInput::Sphere> const&, int32_t numSpheres, int32_t numSpheresOffset);
+    void LimitInstances(int32_t numInstances);
+    void Render(
+        glm::mat4 const& camera, int32_t firstInstance = 0,
+        int32_t numInstances = std::numeric_limits<int32_t>::max()) const;
 
 private:
     Vao vao_{};
@@ -34,7 +37,7 @@ private:
     GpuBuffer instancesBuffer_{};
     GpuBuffer indexBuffer_{};
     GpuProgram program_{};
-    GLsizei numInstances_{0};
+    GLsizei lastInstance_{0};
 };
 
 } // namespace engine::gl

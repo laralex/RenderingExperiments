@@ -2,6 +2,7 @@
 #include "engine/BoxMesh.hpp"
 #include "engine/EngineLoop.hpp"
 #include "engine/IcosphereMesh.hpp"
+#include "engine/PlaneMesh.hpp"
 #include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
@@ -30,10 +31,10 @@
 #define ENABLE_RENDERDOC 0
 
 struct UboDataSamplerTiling {
-    GLint albedoIdx = 0;
-    GLint normalIdx = 0;
+    GLint albedoIdx   = 0;
+    GLint normalIdx   = 0;
     GLint specularIdx = 0;
-    GLint __pad0 = 0;
+    GLint __pad0      = 0;
     glm::vec4 uvScaleOffsets[256U];
 };
 
@@ -46,6 +47,7 @@ struct Application final {
     engine::gl::GpuMesh boxMesh{};
     engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuMesh sphereMesh2{};
+    engine::gl::GpuMesh planeMesh{};
     engine::gl::GpuProgram program{};
     engine::gl::Texture texture{};
     engine::gl::GpuBuffer uboSamplerTiling{};
@@ -75,7 +77,7 @@ constexpr GLint ATTRIB_UV_LOCATION                 = 1;
 constexpr GLint ATTRIB_NORMAL_LOCATION             = 2;
 constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
 constexpr GLint UNIFORM_MVP_LOCATION               = 10;
-constexpr GLint UBO_SAMPLER_TILING_SHADER_BINDING = 0;
+constexpr GLint UBO_SAMPLER_TILING_SHADER_BINDING  = 0;
 constexpr GLint UBO_SAMPLER_TILING_CONTEXT_BINDING = 0;
 constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
@@ -120,22 +122,6 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         .clockwiseTriangles = false,
     });
 
-    for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
-        auto ii = i % uvSphere.vertexData.size();
-        app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
-        app->debugLines.PushRay(uvSphere.vertexPositions[ii], uvSphere.vertexData[ii].normal * 0.2f);
-    }
-    app->debugLines.SetTransform(glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0.0f, 0.0f}));
-    for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
-        // app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
-        app->debugLines.PushRay(
-            uvSphere.vertexPositions[i],
-            glm::cross(uvSphere.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
-    }
-    for (int i = 0; i < uvSphere.vertexData.size(); ++i) {
-        app->debugSpheres.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
-        app->debugSpheres.PushSphere(uvSphere.vertexPositions[i] * 2.0f, 0.03f);
-    }
     app->sphereMesh = gl::AllocateUvSphereMesh(
         uvSphere,
         gl::GpuMesh::AttributesLayout{
@@ -155,26 +141,55 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    int x, y, numChannels;
+    auto planeMesh = PlaneMesh::Generate(glm::ivec2{6, 5});
+    app->planeMesh = gl::AllocatePlaneMesh(
+        planeMesh,
+        gl::GpuMesh::AttributesLayout{
+            .positionLocation = ATTRIB_POSITION_LOCATION,
+            .uvLocation       = ATTRIB_UV_LOCATION,
+            .normalLocation   = ATTRIB_NORMAL_LOCATION,
+        });
+
+    // for (int i = 0; i < planeMesh.vertexData.size(); ++i) {
+    //     auto ii = i % planeMesh.vertexData.size();
+    //     app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
+    //     app->debugLines.PushRay(planeMesh.vertexPositions[ii], planeMesh.vertexData[ii].normal * 0.2f);
+    // }
+    // app->debugLines.SetTransform(glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0.0f, 0.0f}));
+    // for (int i = 0; i < planeMesh.vertexData.size(); ++i) {
+    //     // app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
+    //     app->debugLines.PushRay(
+    //         planeMesh.vertexPositions[i],
+    //         glm::cross(planeMesh.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
+    // }
+    for (int i = 0; i < planeMesh.vertexData.size(); ++i) {
+        app->debugSpheres.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
+        app->debugSpheres.PushSphere(planeMesh.vertexPositions[i], 0.03f);
+    }
+
     // TODO: cwd relative path
-    auto uvCheckerData =
-        stbi_load("build/install/data/engine/textures/utils/uv_checker_512_512.jpg", &x, &y, &numChannels, 3);
-    if (stbi_failure_reason()) { XLOGE("STB IMAGE: {}", stbi_failure_reason()); }
+    std::vector<uint8_t> uvCheckerEncodedData;
+    // auto bytesRead = LoadBinaryFile("data/engine/textures/utils/uv_checker_512_512.jpg", [&](size_t filesize){
+    auto bytesRead = LoadBinaryFile("data/app/textures/shrek.jpeg", [&](size_t filesize) {
+        uvCheckerEncodedData.resize(filesize);
+        return std::pair{uvCheckerEncodedData.data(), filesize};
+    });
+    int x, y, numChannels;
+    auto uvCheckerData = stbi_load_from_memory(uvCheckerEncodedData.data(), bytesRead + 200, &x, &y, &numChannels, 4);
+    if (stbi_failure_reason()) { XLOGE("STB IMAGE ERROR: {}", stbi_failure_reason()); }
     XLOGE("Texture {} {} {}", x, y, numChannels);
 
-#if ENABLE_RENDERDOC == 0
     assert(uvCheckerData != nullptr);
-    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
+    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGBA8, "UV checker");
     (void)gl::TextureCtx{app->texture}
         .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
         .GenerateMipmaps();
     stbi_image_free(uvCheckerData);
-#endif
 
-    app->uboSamplerTiling =
-        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
-    app->uboDataSamplerTiling.albedoIdx = 0;
-    engine::gl::SamplerTiling albedoTiling{glm::vec2{3.3f}, glm::vec2{0.3f}};
+    app->uboSamplerTiling = gl::GpuBuffer::Allocate(
+        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
+    app->uboDataSamplerTiling.albedoIdx = 42;
+    engine::gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.1f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
     app->uboSamplerTiling.Fill(&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling), 0);
 
@@ -253,18 +268,19 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        gl::RenderVao(app->boxMesh.Vao());
+        // gl::RenderVao(app->boxMesh.Vao());
+        gl::RenderVao(app->planeMesh.Vao());
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
         model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
         programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
 
-        if (windowCtx.MouseInsideWindow()) {
-            gl::RenderVao(app->sphereMesh.Vao());
-        } else {
-            gl::RenderVao(app->sphereMesh2.Vao());
-        }
+        // if (windowCtx.MouseInsideWindow()) {
+        //     gl::RenderVao(app->sphereMesh.Vao());
+        // } else {
+        //     gl::RenderVao(app->sphereMesh2.Vao());
+        // }
 
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
     }
@@ -289,9 +305,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp     = camera * model;
 
-        app->commonRenderers.RenderAxes(mvp, 1.5f);
-        app->commonRenderers.RenderAxes(camera, 0.4f);
-        app->commonRenderers.RenderAxes(camera * lightModel, 0.5f);
+        app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
+        app->commonRenderers.RenderAxes(camera, 0.4f, ColorCode::BROWN);
+        app->commonRenderers.RenderAxes(camera * lightModel, 0.5f, ColorCode::YELLOW);
 
         gl::GpuMesh const& mesh = app->sphereMesh;
         GLCALL(glEnable(GL_CULL_FACE));
@@ -300,13 +316,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
-        app->flatRenderer.Render(gl::FlatRenderArgs{
-            .lightWorldPosition = lightPosition,
-            .primitive          = GL_TRIANGLES,
-            .vaoWithNormal      = mesh.Vao(),
-            .mvp                = mvp,
-            .invModel           = invModel,
-        });
+        // app->flatRenderer.Render(gl::FlatRenderArgs{
+        //     .lightWorldPosition = lightPosition,
+        //     .primitive          = GL_TRIANGLES,
+        //     .vaoWithNormal      = mesh.Vao(),
+        //     .mvp                = mvp,
+        //     .invModel           = invModel,
+        // });
     }
 
     {
@@ -321,18 +337,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     {
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
-
-        if (app->debugLines.IsDataDirty()) {
-            app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
-            app->debugLines.Clear();
-        }
-        app->commonRenderers.RenderLines(camera);
-
-        if (app->debugSpheres.IsDataDirty()) {
-            app->commonRenderers.FlushSpheresToGpu(app->debugSpheres.Data());
-            app->debugSpheres.Clear();
-        }
-        app->commonRenderers.RenderSpheres(camera);
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -369,6 +373,23 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
     }
 
+    {
+        auto debugGroupGuard = gl::DebugGroupCtx("Debug lines/spheres pass");
+        auto fbGuard         = gl::FramebufferCtx{0U, true};
+        if (app->debugLines.IsDataDirty()) {
+            app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
+            app->debugLines.Clear();
+        }
+        app->commonRenderers.RenderLines(camera);
+
+        if (app->debugSpheres.IsDataDirty()) {
+            app->commonRenderers.FlushSpheresToGpu(app->debugSpheres.Data());
+            app->debugSpheres.Clear();
+        }
+        app->commonRenderers.RenderSpheres(camera);
+    }
+
+    app->commonRenderers.OnFrameEnd();
     gl::GlTextureUnits::RestoreState();
 }
 

@@ -102,7 +102,9 @@ auto GpuSampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) && -> GpuSam
     return std::move(*this);
 }
 
-auto GpuSampler::WithWrap(GLenum wrapXYZ) && -> GpuSampler&& { return std::move(*this).WithWrap(wrapXYZ, wrapXYZ, wrapXYZ); }
+auto GpuSampler::WithWrap(GLenum wrapXYZ) && -> GpuSampler&& {
+    return std::move(*this).WithWrap(wrapXYZ, wrapXYZ, wrapXYZ);
+}
 
 auto GpuSampler::WithAnisotropicFilter(GLfloat maxAnisotropy) && -> GpuSampler&& {
     assert(GlExtensions::IsInitialized());

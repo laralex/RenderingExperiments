@@ -4,8 +4,8 @@
 
 namespace engine {
 
-struct BoxMesh final {
-#define Self BoxMesh
+struct PlaneMesh final {
+#define Self PlaneMesh
     explicit Self() noexcept     = default;
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
@@ -16,15 +16,15 @@ struct BoxMesh final {
 
     struct Vertex final {
         glm::vec2 uv{};
-        glm::vec3 normal{};
     };
 
-    static auto Generate [[nodiscard]] (glm::vec3 bakedScale = glm::vec3{1.0f}, bool clockwiseTriangles = false)
-    -> BoxMesh;
+    static auto Generate [[nodiscard]] (
+        glm::ivec2 numSegments = glm::ivec2{1, 1}, glm::vec2 uvScale = glm::vec2{1.0f}, bool clockwiseTriangles = false)
+    -> PlaneMesh;
 
     std::vector<glm::vec3> vertexPositions{};
     std::vector<Vertex> vertexData{};
-    std::vector<uint8_t> indices{};
+    std::vector<uint16_t> indices{};
     bool isClockwiseWinding = false;
 };
 

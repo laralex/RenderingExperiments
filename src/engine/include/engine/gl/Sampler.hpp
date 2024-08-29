@@ -60,7 +60,10 @@ public:
 
     auto UvScale [[nodiscard]] () const -> glm::vec3 { return uvScale_; }
     auto UvOffset [[nodiscard]] () const -> glm::vec3 { return uvOffset_; }
-    auto Packed [[nodiscard]] () const -> glm::vec4 { return glm::vec4{uvScale_.x, uvScale_.y, uvOffset_.x, uvOffset_.y}; }
+    auto Packed [[nodiscard]] () const -> glm::vec4 {
+        return glm::vec4{uvScale_.x, uvScale_.y, uvOffset_.x, uvOffset_.y};
+    }
+
 private:
     glm::vec3 uvScale_{0.0f};
     glm::vec3 uvOffset_{0.0f};

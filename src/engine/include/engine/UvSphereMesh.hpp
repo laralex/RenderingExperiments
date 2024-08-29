@@ -25,7 +25,7 @@ struct UvSphereMesh final {
         bool duplicateSeam      = true;
         bool clockwiseTriangles = false;
     };
-    static auto Generate(GenerationArgs args) -> UvSphereMesh;
+    static auto Generate [[nodiscard]] (GenerationArgs args) -> UvSphereMesh;
 
     std::vector<glm::vec3> vertexPositions{};
     std::vector<Vertex> vertexData{};

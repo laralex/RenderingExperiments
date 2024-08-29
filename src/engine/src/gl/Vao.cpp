@@ -43,7 +43,7 @@ auto Vao::Allocate(std::string_view name) -> Vao {
 }
 
 auto VaoMutableCtx::MakeVertexAttribute(
-    GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized) -> VaoMutableCtx&& {
+    GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized) const -> VaoMutableCtx const& {
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
 
@@ -64,11 +64,11 @@ auto VaoMutableCtx::MakeVertexAttribute(
         offset += info.offsetAdvance;
     }
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    return std::move(*this);
+    return *this;
 }
 
-auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset)
-    -> VaoMutableCtx&& {
+auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset) const
+    -> VaoMutableCtx const& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
     GLsizei bytesPerIndex = 1;
     switch (dataType) {
@@ -93,16 +93,16 @@ auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, G
     contextVao_.indexBufferDataType_ = dataType;
     contextVao_.numIndices_          = indexBuffer.SizeBytes() / bytesPerIndex;
     contextVao_.firstIndex_          = indexBufferOffset;
-    return std::move(*this);
+    return *this;
 }
 
-auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) -> VaoMutableCtx&& {
+auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) const -> VaoMutableCtx const& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0U));
     contextVao_.indexBuffer_         = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
     contextVao_.indexBufferDataType_ = GL_NONE;
     contextVao_.numIndices_          = numVertexIds;
     contextVao_.firstIndex_          = firstVertexId;
-    return std::move(*this);
+    return *this;
 }
 
 auto Vao::IsInitialized() const -> bool {

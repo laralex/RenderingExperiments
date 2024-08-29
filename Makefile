@@ -33,7 +33,7 @@ obj_engine_ = \
 	Assets.o BoxMesh.o \
 	EngineLoop.o IcosphereMesh.o \
 	LineRendererInput.o SphereRendererInput.o \
-	UvSphereMesh.o \
+	PlaneMesh.o UvSphereMesh.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
 	gl/BoxRenderer.o gl/ProceduralMeshes.o \
@@ -90,7 +90,7 @@ build_engine: ${BUILD_DIR}/engine/src/gl ${BUILD_DIR}/engine/libengine.a
 .PHONY: ${INSTALL_DIR}/run_app
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(vert\|frag\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
-	find data -name 'uv_checker_512_512.jpg' -exec cp --parents \{\} ${INSTALL_DIR} \;
+	find data -regex '.*\.\(jpg\|jpeg\|png\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	cp ${APP_EXE} $@
 
 ${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${BUILD_DIR}/engine/libengine.a

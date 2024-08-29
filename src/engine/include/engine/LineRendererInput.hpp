@@ -28,7 +28,8 @@ public:
         Vertex end;
     };
 
-    auto IsDataDirty [[nodiscard]] () -> bool { return isDirty_; }
+    auto IsDataDirty [[nodiscard]] () const -> bool { return isDirty_; }
+    auto DataSize [[nodiscard]] () const -> int32_t { return lines_.size(); }
     auto Data [[nodiscard]] () -> std::vector<Line> const& {
         isDirty_ = false;
         return lines_;
@@ -41,15 +42,10 @@ public:
     void Clear();
 
 private:
-    struct ColorCtx final {
-        glm::vec3 color;
-        int32_t colorIdx;
-    };
-
     size_t maxLines_{};
     std::vector<Line> lines_{};
-    std::stack<ColorCtx> colorContexts_{};
     glm::mat4 customTransform_{};
+    ColorCode currentColor_{ColorCode::WHITE};
     bool isDirty_{false};
     bool hasTransform_{false};
 };

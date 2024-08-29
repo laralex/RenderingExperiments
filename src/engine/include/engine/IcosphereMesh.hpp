@@ -24,7 +24,7 @@ struct IcosphereMesh final {
         bool duplicateSeam      = true;
         bool clockwiseTriangles = false;
     };
-    static auto Generate(GenerationArgs args) -> IcosphereMesh;
+    static auto Generate [[nodiscard]] (GenerationArgs args) -> IcosphereMesh;
 
     std::vector<glm::vec3> vertexPositions{};
     std::vector<Vertex> vertexData{};

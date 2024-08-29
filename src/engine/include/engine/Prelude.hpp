@@ -105,6 +105,8 @@ template <typename IntT> void InvertTriangleWinding(std::vector<IntT>& triangleI
     }
 }
 
+void InvertTriangleStripWinding(std::vector<uint16_t>& triangleIndices);
+
 void InvertTriangleNormals(void* vertexData, int32_t normalsByteOffset, int32_t vertexStride, int32_t numVertices);
 
 } // namespace engine

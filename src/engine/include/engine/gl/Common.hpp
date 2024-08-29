@@ -23,7 +23,7 @@ auto LinkProgramFromFiles [[nodiscard]] (
     std::string_view name = {}) -> std::optional<GpuProgram>;
 
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
-void RenderVaoInstanced(Vao const& vao, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);
+void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);
 
 // Wrapper for OpenGL object identifiers. Becomes 0 when moved away from
 // This helps to define move constructor/assignment of other high level wrappers as simply "=default"
@@ -82,7 +82,7 @@ struct ViewProjShaderArgs final {
     alignas(16) glm::mat4 invViewProjection;
 };
 
-auto TransformOrigin(glm::mat4& transform, bool isRowMajor = false) -> glm::vec3;
+auto TransformOrigin(glm::mat4 const& transform, bool isRowMajor = false) -> glm::vec3;
 void UndoAffineScale(glm::mat4& transform);
 auto UndoAffineScale(glm::mat4 const& transform) -> glm::mat4;
 

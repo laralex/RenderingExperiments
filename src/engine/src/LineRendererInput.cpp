@@ -10,11 +10,7 @@ LineRendererInput::LineRendererInput(size_t maxLines) noexcept
 
 void LineRendererInput::Clear() {
     lines_.clear();
-    std::stack<ColorCtx> emptyStack{{{
-        .color    = COLOR_PALETTE[static_cast<size_t>(ColorCode::WHITE)],
-        .colorIdx = static_cast<int32_t>(ColorCode::WHITE),
-    }}};
-    colorContexts_.swap(emptyStack);
+    currentColor_ = ColorCode::WHITE;
     isDirty_      = false;
     hasTransform_ = false;
 }
@@ -26,12 +22,7 @@ void LineRendererInput::SetTransform(glm::mat4 const& transform) {
 
 void LineRendererInput::SetTransform() { hasTransform_ = false; }
 
-void LineRendererInput::SetColor(ColorCode color) {
-    colorContexts_.push(ColorCtx{
-        .color    = COLOR_PALETTE[static_cast<size_t>(color)],
-        .colorIdx = static_cast<int32_t>(color),
-    });
-}
+void LineRendererInput::SetColor(ColorCode color) { currentColor_ = color; }
 
 void LineRendererInput::PushLine(glm::vec3 worldBegin, glm::vec3 worldEnd) {
     if (std::size(lines_) >= maxLines_) {
@@ -39,7 +30,7 @@ void LineRendererInput::PushLine(glm::vec3 worldBegin, glm::vec3 worldEnd) {
         // reallocates the lines_ vector
         XLOGW("LineRendererInput too many lines are added {}", std::size(lines_));
     }
-    int32_t colorIdx = colorContexts_.top().colorIdx;
+    int32_t colorIdx = static_cast<int32_t>(currentColor_);
     if (hasTransform_) {
         glm::vec4 homo = customTransform_ * glm::vec4{worldBegin, 1.0f};
         worldBegin     = glm::vec3{homo} / homo.w;

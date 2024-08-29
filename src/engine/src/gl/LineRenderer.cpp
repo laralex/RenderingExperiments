@@ -57,10 +57,15 @@ void LineRenderer::Render(glm::mat4 const& camera) const {
     RenderVao(vao_, GL_LINES);
 }
 
-void LineRenderer::Fill(std::vector<LineRendererInput::Line> const& lines) const {
-    using T       = typename std::decay<decltype(*lines.begin())>::type;
-    auto numBytes = std::min(attributeBuffer_.SizeBytes(), static_cast<int32_t>(std::size(lines) * sizeof(T)));
-    attributeBuffer_.Fill(lines.data(), numBytes);
+void LineRenderer::Fill(
+    std::vector<LineRendererInput::Line> const& lines, size_t numLines, size_t numLinesOffset) const {
+    using T               = typename std::decay<decltype(*lines.begin())>::type;
+    auto const byteOffset = numLinesOffset * sizeof(T);
+    auto const numBytes   = std::min(
+        attributeBuffer_.SizeBytes() - byteOffset, // buffer limit
+        numLines * sizeof(T)                       // argument limit
+    );
+    attributeBuffer_.Fill(lines.data(), numBytes, byteOffset);
 }
 
 } // namespace engine::gl

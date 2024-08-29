@@ -29,14 +29,16 @@ public:
 
     void Initialize();
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
+    void OnFrameEnd();
 
-    void RenderAxes(glm::mat4 const& mvp, float scale = 1.0f) const;
+    void RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color);
+    void RenderAxes(glm::mat4 const& mvp, float scale = 1.0f);
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderBillboard(BillboardRenderArgs const& args) const;
     void RenderLines(glm::mat4 const& camera) const;
-    void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&) const;
+    void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&);
     void RenderSpheres(glm::mat4 const& camera) const;
     void FlushSpheresToGpu(std::vector<SphereRendererInput::Sphere> const&);
 
@@ -62,8 +64,14 @@ private:
     BoxRenderer boxRenderer_{};
     FrustumRenderer frustumRenderer_{};
     BillboardRenderer billboardRenderer_{};
+
     LineRenderer lineRenderer_{};
+    LineRendererInput debugLines_{};
+
     DebugSphereRenderer debugSphereRenderer_{};
+    int32_t debugSphereFirstExternal_{0};
+    SphereRendererInput debugSpheres_{};
+
     Vao datalessTriangleVao_{};
     Vao datalessQuadVao_{};
     GpuProgram blitProgram_{};
