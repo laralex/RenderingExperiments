@@ -13,7 +13,7 @@ struct Light {
     highp vec4 towardsLight; // only xyz used
 };
 
-layout(std140, binding = UBO_BINDING) uniform Params {
+layout(std140, binding = UBO_BINDING) uniform Ubo {
     vec4 u_AmbientColor;
     Light u_Light;
 };

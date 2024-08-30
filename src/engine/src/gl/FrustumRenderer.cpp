@@ -8,8 +8,7 @@
 namespace {
 
 constexpr GLint UNIFORM_MVP_LOCATION   = 0;
-constexpr GLint UBO_CONTEXT_BINDING    = 0; // global for GL
-constexpr GLint UBO_SHADER_BINDING     = 0; // local for shader
+constexpr GLint UBO_BINDING    = 0; // global for GL
 constexpr GLint UNIFORM_COLOR_LOCATION = 100;
 
 constexpr float THICKNESS = 0.01f;
@@ -170,7 +169,7 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
         {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UBO_FRUSTUM", .value = UBO_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
+        {.name = "UBO_FRUSTUM", .value = UBO_BINDING, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
@@ -179,6 +178,7 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
         "FrustumRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
+    renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     renderer.ubo_ =
         gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboData), "FrustumRenderer UBO");
@@ -194,11 +194,11 @@ void FrustumRenderer::Render(glm::mat4 const& originMvp, Frustum const& frustum,
     };
 
     ubo_.Fill(&data, sizeof(data));
-    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));
-    programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
+    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
+    // programGuard.SetUbo(uboLocation_, UBO_BINDING);
 
-    programGuard.SetUniformArray<4>(UNIFORM_COLOR_LOCATION, glm::value_ptr(color), 1);
-    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(originMvp));
+    programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));
+    programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(originMvp));
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));

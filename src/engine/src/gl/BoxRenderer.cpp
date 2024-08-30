@@ -158,8 +158,8 @@ auto BoxRenderer::Allocate() -> BoxRenderer {
 
 void BoxRenderer::Render(glm::mat4 const& centerMvp, glm::vec4 color) const {
     auto programGuard = gl::UniformCtx(program_);
-    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
-    programGuard.SetUniformArray<4>(UNIFORM_COLOR_LOCATION, glm::value_ptr(color), 1);
+    programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
+    programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));
 
     GLCALL(glDisable(GL_CULL_FACE));
     GLCALL(glEnable(GL_DEPTH_TEST));

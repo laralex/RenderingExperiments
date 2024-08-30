@@ -21,7 +21,7 @@ auto SamplersCache::GetSampler(CacheKey id) const -> GpuSampler const& {
     return idToSampler_[id];
 }
 
-auto SamplersCache::Cache(std::string_view name, GpuSampler&& sampler) -> CacheKey {
+auto SamplersCache::Store(std::string_view name, GpuSampler&& sampler) -> CacheKey {
     idToSampler_.emplace_back(std::move(sampler));
     size_t id = std::size(idToSampler_) - 1;
     nameToId_.emplace(name, id);

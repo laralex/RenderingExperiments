@@ -156,7 +156,7 @@ auto IcosphereMesh::Generate(GenerationArgs args) -> IcosphereMesh {
                 auto& idxRef = mesh.indices[t + i];
                 if (mesh.vertexData[idxRef].uv.x < 0.25f) { idxRef = findOrInsertVertex(idxRef); }
             }
-            XLOG("SEAM {} {} {}", i0, i1, i2);
+            // XLOG("SEAM {} {} {}", i0, i1, i2);
         }
     };
 

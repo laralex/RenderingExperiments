@@ -45,6 +45,7 @@ private:
     GpuBuffer indexBuffer_{};
     GpuProgram program_{};
     GpuBuffer ubo_{};
+    GLint uboLocation_{-1};
 };
 
 } // namespace engine::gl

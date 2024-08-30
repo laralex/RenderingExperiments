@@ -1,12 +1,9 @@
-* render utils (billboard, planes)
+* render utils (billboard)
 * fix stb uses paths relative to CWD
-* ubo binding indices greater than 0 crash
 * inverted Y axis
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * camera
 * incremental compilation
-* uniforms functions are ugly
-
 
 world pos, world orient:
 offset world position = simple

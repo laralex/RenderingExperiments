@@ -17,8 +17,7 @@ constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
 constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
 
 constexpr GLint UNIFORM_MVP_LOCATION = 0;
-constexpr GLint UBO_CONTEXT_BINDING  = 0; // global for GL
-constexpr GLint UBO_SHADER_BINDING   = 0; // local for shader
+constexpr GLint UBO_BINDING  = 5; // global for GL
 
 } // namespace
 
@@ -32,7 +31,7 @@ auto FlatRenderer::Allocate() -> FlatRenderer {
         {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UBO_BINDING", .value = UBO_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
+        {.name = "UBO_BINDING", .value = UBO_BINDING, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
@@ -43,6 +42,7 @@ auto FlatRenderer::Allocate() -> FlatRenderer {
 
     renderer.ubo_ =
         gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboData), "FlatRenderer UBO");
+    renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     return renderer;
 }
@@ -60,15 +60,15 @@ void FlatRenderer::Render(FlatRenderArgs const& args) const {
     };
 
     ubo_.Fill(&data, sizeof(data));
-    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));
+    GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
 
     auto programGuard = gl::UniformCtx(program_);
-    programGuard.SetUbo(UBO_SHADER_BINDING, UBO_CONTEXT_BINDING);
+    // programGuard.SetUbo(uboLocation_, UBO_BINDING);
 
     // auto normalModelView = UndoAffineScale(args.view * args.model);
     // auto viewProj = args.proj * args.view;
 
-    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(args.mvp));
+    programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(args.mvp));
 
     RenderVao(args.vaoWithNormal, args.primitive);
 }

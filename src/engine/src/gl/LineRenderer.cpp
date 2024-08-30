@@ -53,7 +53,7 @@ auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
 
 void LineRenderer::Render(glm::mat4 const& camera) const {
     auto programGuard = UniformCtx{program_};
-    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
+    programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVao(vao_, GL_LINES);
 }
 

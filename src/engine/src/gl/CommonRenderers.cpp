@@ -56,24 +56,25 @@ void CommonRenderers::Initialize() {
     isInitialized_ = true;
     blitProgram_   = AllocateBlitter();
 
-    samplerNearest_ = samplersCache_.Cache(
+    samplerNearest_ = samplersCache_.Store(
         "clamp/nearest",
         gl::GpuSampler::Allocate("Sampler/Nearset")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
             .WithWrap(GL_CLAMP_TO_EDGE));
-    samplerLinear_ = samplersCache_.Cache(
+    samplerLinear_ = samplersCache_.Store(
         "clamp/linear",
         gl::GpuSampler::Allocate("Sampler/Linear")
             .WithLinearMagnify(true)
             .WithLinearMinify(true)
             .WithWrap(GL_CLAMP_TO_EDGE));
-    samplerLinearRepeat_ = samplersCache_.Cache(
+    samplerLinearRepeat_ = samplersCache_.Store(
         "repeat/linear",
         gl::GpuSampler::Allocate("Sampler/LinearRepeat")
             .WithLinearMagnify(true)
             .WithLinearMinify(true)
             .WithWrap(GL_REPEAT));
+
     stubColorTexture_ = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
     constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
         255,
@@ -175,7 +176,7 @@ void CommonRenderers::Blit2D(GLuint srcTexture) const {
 }
 
 auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey {
-    return samplersCache_.Cache(name, std::move(sampler));
+    return samplersCache_.Store(name, std::move(sampler));
 }
 
 auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuSampler const& {

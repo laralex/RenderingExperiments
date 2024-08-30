@@ -8,6 +8,10 @@ GLint GlCapabilities::numExtensions   = 0xDEAD;
 GLint GlCapabilities::majorVersion    = 0xDEAD;
 GLint GlCapabilities::minorVersion    = 0xDEAD;
 GLint GlCapabilities::maxUboBindings  = 0xDEAD;
+GLint GlCapabilities::maxUboBlocksVertex  = 0xDEAD;
+GLint GlCapabilities::maxUboBlocksFragment  = 0xDEAD;
+GLint GlCapabilities::maxUboBlocksGeometry  = 0xDEAD;
+GLint GlCapabilities::uboOffsetAlignment  = 0xDEAD;
 
 void GlCapabilities::Initialize() {
     if (isInitialized) { return; }
@@ -22,6 +26,10 @@ void GlCapabilities::Initialize() {
     getCapability(GL_MAJOR_VERSION, "GL_MAJOR_VERSION", majorVersion);
     getCapability(GL_MINOR_VERSION, "GL_MINOR_VERSION", minorVersion);
     getCapability(GL_MAX_UNIFORM_BUFFER_BINDINGS, "GL_MAX_UNIFORM_BUFFER_BINDINGS", maxUboBindings);
+    getCapability(GL_MAX_VERTEX_UNIFORM_BLOCKS, "GL_MAX_VERTEX_UNIFORM_BLOCKS", maxUboBlocksVertex);
+    getCapability(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, "GL_MAX_FRAGMENT_UNIFORM_BLOCKS", maxUboBlocksFragment);
+    getCapability(GL_MAX_GEOMETRY_UNIFORM_BLOCKS, "GL_MAX_GEOMETRY_UNIFORM_BLOCKS", maxUboBlocksGeometry);
+    getCapability(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, "GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT", uboOffsetAlignment);
 
     isInitialized = true;
 }

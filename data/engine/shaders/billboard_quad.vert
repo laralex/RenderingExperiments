@@ -11,7 +11,7 @@ struct Screen {
     float aspectRatio;
 };
 
-layout(std140, binding = UBO_BINDING) uniform Params {
+layout(std140, binding = UBO_BINDING) uniform Ubo {
     mat4 u_PivotMVP;
     vec4 u_PivotPositionOffset; // vec3 position, last float aspect
     vec2 u_LocalSize;

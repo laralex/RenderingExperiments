@@ -26,8 +26,9 @@ public:
     void Render(FlatRenderArgs const&) const;
 
 private:
-    GpuProgram program_;
-    GpuBuffer ubo_;
+    GpuProgram program_{};
+    GpuBuffer ubo_{};
+    GLint uboLocation_{-1};
 };
 
 struct FlatRenderArgs {

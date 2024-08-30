@@ -23,12 +23,12 @@ public:
     float prevFrametimeMs{0.0f};
     float prevFPS{0.0f};
 
-    void Update(int64_t currentTimeNs, RenderCtx& destination) const;
+    void Update(int64_t currentTimeNs, int64_t frameIdx, RenderCtx& destination) const;
 };
 
 // TODO: remove inline, move to cpp
-inline void RenderCtx::Update(int64_t currentTimeNs, RenderCtx& destination) const {
-    ++destination.frameIdx;
+inline void RenderCtx::Update(int64_t currentTimeNs, int64_t frameIdx, RenderCtx& destination) const {
+    destination.frameIdx = frameIdx;
     destination.timeNs          = currentTimeNs;
     destination.timeSec         = static_cast<float>(currentTimeNs / 1000) * 0.000001;
     destination.prevTimeNs      = this->timeNs;

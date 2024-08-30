@@ -160,7 +160,7 @@ void AxesRenderer::Render(glm::mat4 const& mvp, float scale) const {
     auto const& program = isCustom ? customizedProgram_ : defaultProgram_;
 
     auto programGuard = gl::UniformCtx{program};
-    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
+    programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
     if (isCustom) { programGuard.SetUniformValue3(UNIFORM_SCALE_LOCATION, scale, scale, scale); }
 
     GLCALL(glDisable(GL_CULL_FACE));

@@ -9,7 +9,7 @@ out vec3 v_Color;
 
 layout(location = UNIFORM_MVP) uniform mat4 u_MVP;
 
-layout(std140, binding = UBO_FRUSTUM) uniform FrustumParams {
+layout(std140, binding = UBO_FRUSTUM) uniform Ubo {
     vec4 u_LeftRightBottomTop;
     vec4 u_NearFarThickness;
 };

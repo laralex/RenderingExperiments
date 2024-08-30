@@ -7,8 +7,12 @@
 
 namespace engine::gl {
 
-auto LinkProgram(std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name)
+auto LinkProgram(std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name, bool logCode)
     -> std::optional<GpuProgram> {
+    if (logCode) {
+        XLOG("Compiling program [{}] type=vertex\n{}", name, vertexShaderCode);
+        XLOG("Compiling name [{}] type=fragment\n{}", name, fragmentShaderCode);
+    }
     GLuint vertexShader   = CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
 
@@ -23,10 +27,10 @@ auto LinkProgram(std::string_view vertexShaderCode, std::string_view fragmentSha
 
 auto LinkProgramFromFiles(
     std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<ShaderDefine const> defines,
-    std::string_view name) -> std::optional<GpuProgram> {
+    std::string_view name, bool logCode) -> std::optional<GpuProgram> {
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, defines);
     std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, defines);
-    return LinkProgram(vertexShaderCode, fragmentShaderCode, name);
+    return LinkProgram(vertexShaderCode, fragmentShaderCode, name, logCode);
 }
 
 void RenderVao(Vao const& vao, GLenum primitive) {

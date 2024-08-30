@@ -34,6 +34,7 @@ private:
     GpuProgram customVaoProgram_{};
     GpuProgram quadVaoProgram_{};
     GpuBuffer ubo_{};
+    GLint uboLocation_{-1};
 
     static GLint constexpr DEFAULT_UNIFORM_TEXTURE_LOCATION = 0;
 };

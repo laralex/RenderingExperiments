@@ -117,7 +117,7 @@ void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32
         return;
     }
     auto programGuard = UniformCtx{program_};
-    programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
+    programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVaoInstanced(vao_, firstInstance, std::min(lastInstance_ - firstInstance, numInstances));
 }
 

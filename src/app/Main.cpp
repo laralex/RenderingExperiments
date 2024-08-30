@@ -76,9 +76,9 @@ constexpr GLint ATTRIB_POSITION_LOCATION           = 0;
 constexpr GLint ATTRIB_UV_LOCATION                 = 1;
 constexpr GLint ATTRIB_NORMAL_LOCATION             = 2;
 constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
+constexpr GLint UNIFORM_TEXTURE_BINDING           = 0;
 constexpr GLint UNIFORM_MVP_LOCATION               = 10;
-constexpr GLint UBO_SAMPLER_TILING_SHADER_BINDING  = 0;
-constexpr GLint UBO_SAMPLER_TILING_CONTEXT_BINDING = 0;
+constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
 constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
 static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
@@ -91,14 +91,15 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         gl::GpuSampler::Allocate("Sampler/NearestRepeat")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
-            .WithWrap(GL_MIRRORED_REPEAT));
+            .WithWrap(GL_REPEAT));
 
     gl::ShaderDefine const defines[] = {
         {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
         {.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UBO_SAMPLER_TILING", .value = UBO_SAMPLER_TILING_SHADER_BINDING, .type = gl::ShaderDefine::INT32},
+        {.name = "UNIFORM_TEXTURE_BINDING", .value = UNIFORM_TEXTURE_BINDING, .type = gl::ShaderDefine::INT32},
+        {.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = gl::ShaderDefine::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
@@ -176,14 +177,17 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     // TODO: cwd relative path
     std::vector<uint8_t> uvCheckerEncodedData;
-    auto bytesRead = LoadBinaryFile("data/engine/textures/utils/uv_checker_512_512.jpg", [&](size_t filesize){
-    // auto bytesRead = LoadBinaryFile("data/app/textures/shrek.jpeg", [&](size_t filesize) {
+    // auto bytesRead = LoadBinaryFile("data/engine/textures/utils/uv_checker_512_512.jpg", [&](size_t filesize){
+    auto bytesRead = LoadBinaryFile("data/app/textures/shrek.jpeg", [&](size_t filesize) {
         uvCheckerEncodedData.resize(filesize);
         return std::pair{uvCheckerEncodedData.data(), filesize};
     });
     int x, y, numChannels;
+    if (bool ok = stbi_info_from_memory(uvCheckerEncodedData.data(), bytesRead, &x, &y, &numChannels); !ok) {
+        XLOGE("STB UNSUPPORTED IMAGE FORMAT: {}", stbi_failure_reason());
+    }
     auto uvCheckerData = stbi_load_from_memory(uvCheckerEncodedData.data(), bytesRead, &x, &y, &numChannels, 3);
-    if (stbi_failure_reason()) { XLOGE("STB IMAGE ERROR: {}", stbi_failure_reason()); }
+    if (stbi_failure_reason()) { XLOGE("STB IMAGE LOAD ERROR: {}", stbi_failure_reason()); }
     XLOGE("Texture {} {} {}", x, y, numChannels);
 
     assert(uvCheckerData != nullptr);
@@ -240,8 +244,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     glm::mat4 camera = proj * view;
 
-    if (ctx.frameIdx % 100 == 0) { XLOG("camera pos {} {} {}", cameraPosition.x, cameraPosition.y, cameraPosition.z); }
-
     {
         // textured box
 
@@ -261,9 +263,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 mvp                = camera * model;
         constexpr GLint TEXTURE_SLOT = 0;
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
-        programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
-        GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_CONTEXT_BINDING, app->uboSamplerTiling.Id()));
-        programGuard.SetUbo(UBO_SAMPLER_TILING_SHADER_BINDING, UBO_SAMPLER_TILING_CONTEXT_BINDING);
+        programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
+        GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
         gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
@@ -281,7 +282,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
         model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
-        programGuard.SetUniformMatrix4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
+        programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
 
         // if (windowCtx.MouseInsideWindow()) {
         //     gl::RenderVao(app->sphereMesh.Vao());
@@ -305,14 +306,14 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 model = glm::mat4(1.0f);
         model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
         // model = glm::rotate(model, rotationSpeed * 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        float modelScale = 0.5f;
+        float modelScale = 1.0f;
         model            = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
         model            = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
         glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp     = camera * model;
 
-        app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
+        // app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
         app->commonRenderers.RenderAxes(camera, 0.4f, ColorCode::BROWN);
         app->commonRenderers.RenderAxes(camera * lightModel, 0.5f, ColorCode::YELLOW);
 
@@ -323,13 +324,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
-        // app->flatRenderer.Render(gl::FlatRenderArgs{
-        //     .lightWorldPosition = lightPosition,
-        //     .primitive          = GL_TRIANGLES,
-        //     .vaoWithNormal      = mesh.Vao(),
-        //     .mvp                = mvp,
-        //     .invModel           = invModel,
-        // });
+        app->flatRenderer.Render(gl::FlatRenderArgs{
+            .lightWorldPosition = lightPosition,
+            .primitive          = GL_TRIANGLES,
+            .vaoWithNormal      = mesh.Vao(),
+            .mvp                = mvp,
+            .invModel           = invModel,
+        });
     }
 
     {

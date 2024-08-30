@@ -125,7 +125,7 @@ auto UpdateEngineLoop [[nodiscard]] (std::vector<RenderCtx>& frameHistory, size_
 
     RenderCtx& renderCtx           = frameHistory[frameHistoryIdx];
     RenderCtx const& prevRenderCtx = frameHistory[prevFrameHistoryIdx];
-    prevRenderCtx.Update(glfwGetTimerValue(), renderCtx);
+    prevRenderCtx.Update(glfwGetTimerValue(), frameIdx, renderCtx);
 
     if (frameHistoryIdx == 0) { XLOG("{} FPS, {} ms", renderCtx.prevFPS, renderCtx.prevFrametimeMs); }
     return renderCtx;

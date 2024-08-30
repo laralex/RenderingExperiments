@@ -18,10 +18,12 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
+    static auto GetUboLocation [[nodiscard]](GpuProgram const& program, char const* programUboName) -> GLint;
+    auto GetUboLocation [[nodiscard]](char const* programUboName) const -> GLint;
     void SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const;
-    void SetUniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
-    void SetUniformMatrix3(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
-    void SetUniformMatrix4(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    void SetUniformMatrix2x2(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    void SetUniformMatrix3x3(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    void SetUniformMatrix4x4(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
     void SetUniformTexture(GLint location, GLint textureSlot);
 
     template <typename T> void SetUniformValue1(GLint location, T const value) {
@@ -38,6 +40,11 @@ public:
         }
     }
 
+    template <typename T>
+    void SetUniformValue2(GLint location, T const* values2) {
+        SetUniformValue2(location, values2[0], values2[1]);
+    }
+
     template <typename T> void SetUniformValue2(GLint location, T const value0, T const value1) {
         if constexpr (std::is_same_v<T, GLint>) {
             GLCALL(glUniform2i(location, value0, value1));
@@ -50,6 +57,11 @@ public:
         } else {
             std::terminate();
         }
+    }
+
+    template <typename T>
+    void SetUniformValue3(GLint location, T const* values3) {
+        SetUniformValue3(location, values3[0], values3[1], values3[2]);
     }
 
     template <typename T> void SetUniformValue3(GLint location, T const value0, T const value1, T const value2) {
@@ -67,6 +79,11 @@ public:
     }
 
     template <typename T>
+    void SetUniformValue4(GLint location, T const* values4) {
+        SetUniformValue4(location, values4[0], values4[1], values4[2], values4[3]);
+    }
+
+    template <typename T>
     void SetUniformValue4(GLint location, T const value0, T const value1, T const value2, T const value3) {
         if constexpr (std::is_same_v<T, GLint>) {
             GLCALL(glUniform4i(location, value0, value1, value2, value3));
@@ -81,53 +98,52 @@ public:
         }
     }
 
-    template <size_t NUM_COMPONENTS = 1> void SetUniformArray(GLint location, GLint const* values, GLsizei numValues) {
-        PFNGLUNIFORM1IVPROC setter = nullptr;
-        if constexpr (NUM_COMPONENTS == 1) {
-            setter = glUniform1iv;
-        } else if constexpr (NUM_COMPONENTS == 2) {
-            setter = glUniform2iv;
-        } else if constexpr (NUM_COMPONENTS == 3) {
-            setter = glUniform3iv;
-        } else if constexpr (NUM_COMPONENTS == 4) {
-            setter = glUniform4iv;
+    template <typename T> void SetUniformArrayOf1(GLint location, T const* values, GLsizei numValues) {
+        if constexpr (std::is_same_v<T, GLint>) {
+            GLCALL(glUniform1iv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLuint>) {
+            GLCALL(glUniform1uiv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLfloat>) {
+            GLCALL(glUniform1fv(location, numValues, values));
         } else {
             std::terminate();
         }
-        GLCALL(setter(location, numValues, values));
     }
 
-    template <size_t NUM_COMPONENTS = 1> void SetUniformArray(GLint location, GLuint const* values, GLsizei numValues) {
-        PFNGLUNIFORM1UIVPROC setter = nullptr;
-        if constexpr (NUM_COMPONENTS == 1) {
-            setter = glUniform1uiv;
-        } else if constexpr (NUM_COMPONENTS == 2) {
-            setter = glUniform2uiv;
-        } else if constexpr (NUM_COMPONENTS == 3) {
-            setter = glUniform3uiv;
-        } else if constexpr (NUM_COMPONENTS == 4) {
-            setter = glUniform4uiv;
+    template <typename T> void SetUniformArrayOf2(GLint location, T const* values, GLsizei numValues) {
+        if constexpr (std::is_same_v<T, GLint>) {
+            GLCALL(glUniform2iv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLuint>) {
+            GLCALL(glUniform2uiv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLfloat>) {
+            GLCALL(glUniform2fv(location, numValues, values));
         } else {
             std::terminate();
         }
-        GLCALL(setter(location, numValues, values));
     }
 
-    template <size_t NUM_COMPONENTS = 1>
-    void SetUniformArray(GLint location, GLfloat const* values, GLsizei numValues) {
-        PFNGLUNIFORM1FVPROC setter = nullptr;
-        if constexpr (NUM_COMPONENTS == 1) {
-            setter = glUniform1fv;
-        } else if constexpr (NUM_COMPONENTS == 2) {
-            setter = glUniform2fv;
-        } else if constexpr (NUM_COMPONENTS == 3) {
-            setter = glUniform3fv;
-        } else if constexpr (NUM_COMPONENTS == 4) {
-            setter = glUniform4fv;
+    template <typename T> void SetUniformArrayOf3(GLint location, T const* values, GLsizei numValues) {
+        if constexpr (std::is_same_v<T, GLint>) {
+            GLCALL(glUniform3iv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLuint>) {
+            GLCALL(glUniform3uiv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLfloat>) {
+            GLCALL(glUniform3fv(location, numValues, values));
         } else {
             std::terminate();
         }
-        GLCALL(setter(location, numValues, values));
+    }
+
+    template <typename T> void SetUniformArrayOf4(GLint location, T const* values, GLsizei numValues) {
+        if constexpr (std::is_same_v<T, GLint>) {
+            GLCALL(glUniform4iv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLuint>) {
+            GLCALL(glUniform4uiv(location, numValues, values));
+        } else if constexpr (std::is_same_v<T, GLfloat>) {
+            GLCALL(glUniform4fv(location, numValues, values));
+        } else {
+            std::terminate();
+        }
     }
 
 private:

@@ -21,19 +21,31 @@ UniformCtx::~UniformCtx() noexcept {
     hasInstances_ = false;
 }
 
-void UniformCtx::SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const {
-    GLCALL(glUniformBlockBinding(contextProgram_, programBinding, bufferBindingIdx));
+auto UniformCtx::GetUboLocation(GpuProgram const& program, char const* programUboName) -> GLint {
+    GLint blockIndex;
+    GLCALL(blockIndex = glGetUniformBlockIndex(program.Id(), programUboName));
+    return blockIndex;
 }
 
-void UniformCtx::SetUniformMatrix2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+auto UniformCtx::GetUboLocation(char const* programUboName) const -> GLint {
+    GLint blockIndex;
+    GLCALL(blockIndex = glGetUniformBlockIndex(contextProgram_, programUboName));
+    return blockIndex;
+}
+
+void UniformCtx::SetUbo(GLuint programLocation, GLuint bufferBinding) const {
+    GLCALL(glUniformBlockBinding(contextProgram_, programLocation, bufferBinding));
+}
+
+void UniformCtx::SetUniformMatrix2x2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix2fv(location, numMatrices, transpose, values));
 }
 
-void UniformCtx::SetUniformMatrix3(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+void UniformCtx::SetUniformMatrix3x3(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix3fv(location, numMatrices, transpose, values));
 }
 
-void UniformCtx::SetUniformMatrix4(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+void UniformCtx::SetUniformMatrix4x4(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix4fv(location, numMatrices, transpose, values));
 }
 

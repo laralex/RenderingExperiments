@@ -25,7 +25,7 @@ public:
 
     auto GetSampler [[nodiscard]] (CacheKey id) const -> GpuSampler const&;
 
-    auto Cache [[nodiscard]] (std::string_view name, GpuSampler&& sampler) -> CacheKey;
+    auto Store [[nodiscard]] (std::string_view name, GpuSampler&& sampler) -> CacheKey;
 
     void Clear();
 

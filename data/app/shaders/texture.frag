@@ -1,11 +1,10 @@
-#version 330 core
-#extension GL_ARB_explicit_uniform_location : require
-#extension GL_ARB_shading_language_420pack : enable
+#version 430 core
+#extension GL_ARB_separate_shader_objects : enable
 
 in vec2 v_Uv;
 layout(location=0) out vec4 out_FragColor;
 
-highp uniform sampler2D u_AlbedoTexture;
+layout(location = UNIFORM_TEXTURE_LOCATION, binding = 0) highp uniform sampler2D u_AlbedoTexture;
 
 struct TextureIndices {
     int albedo;
@@ -13,7 +12,7 @@ struct TextureIndices {
     int specular;
 };
 
-layout(std140, binding = UBO_SAMPLER_TILING) uniform __SamplerTilingUBO {
+layout(binding = UBO_SAMPLER_TILING_BINDING, std140) uniform SamplerTilingUBO {
     TextureIndices u_TextureIndices;
     vec4 u_UvScaleOffset[256U];
 };

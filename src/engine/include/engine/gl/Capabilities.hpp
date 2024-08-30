@@ -23,6 +23,10 @@ public:
     static GLint majorVersion;
     static GLint minorVersion;
     static GLint maxUboBindings;
+    static GLint maxUboBlocksVertex;
+    static GLint maxUboBlocksFragment;
+    static GLint maxUboBlocksGeometry;
+    static GLint uboOffsetAlignment;
 
 private:
     static bool isInitialized;
