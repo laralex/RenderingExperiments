@@ -81,8 +81,12 @@ void CommonRenderers::Initialize() {
         42,
         255,
     };
-    (void)gl::TextureCtx{stubColorTexture_}.Fill2D(
-        GL_RGB, GL_UNSIGNED_BYTE, TEXTURE_DATA_STUB_COLOR, stubColorTexture_.Size());
+    (void)gl::TextureCtx{stubColorTexture_}.Fill2D({
+        .dataFormat = GL_RGB,
+        .dataType = GL_UNSIGNED_BYTE,
+        .data = TEXTURE_DATA_STUB_COLOR,
+        .size = stubColorTexture_.Size()
+    });
 }
 
 void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {

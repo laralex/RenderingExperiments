@@ -23,7 +23,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -61,6 +60,7 @@ struct Application final {
     engine::gl::SamplersCache::CacheKey samplerNearestWrap{};
     engine::LineRendererInput debugLines{};
     engine::PointRendererInput debugPoints{};
+    engine::ImageLoader imageLoader{};
 
     bool isInitialized = false;
 };
@@ -175,32 +175,19 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         app->debugPoints.PushPoint(planeMesh.vertexPositions[vi], 0.03f);
     }
 
-    // TODO: cwd relative path
-    std::vector<uint8_t> uvCheckerEncodedData;
-    // auto bytesRead = LoadBinaryFile("data/engine/textures/utils/uv_checker_512_512.jpg", [&](size_t filesize){
-    auto bytesRead = LoadBinaryFile("data/app/textures/shrek.jpeg", [&](size_t filesize) {
-        uvCheckerEncodedData.resize(filesize);
-        return std::pair{uvCheckerEncodedData.data(), filesize};
+    auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
+        .loader = app->imageLoader,
+        .filepath = "data/app/textures/shrek.jpeg",
+        .format = GL_RGB8,
+        .numChannels = 3,
     });
-    int x, y, numChannels;
-    if (bool ok = stbi_info_from_memory(uvCheckerEncodedData.data(), bytesRead, &x, &y, &numChannels); !ok) {
-        XLOGE("STB UNSUPPORTED IMAGE FORMAT: {}", stbi_failure_reason());
-    }
-    auto uvCheckerData = stbi_load_from_memory(uvCheckerEncodedData.data(), bytesRead, &x, &y, &numChannels, 3);
-    if (stbi_failure_reason()) { XLOGE("STB IMAGE LOAD ERROR: {}", stbi_failure_reason()); }
-    XLOGE("Texture {} {} {}", x, y, numChannels);
+    assert(maybeTexture);
 
-    assert(uvCheckerData != nullptr);
-    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
-    (void)gl::TextureCtx{app->texture}
-        .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
-        .GenerateMipmaps();
-    stbi_image_free(uvCheckerData);
-
+    app->texture = std::move(*maybeTexture);
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
         GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
-    engine::gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.0f}};
+    gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
     app->uboSamplerTiling.Fill(&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling), 0);
 

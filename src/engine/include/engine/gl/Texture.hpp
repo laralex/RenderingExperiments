@@ -66,10 +66,19 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    auto GenerateMipmaps [[nodiscard]] (GLint minLevel = 0, GLint maxLevel = 1000) -> TextureCtx&&;
-    auto Fill2D
-        [[nodiscard]] (GLenum dataFormat, GLenum dataType, uint8_t const* data, glm::ivec3 size, GLint miplevel = 0)
-        -> TextureCtx&&;
+    // NOTE: nodiscard is not needed
+    auto GenerateMipmaps(GLint minLevel = 0, GLint maxLevel = 1000) & -> TextureCtx&;
+    auto GenerateMipmaps[[nodiscard]](GLint minLevel = 0, GLint maxLevel = 1000) && -> TextureCtx&&;
+
+    struct FillArgs {
+        GLenum dataFormat = GL_NONE;
+        GLenum dataType = GL_NONE;
+        uint8_t const* data = nullptr;
+        glm::ivec3 size = glm::ivec3{0};
+        GLint mipLevel = 0;
+    };
+    auto Fill2D(FillArgs const& args) & -> TextureCtx&;
+    auto Fill2D[[nodiscard]](FillArgs const& args) && -> TextureCtx&&;
 
 private:
     static GlHandle contextTexture_;

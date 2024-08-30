@@ -18,9 +18,57 @@ using FileSizeCallback = std::function<std::pair<uint8_t*, size_t>(size_t)>;
 // Function returns the number of bytes actually written
 auto LoadBinaryFile [[nodiscard]] (std::string_view const filepath, FileSizeCallback sizeCallback) -> size_t;
 
+struct ImageLoader final {
+
+public:
+#define Self ImageLoader
+    explicit Self(size_t temporaryBufferNumBytes = 4*1024*1024) noexcept
+        : temporaryBuffer_(temporaryBufferNumBytes), loadedImages_{},
+          nextImageId_{0}, latestError_{nullptr} {}
+    ~Self() noexcept;
+    Self(Self const&)            = delete;
+    Self& operator=(Self const&) = delete;
+    Self(Self&&)                 = delete;
+    Self& operator=(Self&&)      = delete;
+#undef Self
+
+    struct LoadInfo {
+        int32_t loadedImageId;
+        int32_t numDecodedBytes = 0U;
+        int32_t width = 0;
+        int32_t height = 0;
+        int32_t numChannelsInFile = 0;
+        int32_t numChannelsDecoded = 0;
+    };
+
+    auto Load(std::string_view const filepath, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
+    auto Load(CpuView<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
+
+    auto ImageData(int32_t loadedImageId) const -> uint8_t const*;
+    auto LatestError() const -> char const* { return latestError_; };
+
+private:
+    constexpr static int32_t MAX_LOADED_IMAGES = 32;
+    std::unordered_map<int32_t, uint8_t*> loadedImages_{};
+    std::vector<uint8_t> temporaryBuffer_{};
+    int32_t nextImageId_ = 0;
+    const char* latestError_ = nullptr;
+};
+
 } // namespace engine
 
 namespace engine::gl {
 
 auto LoadShaderCode [[nodiscard]] (std::string_view const filepath, CpuView<ShaderDefine const> defines) -> std::string;
+
+struct LoadTextureArgs final {
+    ImageLoader& loader;
+    std::string_view const filepath = {};
+    GLenum format = GL_NONE;
+    int32_t numChannels = 0;
+    std::string_view name = {};
+    bool withMips = false;
+};
+auto LoadTexture[[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture>;
+
 } // namespace engine::gl

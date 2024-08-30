@@ -101,18 +101,35 @@ auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleSten
     return texture;
 }
 
-auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) -> TextureCtx&& {
-    GLCALL(glBindTexture(contextTarget_, contextTexture_));
-    GLCALL(glTexParameteri(contextTarget_, GL_TEXTURE_BASE_LEVEL, minLevel));
-    GLCALL(glTexParameteri(contextTarget_, GL_TEXTURE_MAX_LEVEL, maxLevel));
-    GLCALL(glGenerateMipmap(contextTarget_));
+static void GenerateMipmapsImpl(GLenum target, GLuint texture, GLint minLevel, GLint maxLevel) {
+    GLCALL(glBindTexture(target, texture));
+    GLCALL(glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, minLevel));
+    GLCALL(glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, maxLevel));
+    GLCALL(glGenerateMipmap(target));
+}
+
+auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) & -> TextureCtx& {
+    GenerateMipmapsImpl(contextTarget_, contextTexture_, minLevel, maxLevel);
+    return *this;
+}
+
+auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) && -> TextureCtx&& {
+    GenerateMipmapsImpl(contextTarget_, contextTexture_, minLevel, maxLevel);
     return std::move(*this);
 }
 
-auto TextureCtx::Fill2D(GLenum dataFormat, GLenum dataType, uint8_t const* data, glm::ivec3 size, GLint miplevel)
-    -> TextureCtx&& {
+static void Fill2DImpl(GLenum target, TextureCtx::FillArgs const& args) {
     GLint offsetX = 0, offsetY = 0;
-    GLCALL(glTexSubImage2D(contextTarget_, miplevel, offsetX, offsetY, size.x, size.y, dataFormat, dataType, data));
+    GLCALL(glTexSubImage2D(target, args.mipLevel, offsetX, offsetY, args.size.x, args.size.y, args.dataFormat, args.dataType, args.data));
+}
+
+auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) & -> TextureCtx& {
+    Fill2DImpl(contextTarget_, args);
+    return *this;
+}
+
+auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) && -> TextureCtx&& {
+    Fill2DImpl(contextTarget_, args);
     return std::move(*this);
 }
 
