@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Prelude.hpp"
-#include "engine/SphereRendererInput.hpp"
+#include "engine/PointRendererInput.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Vao.hpp"
@@ -11,10 +11,10 @@
 
 namespace engine::gl {
 
-class DebugSphereRenderer final {
+class PointRenderer final {
 
 public:
-#define Self DebugSphereRenderer
+#define Self PointRenderer
     explicit Self() noexcept     = default;
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
@@ -23,8 +23,8 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (size_t maxSpheres) -> DebugSphereRenderer;
-    void Fill(std::vector<SphereRendererInput::Sphere> const&, int32_t numSpheres, int32_t numSpheresOffset);
+    static auto Allocate [[nodiscard]] (size_t maxPoints) -> PointRenderer;
+    void Fill(std::vector<PointRendererInput::Point> const&, int32_t numPoints, int32_t numPointsOffset);
     void LimitInstances(int32_t numInstances);
     void Render(
         glm::mat4 const& camera, int32_t firstInstance = 0,

@@ -60,7 +60,7 @@ struct Application final {
     engine::gl::FlatRenderer flatRenderer{};
     engine::gl::SamplersCache::CacheKey samplerNearestWrap{};
     engine::LineRendererInput debugLines{};
-    engine::SphereRendererInput debugSpheres{};
+    engine::PointRendererInput debugPoints{};
 
     bool isInitialized = false;
 };
@@ -141,7 +141,8 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    auto planeMesh = PlaneMesh::Generate(glm::ivec2{6, 5});
+    glm::ivec2 planeSize{8, 15};
+    auto planeMesh = PlaneMesh::Generate(planeSize, glm::vec2{0.5f, 0.5f});
     app->planeMesh = gl::AllocatePlaneMesh(
         planeMesh,
         gl::GpuMesh::AttributesLayout{
@@ -162,25 +163,31 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     //         planeMesh.vertexPositions[i],
     //         glm::cross(planeMesh.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
     // }
-    for (int i = 0; i < planeMesh.vertexData.size(); ++i) {
-        app->debugSpheres.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
-        app->debugSpheres.PushSphere(planeMesh.vertexPositions[i], 0.03f);
+    int off = 1;
+    for (int i = off; i < off + 8 /* planeMesh.indices.size() */; ++i) {
+        // if (i % planeSize.x == 0) {
+        //     app->debugPoints.SetColor(static_cast<ColorCode>(
+        //         (i / planeSize.x)  % static_cast<int>(ColorCode::NUM_COLORS)));
+        // }
+        auto vi = planeMesh.indices[i];
+        app->debugPoints.SetColor(static_cast<ColorCode>((i - off) % 4));
+        app->debugPoints.PushPoint(planeMesh.vertexPositions[vi], 0.03f);
     }
 
     // TODO: cwd relative path
     std::vector<uint8_t> uvCheckerEncodedData;
-    // auto bytesRead = LoadBinaryFile("data/engine/textures/utils/uv_checker_512_512.jpg", [&](size_t filesize){
-    auto bytesRead = LoadBinaryFile("data/app/textures/shrek.jpeg", [&](size_t filesize) {
+    auto bytesRead = LoadBinaryFile("data/engine/textures/utils/uv_checker_512_512.jpg", [&](size_t filesize){
+    // auto bytesRead = LoadBinaryFile("data/app/textures/shrek.jpeg", [&](size_t filesize) {
         uvCheckerEncodedData.resize(filesize);
         return std::pair{uvCheckerEncodedData.data(), filesize};
     });
     int x, y, numChannels;
-    auto uvCheckerData = stbi_load_from_memory(uvCheckerEncodedData.data(), bytesRead + 200, &x, &y, &numChannels, 4);
+    auto uvCheckerData = stbi_load_from_memory(uvCheckerEncodedData.data(), bytesRead, &x, &y, &numChannels, 3);
     if (stbi_failure_reason()) { XLOGE("STB IMAGE ERROR: {}", stbi_failure_reason()); }
     XLOGE("Texture {} {} {}", x, y, numChannels);
 
     assert(uvCheckerData != nullptr);
-    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGBA8, "UV checker");
+    app->texture = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(x, y, 0), GL_RGB8, "UV checker");
     (void)gl::TextureCtx{app->texture}
         .Fill2D(GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t const*>(uvCheckerData), app->texture.Size())
         .GenerateMipmaps();
@@ -189,7 +196,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
         GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
-    engine::gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.1f}};
+    engine::gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
     app->uboSamplerTiling.Fill(&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling), 0);
 
@@ -269,7 +276,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
         // gl::RenderVao(app->boxMesh.Vao());
-        gl::RenderVao(app->planeMesh.Vao());
+        gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
@@ -374,7 +381,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     }
 
     {
-        auto debugGroupGuard = gl::DebugGroupCtx("Debug lines/spheres pass");
+        auto debugGroupGuard = gl::DebugGroupCtx("Debug lines/points pass");
         auto fbGuard         = gl::FramebufferCtx{0U, true};
         if (app->debugLines.IsDataDirty()) {
             app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
@@ -382,11 +389,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         }
         app->commonRenderers.RenderLines(camera);
 
-        if (app->debugSpheres.IsDataDirty()) {
-            app->commonRenderers.FlushSpheresToGpu(app->debugSpheres.Data());
-            app->debugSpheres.Clear();
+        if (app->debugPoints.IsDataDirty()) {
+            app->commonRenderers.FlushPointsToGpu(app->debugPoints.Data());
+            app->debugPoints.Clear();
         }
-        app->commonRenderers.RenderSpheres(camera);
+        app->commonRenderers.RenderPoints(camera);
     }
 
     app->commonRenderers.OnFrameEnd();

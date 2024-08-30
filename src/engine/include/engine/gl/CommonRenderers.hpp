@@ -3,7 +3,7 @@
 #include "engine/gl/AxesRenderer.hpp"
 #include "engine/gl/BillboardRenderer.hpp"
 #include "engine/gl/BoxRenderer.hpp"
-#include "engine/gl/DebugSphereRenderer.hpp"
+#include "engine/gl/PointRenderer.hpp"
 #include "engine/gl/FrustumRenderer.hpp"
 #include "engine/gl/LineRenderer.hpp"
 #include "engine/gl/Program.hpp"
@@ -39,8 +39,8 @@ public:
     void RenderBillboard(BillboardRenderArgs const& args) const;
     void RenderLines(glm::mat4 const& camera) const;
     void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&);
-    void RenderSpheres(glm::mat4 const& camera) const;
-    void FlushSpheresToGpu(std::vector<SphereRendererInput::Sphere> const&);
+    void RenderPoints(glm::mat4 const& camera) const;
+    void FlushPointsToGpu(std::vector<PointRendererInput::Point> const&);
 
     void RenderFulscreenTriangle() const;
     void Blit2D(GLuint srcTexture) const;
@@ -68,9 +68,9 @@ private:
     LineRenderer lineRenderer_{};
     LineRendererInput debugLines_{};
 
-    DebugSphereRenderer debugSphereRenderer_{};
-    int32_t debugSphereFirstExternal_{0};
-    SphereRendererInput debugSpheres_{};
+    PointRenderer pointRenderer_{};
+    int32_t pointsFirstExternalIdx_{0};
+    PointRendererInput debugPoints_{};
 
     Vao datalessTriangleVao_{};
     Vao datalessQuadVao_{};

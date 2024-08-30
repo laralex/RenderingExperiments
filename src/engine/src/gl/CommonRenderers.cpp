@@ -44,8 +44,8 @@ void CommonRenderers::Initialize() {
     billboardRenderer_           = BillboardRenderer::Allocate();
     constexpr size_t MAX_LINES   = 10'000;
     lineRenderer_                = LineRenderer::Allocate(MAX_LINES);
-    constexpr size_t MAX_SPHERES = 10'000;
-    debugSphereRenderer_         = DebugSphereRenderer::Allocate(MAX_SPHERES);
+    constexpr size_t MAX_POINTS = 10'000;
+    pointRenderer_         = PointRenderer::Allocate(MAX_POINTS);
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -87,7 +87,7 @@ void CommonRenderers::Initialize() {
 void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     axesRenderer_.Render(mvp, scale);
-    debugSpheres_.PushSphere(glm::scale(mvp, glm::vec3{scale * 0.1f}), color);
+    debugPoints_.PushPoint(glm::scale(mvp, glm::vec3{scale * 0.1f}), color);
 }
 
 void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) {
@@ -136,28 +136,28 @@ void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const
     }
 }
 
-void CommonRenderers::RenderSpheres(glm::mat4 const& camera) const {
-    assert(IsInitialized() && "Bad call to RenderSpheres, CommonRenderers isn't initialized");
-    debugSphereRenderer_.Render(glm::mat4{1.0f}, 0, debugSphereFirstExternal_);
-    debugSphereRenderer_.Render(camera, debugSphereFirstExternal_);
+void CommonRenderers::RenderPoints(glm::mat4 const& camera) const {
+    assert(IsInitialized() && "Bad call to RenderPoints, CommonRenderers isn't initialized");
+    pointRenderer_.Render(glm::mat4{1.0f}, 0, pointsFirstExternalIdx_);
+    pointRenderer_.Render(camera, pointsFirstExternalIdx_);
 }
 
-void CommonRenderers::FlushSpheresToGpu(std::vector<SphereRendererInput::Sphere> const& spheres) {
-    assert(IsInitialized() && "Bad call to FlushSpheresToGpu, CommonRenderers isn't initialized");
-    auto spheresOffset = 0;
+void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> const& points) {
+    assert(IsInitialized() && "Bad call to FlushPointsToGpu, CommonRenderers isn't initialized");
+    auto pointsOffset = 0;
     {
-        spheresOffset += debugSpheres_.DataSize();
-        if (debugSpheres_.IsDataDirty()) {
-            debugSphereRenderer_.Fill(debugSpheres_.Data(), debugSpheres_.DataSize(), 0);
-            debugSpheres_.Clear();
+        pointsOffset += debugPoints_.DataSize();
+        if (debugPoints_.IsDataDirty()) {
+            pointRenderer_.Fill(debugPoints_.Data(), debugPoints_.DataSize(), 0);
+            debugPoints_.Clear();
         }
     }
-    debugSphereFirstExternal_ = spheresOffset;
+    pointsFirstExternalIdx_ = pointsOffset;
     {
-        debugSphereRenderer_.Fill(spheres, std::size(spheres), spheresOffset);
-        spheresOffset += std::size(spheres);
+        pointRenderer_.Fill(points, std::size(points), pointsOffset);
+        pointsOffset += std::size(points);
     }
-    debugSphereRenderer_.LimitInstances(spheresOffset);
+    pointRenderer_.LimitInstances(pointsOffset);
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture) const {
@@ -183,14 +183,14 @@ auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuS
 }
 
 void CommonRenderers::OnFrameEnd() {
-    if (debugSpheres_.IsDataDirty()) {
-        if (debugSpheres_.DataSize() > debugSphereFirstExternal_) {
+    if (debugPoints_.IsDataDirty()) {
+        if (debugPoints_.DataSize() > pointsFirstExternalIdx_) {
             XLOGW(
-                "Too many internal spheres, some will be ignored (actual={}, limit={})", debugSpheres_.DataSize(),
-                debugSphereFirstExternal_);
+                "Too many internal points, some will be ignored (actual={}, limit={})", debugPoints_.DataSize(),
+                pointsFirstExternalIdx_);
         }
-        debugSphereRenderer_.Fill(debugSpheres_.Data(), debugSphereFirstExternal_, 0);
-        debugSpheres_.Clear();
+        pointRenderer_.Fill(debugPoints_.Data(), pointsFirstExternalIdx_, 0);
+        debugPoints_.Clear();
     }
     // if (debugLines_.IsDataDirty()) {
     //     lineRenderer_.Fill(debugLines_.Data());

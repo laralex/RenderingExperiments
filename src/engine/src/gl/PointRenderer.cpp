@@ -1,6 +1,7 @@
-#include "engine/gl/DebugSphereRenderer.hpp"
+#include "engine/gl/PointRenderer.hpp"
 
-#include "engine/BoxMesh.hpp"
+#include "engine/IcosphereMesh.hpp"
+// #include "engine/BoxMesh.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
@@ -12,31 +13,32 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-auto DebugSphereRenderer::Allocate(size_t maxSpheres) -> DebugSphereRenderer {
+auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION        = 0;
     constexpr GLint ATTRIB_UV_LOCATION              = 1;
     constexpr GLint ATTRIB_NORMAL_LOCATION          = 2;
     constexpr GLint ATTRIB_INSTANCE_COLOR_LOCATION  = 3;
     constexpr GLint ATTRIB_INSTANCE_MATRIX_LOCATION = 4;
 
-    using T = SphereRendererInput::Sphere;
+    using T = PointRendererInput::Point;
 
-    auto mesh = BoxMesh::Generate();
+    auto mesh = IcosphereMesh::Generate({.numSubdivisions = 0, .duplicateSeam = true, .clockwiseTriangles = false});
+    // auto mesh = BoxMesh::Generate();
 
-    DebugSphereRenderer renderer;
+    PointRenderer renderer;
     renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh.vertexPositions.data(),
-        std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]), "DebugSphereRenderer/TemplatePositionsVBO");
+        std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]), "PointRenderer/TemplatePositionsVBO");
     renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh.vertexData.data(),
-        std::size(mesh.vertexData) * sizeof(mesh.vertexData[0]), "DebugSphereRenderer/TemplateVBO");
+        std::size(mesh.vertexData) * sizeof(mesh.vertexData[0]), "PointRenderer/TemplateVBO");
     renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, nullptr, maxSpheres * sizeof(T), "DebugSphereRenderer/InstancesVBO");
+        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, nullptr, maxPoints * sizeof(T), "PointRenderer/InstancesVBO");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0]),
-        "DebugSphereRenderer/TemplateEBO");
+        "PointRenderer/TemplateEBO");
 
-    renderer.vao_ = gl::Vao::Allocate("DebugSphereRenderer/VAO");
+    renderer.vao_ = gl::Vao::Allocate("PointRenderer/VAO");
 
     GLenum indexType;
     if constexpr (sizeof(mesh.indices[0]) == 1) {
@@ -100,7 +102,7 @@ auto DebugSphereRenderer::Allocate(size_t maxSpheres) -> DebugSphereRenderer {
 
     auto maybeProgram = gl::LinkProgramFromFiles(
         "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag",
-        CpuView{defines, std::size(defines)}, "DebugSphereRenderer");
+        CpuView{defines, std::size(defines)}, "PointRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
@@ -109,9 +111,9 @@ auto DebugSphereRenderer::Allocate(size_t maxSpheres) -> DebugSphereRenderer {
     return renderer;
 }
 
-void DebugSphereRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
+void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0) {
-        XLOGW("Limit of spheres is 0 in DebugSphereRenderer", 0);
+        XLOGW("Limit of points is 0 in PointRenderer", 0);
         return;
     }
     auto programGuard = UniformCtx{program_};
@@ -119,20 +121,20 @@ void DebugSphereRenderer::Render(glm::mat4 const& camera, int32_t firstInstance,
     RenderVaoInstanced(vao_, firstInstance, std::min(lastInstance_ - firstInstance, numInstances));
 }
 
-void DebugSphereRenderer::LimitInstances(int32_t numInstances) {
+void PointRenderer::LimitInstances(int32_t numInstances) {
     lastInstance_ = std::min(
-        numInstances, static_cast<int32_t>(instancesBuffer_.SizeBytes() / sizeof(SphereRendererInput::Sphere)));
+        numInstances, static_cast<int32_t>(instancesBuffer_.SizeBytes() / sizeof(PointRendererInput::Point)));
 }
 
-void DebugSphereRenderer::Fill(
-    std::vector<SphereRendererInput::Sphere> const& spheres, int32_t numSpheres, int32_t numSpheresOffset) {
-    using T               = typename std::decay<decltype(*spheres.begin())>::type;
-    auto const byteOffset = numSpheresOffset * sizeof(T);
+void PointRenderer::Fill(
+    std::vector<PointRendererInput::Point> const& points, int32_t numPoints, int32_t numPointsOffset) {
+    using T               = typename std::decay<decltype(*points.begin())>::type;
+    auto const byteOffset = numPointsOffset * sizeof(T);
     auto const numBytes   = std::min(
         instancesBuffer_.SizeBytes() - byteOffset, // buffer limit
-        numSpheres * sizeof(T)                     // argument limit
+        numPoints * sizeof(T)                     // argument limit
     );
-    instancesBuffer_.Fill(spheres.data(), numBytes, byteOffset);
+    instancesBuffer_.Fill(points.data(), numBytes, byteOffset);
 }
 
 } // namespace engine::gl
