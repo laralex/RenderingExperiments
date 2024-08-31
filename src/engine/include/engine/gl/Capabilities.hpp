@@ -27,6 +27,7 @@ public:
     static GLint maxUboBlocksFragment;
     static GLint maxUboBlocksGeometry;
     static GLint uboOffsetAlignment;
+    static GLint maxDrawBuffers;
 
 private:
     static bool isInitialized;

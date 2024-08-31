@@ -30,7 +30,7 @@ struct FrustumPlanes {
     glm::vec4 far;
 };
 
-FrustumPlanes CameraToPlanes [[nodiscard]](glm::mat4 const& mvp, bool normalize = false);
-Frustum ProjectionToFrustum [[nodiscard]](glm::mat4 const& proj);
+FrustumPlanes CameraToPlanes [[nodiscard]] (glm::mat4 const& mvp, bool normalize = false);
+Frustum ProjectionToFrustum [[nodiscard]] (glm::mat4 const& proj);
 
 } // namespace engine

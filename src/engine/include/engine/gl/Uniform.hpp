@@ -21,12 +21,12 @@ public:
     static auto GetUboLocation [[nodiscard]] (GpuProgram const& program, char const* programUboName) -> GLint;
     auto GetUboLocation [[nodiscard]] (char const* programUboName) const -> GLint;
     void SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const;
-    void
-    SetUniformMatrix2x2(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
-    void
-    SetUniformMatrix3x3(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
-    void
-    SetUniformMatrix4x4(GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    void SetUniformMatrix2x2(
+        GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    void SetUniformMatrix3x3(
+        GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    void SetUniformMatrix4x4(
+        GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
     void SetUniformTexture(GLint location, GLint textureSlot);
 
     template <typename T> void SetUniformValue1(GLint location, T const value) {

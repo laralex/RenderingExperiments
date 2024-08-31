@@ -185,7 +185,8 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
     return renderer;
 }
 
-void FrustumRenderer::Render(glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
+void FrustumRenderer::Render(
+    glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     auto programGuard = gl::UniformCtx(program_);
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},

@@ -70,6 +70,8 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
+    static auto IsContextExisting() -> bool { return hasInstances_; }
+
 private:
     Vao const& contextVao_;
     static bool hasInstances_;
@@ -88,9 +90,8 @@ public:
 #undef Self
 
     // NOTE: nodiscard is not required
-    auto
-    MakeVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false) const
-        -> VaoMutableCtx const&;
+    auto MakeVertexAttribute(GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized = false)
+        const -> VaoMutableCtx const&;
     auto MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint firstVertexId = 0) const
         -> VaoMutableCtx const&;
     auto MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId = 0) const -> VaoMutableCtx const&;

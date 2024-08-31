@@ -8,6 +8,7 @@ ColumnLimit: 120
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakBeforeBinaryOperators: NonAssignment
+PenaltyReturnTypeOnItsOwnLine: 10000
 
 AlignOperands: false
 AlignAfterOpenBracket: AlwaysBreak

@@ -12,6 +12,7 @@ GLint GlCapabilities::maxUboBlocksVertex   = 0xDEAD;
 GLint GlCapabilities::maxUboBlocksFragment = 0xDEAD;
 GLint GlCapabilities::maxUboBlocksGeometry = 0xDEAD;
 GLint GlCapabilities::uboOffsetAlignment   = 0xDEAD;
+GLint GlCapabilities::maxDrawBuffers       = 0xDEAD;
 
 void GlCapabilities::Initialize() {
     if (isInitialized) { return; }
@@ -30,6 +31,7 @@ void GlCapabilities::Initialize() {
     getCapability(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, "GL_MAX_FRAGMENT_UNIFORM_BLOCKS", maxUboBlocksFragment);
     getCapability(GL_MAX_GEOMETRY_UNIFORM_BLOCKS, "GL_MAX_GEOMETRY_UNIFORM_BLOCKS", maxUboBlocksGeometry);
     getCapability(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, "GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT", uboOffsetAlignment);
+    getCapability(GL_MAX_DRAW_BUFFERS, "GL_MAX_DRAW_BUFFERS", maxDrawBuffers);
 
     isInitialized = true;
 }
