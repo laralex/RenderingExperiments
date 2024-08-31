@@ -5,6 +5,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace {
 
 constexpr float LENGTH       = 1.0f;

@@ -159,7 +159,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
         .loader      = app->imageLoader,
-        .filepath    = "data/app/textures/shrek.jpeg",
+        .filepath    = "data/app/textures/ob.jpg",
         .format      = GL_RGB8,
         .numChannels = 3,
     });

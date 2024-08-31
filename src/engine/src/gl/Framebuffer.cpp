@@ -29,9 +29,7 @@ FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
     hasInstances_ = false;
 }
 
-Framebuffer::Framebuffer() noexcept {
-    std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE);
-}
+Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE); }
 
 void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }

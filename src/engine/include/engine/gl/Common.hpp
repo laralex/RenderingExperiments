@@ -2,8 +2,7 @@
 
 #include <cassert>
 #include <glad/gl.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace engine {
 template <typename T> struct CpuView;

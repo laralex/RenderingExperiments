@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <glad/gl.h>
 
 #if defined(_MSC_VER)
 //  Microsoft

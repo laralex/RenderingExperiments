@@ -1,23 +1,36 @@
+.PHONY: all
+all: build_engine
+all: build_app
+
+.PHONY: init_repo
+init_repo:
+	sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
+	git submodule update --init --remote
+	git submodule status
+
+USE_DEP_FILES?=1
+USE_PCH?=1
+# COMPILER_DUMP?=1
+
 BUILD_TYPE=debug
 
 BUILD_DIR=build
 INSTALL_DIR=${BUILD_DIR}/install
 MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 APP_EXE=${BUILD_DIR}/run_app
+PRECOMPILED_HEADER=${BUILD_DIR}/Precompiled.hpp.pch
 
 THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
-	${BUILD_DIR}/third_party/glfw/src/libglfw3.a \
+	${BUILD_DIR}/third_party/glfw/src/src/libglfw3.a \
 	${BUILD_DIR}/third_party/glad/gl.o \
-	${BUILD_DIR}/third_party/glm_install/glm/libglm.a \
+	${BUILD_DIR}/third_party/glm/glm/libglm.a \
 	${BUILD_DIR}/third_party/stb/stb_image.o
 
-.PHONY: all
-all: build_engine
-all: build_app
-
 CC=ccache clang++
-COMPILE_FLAGS=-std=c++20 $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
+
+# NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
+COMPILE_FLAGS=-std=c++20 $(if $(USE_DEP_FILES),-MMD,) $(if $(COMPILER_DUMP),-save-stats,) $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
 INCLUDE_DIR+=-I src/engine/include
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
@@ -28,6 +41,7 @@ LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
 
 obj_app_ = Main.o
+obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
 
 obj_engine_ = \
 	Assets.o BoxMesh.o \
@@ -53,17 +67,14 @@ obj_engine_ = \
 	gl/TextureUnits.o gl/Uniform.o \
 	gl/Vao.o
 
-obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
 obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})
-hpp_engine = \
-	$(wildcard src/engine/include/engine/*) \
-	$(wildcard src/engine/include/engine/gl/*)
-hpp_engine_private = $(wildcard src/engine/include_private/engine_private/*)
+ifdef ${USE_DEP_FILES}
+-include $(obj_engine:.o=.d)
+endif
 
 .PHONY: wtf
 wtf:
-	$(info > Depending on engine headers ${hpp_engine})
-	$(info > Depending on engine private headers ${hpp_engine_private})
+	$(info > Obj files: ${obj_engine})
 
 .PHONY: run
 run: ${INSTALL_DIR}/run_app
@@ -96,7 +107,7 @@ ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 
 ${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${BUILD_DIR}/engine/libengine.a
 	$(info > Linking $@)
-	@${CC} $^ ${LDFLAGS} -o $@
+	${CC} $^ ${LDFLAGS} -o $@
 
 # linking engine library
 ${BUILD_DIR}/engine/libengine.a: ${THIRD_PARTY_DEPS} ${obj_engine}
@@ -104,17 +115,17 @@ ${BUILD_DIR}/engine/libengine.a: ${THIRD_PARTY_DEPS} ${obj_engine}
 	@ar r $@ ${obj_engine}
 
 # compiling main executable sources
-${BUILD_DIR}/app/%.o: src/app/%.cpp ${hpp_engine}
+${BUILD_DIR}/app/%.o: src/app/%.cpp
 	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c $(filter %.cpp,$^) -o $@
+	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c $< -o $@
 
 # compiling engine sources
-${BUILD_DIR}/engine/%.o: src/engine/%.cpp ${hpp_engine} ${hpp_engine_private}
+${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},)
 	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private -c $(filter %.cpp,$^) -o $@
-${BUILD_DIR}/engine/gl/%.o: src/engine/gl/%.cpp ${hpp_engine} ${hpp_engine_private}
-	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private -c $(filter %.cpp,$^) -o $@
+	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private $(if $(USE_PCH),-include-pch ${PRECOMPILED_HEADER},) -c $< -o $@
+
+${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
+	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c -o $@ -xc++-header $<
 
 # compiling third party
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
@@ -127,7 +138,7 @@ ${BUILD_DIR}/third_party/glad/gl.o:
 	mkdir -p $(dir $@)
 	$(CC) ${COMPILE_FLAGS} -I third_party/glad/include -c third_party/glad/src/gl.c -o $@
 
-${BUILD_DIR}/third_party/glm_install/glm/libglm.a:
+${BUILD_DIR}/third_party/glm/glm/libglm.a:
 	cmake -S third_party/glm \
 		-DCMAKE_INSTALL_INCLUDEDIR=${MAKEFILE_DIR}/${BUILD_DIR}/third_party/glm_install/include \
 		-DGLM_BUILD_TESTS=OFF \
@@ -142,9 +153,3 @@ ${BUILD_DIR}/third_party/stb/stb_image.o:
 
 ${BUILD_DIR}/app ${BUILD_DIR}/engine/src/gl ${INSTALL_DIR}:
 	mkdir -p $@
-
-.PHONY: init_repo
-init_repo:
-	sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
-	git submodule update --init --remote
-	git submodule status

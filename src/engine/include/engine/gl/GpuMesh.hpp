@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/BoxMesh.hpp"
-#include "engine/Prelude.hpp"
+#include "engine/Precompiled.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/Vao.hpp"
 

@@ -1,5 +1,6 @@
 #include "engine/IcosphereMesh.hpp"
 
+#include <glm/ext/scalar_constants.hpp>
 #include <map>
 
 namespace {

@@ -113,7 +113,7 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
 
 void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0) {
-        XLOGW("Limit of points is 0 in PointRenderer", 0);
+        XLOGW("Limit of points is <= 0 in PointRenderer", 0);
         return;
     }
     auto programGuard = UniformCtx{program_};
