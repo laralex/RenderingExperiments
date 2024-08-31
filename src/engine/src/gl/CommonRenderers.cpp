@@ -104,9 +104,9 @@ void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) con
     boxRenderer_.Render(centerMvp, color);
 }
 
-void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color) const {
+void CommonRenderers::RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
-    frustumRenderer_.Render(centerMvp, frustum, color);
+    frustumRenderer_.Render(centerMvp, frustum, color, thickness);
 }
 
 void CommonRenderers::RenderFulscreenTriangle() const {

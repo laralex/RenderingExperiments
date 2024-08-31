@@ -26,7 +26,7 @@ public:
     auto Id [[nodiscard]] () const -> GLuint { return fbId_; }
     void BindDraw() const;
     void BindRead() const;
-    auto IsComplete [[nodiscard]] () -> bool;
+    auto IsComplete [[nodiscard]] () const -> bool;
 
 private:
     void Dispose();
@@ -50,21 +50,21 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    auto ClearColor [[nodiscard]] (GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) -> FramebufferCtx&&;
-    auto ClearColor [[nodiscard]] (GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) -> FramebufferCtx&&;
-    auto ClearColor [[nodiscard]] (GLint drawBufferIdx, GLfloat r, GLfloat g, GLfloat b, GLfloat a) -> FramebufferCtx&&;
-    auto ClearDepth [[nodiscard]] (GLfloat value) -> FramebufferCtx&&;
-    auto ClearStencil [[nodiscard]] (GLint value) -> FramebufferCtx&&;
-    auto ClearDepthStencil [[nodiscard]] (GLfloat depth, GLint stencil) -> FramebufferCtx&&;
-    auto Invalidate [[nodiscard]] (uint32_t numAttachments, GLenum* attachments) -> FramebufferCtx&&;
+    auto ClearColor (GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) const -> FramebufferCtx const&;
+    auto ClearColor (GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) const -> FramebufferCtx const&;
+    auto ClearColor (GLint drawBufferIdx, GLfloat r, GLfloat g, GLfloat b, GLfloat a) const -> FramebufferCtx const&;
+    auto ClearDepth (GLfloat value) const -> FramebufferCtx const&;
+    auto ClearStencil (GLint value) const -> FramebufferCtx const&;
+    auto ClearDepthStencil (GLfloat depth, GLint stencil) const -> FramebufferCtx const&;
+    auto Invalidate (uint32_t numAttachments, GLenum* attachments) const -> FramebufferCtx const&;
 
-    auto LinkTexture [[nodiscard]] (GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1)
-    -> FramebufferCtx&&;
-    auto LinkRenderbuffer [[nodiscard]] (GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1)
-    -> FramebufferCtx&&;
+    auto LinkTexture (GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
+    -> FramebufferCtx const&;
+    auto LinkRenderbuffer (GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1) const
+    -> FramebufferCtx const&;
     // auto LinkBackbuffer(GLenum attachment, GLint texLevel = 0) const -> FramebufferCtx&&;
 
-    auto IsComplete [[nodiscard]] () -> bool;
+    auto IsComplete [[nodiscard]] () const -> bool;
 
 private:
     static GlHandle contextFramebuffer_;

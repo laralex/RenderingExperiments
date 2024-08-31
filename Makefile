@@ -33,7 +33,8 @@ obj_engine_ = \
 	Assets.o BoxMesh.o \
 	EngineLoop.o IcosphereMesh.o \
 	LineRendererInput.o PointRendererInput.o \
-	PlaneMesh.o UvSphereMesh.o \
+	PlaneMesh.o Unprojection.o \
+	UvSphereMesh.o \
 	Prelude.o WindowContext.o \
 	gl/AxesRenderer.o \
 	gl/BoxRenderer.o gl/ProceduralMeshes.o \

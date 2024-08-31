@@ -19,5 +19,5 @@ void main() {
     float thickness = in_NearFarInnerWeight.z * u_NearFarThickness.z;
     vec4 frustum =  in_FrustumWeights * (u_LeftRightBottomTop * z / u_NearFarThickness.x - thickness);
     vec2 xy = vec2(frustum.x + frustum.y, frustum.z + frustum.w);
-    gl_Position = u_MVP * vec4(xy, z /*- thickness*/, 1.0);
+    gl_Position = u_MVP * vec4(xy, -(z + thickness), 1.0);
 }

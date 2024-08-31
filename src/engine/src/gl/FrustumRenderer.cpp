@@ -11,7 +11,6 @@ constexpr GLint UNIFORM_MVP_LOCATION   = 0;
 constexpr GLint UBO_BINDING            = 0; // global for GL
 constexpr GLint UNIFORM_COLOR_LOCATION = 100;
 
-constexpr float THICKNESS = 0.01f;
 constexpr float OUT_BEGIN = 0.5f;
 constexpr float OUT_END   = 1.0f;
 constexpr float IN_BEGIN  = 0.5f;
@@ -186,11 +185,11 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
     return renderer;
 }
 
-void FrustumRenderer::Render(glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color) const {
+void FrustumRenderer::Render(glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     auto programGuard = gl::UniformCtx(program_);
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
-        .nearFarThickness   = {frustum.near, frustum.far, THICKNESS, 0.0},
+        .nearFarThickness   = {frustum.near, frustum.far, thickness, 0.0},
     };
 
     ubo_.Fill(&data, sizeof(data));

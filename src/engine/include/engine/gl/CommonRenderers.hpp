@@ -35,7 +35,7 @@ public:
     void RenderAxes(glm::mat4 const& mvp, float scale = 1.0f);
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
     void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
-    void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}) const;
+    void RenderFrustum(glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f}, float thickness = 0.015f) const;
     void RenderBillboard(BillboardRenderArgs const& args) const;
     void RenderLines(glm::mat4 const& camera) const;
     void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&);

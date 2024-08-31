@@ -54,104 +54,99 @@ void Framebuffer::BindDraw() const { GLCALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFE
 
 void Framebuffer::BindRead() const { GLCALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, fbId_)); }
 
-auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) -> FramebufferCtx&& {
+auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) const -> FramebufferCtx const& {
     GLint rgba[] = {r, g, b, a};
     GLCALL(glClearBufferiv(GL_COLOR, drawBufferIdx, rgba));
-    //
-    return std::move(*this);
+    return *this;
 }
 
-auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) -> FramebufferCtx&& {
+auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) const -> FramebufferCtx const& {
     GLuint rgba[] = {r, g, b, a};
     GLCALL(glClearBufferuiv(GL_COLOR, drawBufferIdx, rgba));
-    return std::move(*this);
+    return *this;
 }
 
-auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLfloat r, GLfloat g, GLfloat b, GLfloat a) -> FramebufferCtx&& {
+auto FramebufferCtx::ClearColor(GLint drawBufferIdx, GLfloat r, GLfloat g, GLfloat b, GLfloat a) const -> FramebufferCtx const& {
     GLfloat rgba[] = {r, g, b, a};
     GLCALL(glClearBufferfv(GL_COLOR, drawBufferIdx, rgba));
-    return std::move(*this);
+    return *this;
 }
 
-auto FramebufferCtx::ClearDepth(GLfloat value) -> FramebufferCtx&& {
+auto FramebufferCtx::ClearDepth(GLfloat value) const -> FramebufferCtx const& {
     GLCALL(glClearBufferfv(GL_DEPTH, 0, &value));
-    return std::move(*this);
+    return *this;
 }
 
-auto FramebufferCtx::ClearStencil(GLint value) -> FramebufferCtx&& {
+auto FramebufferCtx::ClearStencil(GLint value) const -> FramebufferCtx const& {
     GLCALL(glClearBufferiv(GL_STENCIL, 0, &value));
-    return std::move(*this);
+    return *this;
 }
 
-auto FramebufferCtx::ClearDepthStencil(GLfloat depth, GLint stencil) -> FramebufferCtx&& {
+auto FramebufferCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -> FramebufferCtx const& {
     GLCALL(glClearBufferfi(GL_DEPTH_STENCIL, 0, depth, stencil));
-    return std::move(*this);
+    return *this;
 }
 
 auto FramebufferCtx::LinkTexture(GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex)
-    -> FramebufferCtx&& {
+    const -> FramebufferCtx const& {
     assert(
         attachment >= GL_COLOR_ATTACHMENT0 && attachment <= GL_COLOR_ATTACHMENT31 || attachment == GL_DEPTH_ATTACHMENT
         || attachment == GL_STENCIL_ATTACHMENT || attachment == GL_DEPTH_STENCIL_ATTACHMENT);
-    bool updated = false;
-    if (tex.IsTextureArray() || tex.IsCubemap()) {
-        assert(arrayIndex >= 0);
-        // NOTE: glFramebufferTexture is for Layered Framebuffers
-        // glFramebufferTexture(GL_FRAMEBUFFER, attachment, tex.Id(), arrayIndex);
-        GLCALL(glFramebufferTextureLayer(framebufferTarget_, attachment, tex.Id(), texLevel, arrayIndex));
-        updated = true;
-    }
-    if (tex.Is1D()) {
-        GLCALL(glFramebufferTexture1D(framebufferTarget_, attachment, GL_TEXTURE_1D, tex.Id(), texLevel));
-        updated = true;
-    }
+    bool updated = true;
     if (tex.Is2D()) {
         // NOTE: doesn't work for cubemaps, must use slice e.g.
         // GL_TEXTURE_CUBE_MAP_POSITIVE_X as texture type (target)
         GLCALL(glFramebufferTexture2D(framebufferTarget_, attachment, tex.TextureSlotTarget(), tex.Id(), texLevel));
-        updated = true;
-    }
-    if (tex.Is3D()) {
+    } else if (tex.IsTextureArray() || tex.IsCubemap()) {
+        assert(arrayIndex >= 0);
+        // NOTE: glFramebufferTexture is for Layered Framebuffers
+        // glFramebufferTexture(GL_FRAMEBUFFER, attachment, tex.Id(), arrayIndex);
+        GLCALL(glFramebufferTextureLayer(framebufferTarget_, attachment, tex.Id(), texLevel, arrayIndex));
+    } else if (tex.Is1D()) {
+        GLCALL(glFramebufferTexture1D(framebufferTarget_, attachment, GL_TEXTURE_1D, tex.Id(), texLevel));
+    } else if (tex.Is3D()) {
         assert(arrayIndex >= 0);
         GLCALL(glFramebufferTexture3D(framebufferTarget_, attachment, GL_TEXTURE_3D, tex.Id(), texLevel, arrayIndex));
-        updated = true;
+    } else {
+        updated = false;
     }
+
     if (updated) {
         assert(IsComplete());
     } else {
         assert(false && "Failed to set framebuffer attachment");
     }
-    return std::move(*this);
+    return *this;
 }
 
-auto FramebufferCtx::LinkRenderbuffer(GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) -> FramebufferCtx&& {
+auto FramebufferCtx::LinkRenderbuffer(GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const -> FramebufferCtx const& {
     GLCALL(glFramebufferRenderbuffer(framebufferTarget_, attachment, rb.RenderbufferSlotTarget(), rb.Id()));
-    return std::move(*this);
+    return *this;
 }
 
 // auto FramebufferCtx::LinkBackbuffer(GLenum attachment, GLint texLevel) -> FramebufferCtx&& {
 //     assert(attachment >= GL_COLOR_ATTACHMENT0 && attachment <= GL_COLOR_ATTACHMENT31);
 //     GLCALL(glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, 0, texLevel));
-// return std::move(*this);
+// return *this;
 // }
 
 // valid attachments: COLOR_ATTACHMENTi, DEPTH_ATTACHMENT, or STENCIL_ATTACHMENT
-auto FramebufferCtx::Invalidate(uint32_t numAttachments, GLenum* attachments) -> FramebufferCtx&& {
+auto FramebufferCtx::Invalidate(uint32_t numAttachments, GLenum* attachments) const -> FramebufferCtx const& {
     assert(GlExtensions::IsInitialized());
     if (GlExtensions::Supports(GlExtensions::ARB_invalidate_subdata)) {
         GLCALL(glInvalidateFramebuffer(framebufferTarget_, numAttachments, attachments));
     }
-    return std::move(*this);
+    return *this;
 }
 
-auto Framebuffer::IsComplete() -> bool {
+auto Framebuffer::IsComplete() const -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(fbId_) == GL_FRAMEBUFFER_COMPLETE);
     if (!isComplete) { LogDebugLabel(*this, "Framebuffer is not complete"); }
     return isComplete;
 }
 
-auto FramebufferCtx::IsComplete() -> bool {
+auto FramebufferCtx::IsComplete() const -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(framebufferTarget_) == GL_FRAMEBUFFER_COMPLETE);
     if (!isComplete) {

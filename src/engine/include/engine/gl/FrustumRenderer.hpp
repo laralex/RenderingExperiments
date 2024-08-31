@@ -1,28 +1,12 @@
 #pragma once
 
 #include "engine/Prelude.hpp"
+#include "engine/Unprojection.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Vao.hpp"
 #include <glm/mat4x4.hpp>
-
 namespace engine::gl {
-
-struct Frustum final {
-    float left;
-    float right;
-    float bottom;
-    float top;
-    float near;
-    float far;
-    Frustum(float left, float right, float bottom, float top, float near, float far)
-        : left(left)
-        , right(right)
-        , bottom(bottom)
-        , top(top)
-        , near(near)
-        , far(far) { }
-};
 
 class FrustumRenderer final {
 
@@ -37,7 +21,7 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] () -> FrustumRenderer;
-    void Render(glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0)) const;
+    void Render(glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0), float thickness = 0.015f) const;
 
 private:
     Vao vao_{};

@@ -3,6 +3,7 @@
 #include "engine/EngineLoop.hpp"
 #include "engine/IcosphereMesh.hpp"
 #include "engine/PlaneMesh.hpp"
+#include "engine/Unprojection.hpp"
 #include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
@@ -185,6 +186,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     app->flatRenderer = gl::FlatRenderer::Allocate();
 }
+
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
@@ -199,7 +201,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     float cameraRadius    = 15.0f;
     glm::mat4 cameraModel = glm::translate(
-        glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(ctx.timeSec), cameraRadius * glm::sin(ctx.timeSec), 3.0f));
+        glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(rotationSpeed), cameraRadius * glm::sin(rotationSpeed), 3.0f));
     // cameraModel           = glm::rotate(cameraModel, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::vec3 cameraPosition = gl::TransformOrigin(cameraModel);
@@ -207,8 +209,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::vec3 cameraUp       = glm::vec3(0.0f, 0.0f, 1.0f);
     glm::mat4 view           = glm::lookAtRH(glm::vec3{cameraPosition}, cameraTarget, cameraUp);
 
+    glm::mat4 firstView = glm::translate(
+        glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(1.5f), cameraRadius * glm::sin(1.0f), 3.0f));
+    firstView           = glm::lookAtRH(gl::TransformOrigin(firstView), cameraTarget, cameraUp);
+    glm::mat4 firstInvView = glm::inverse(firstView);
+
     float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
-    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 100.0f);
+    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 50.0f);
 
     glm::mat4 camera = proj * view;
 
@@ -216,7 +223,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         // textured box
 
         auto fbGuard = gl::FramebufferCtx{app->outputFramebuffer, true};
-        fbGuard      = fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
+        fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
         GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
 
         glm::mat4 model = glm::mat4(1.0f);
@@ -304,7 +311,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     {
         // present
         glViewport(0, 0, screenSize.x, screenSize.y);
-        auto dstGuard = gl::FramebufferCtx{0U, true}.ClearDepthStencil(1.0f, 0);
+        auto dstGuard = gl::FramebufferCtx{0U, true};
+        dstGuard.ClearDepthStencil(1.0f, 0);
         // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
         // .Invalidate(1, invalidateAttachments);
         app->commonRenderers.Blit2D(app->outputColor.Id());
@@ -315,15 +323,23 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto fbGuard         = gl::FramebufferCtx{0U, true};
 
         glm::mat4 model{1.0};
-        model = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::rotate(model, rotationSpeed*0.5f, glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::translate(model, glm::vec3(1.6f, 0.0f, 0.0f));
 
         glm::mat4 mvp = camera * model;
-        // app->commonRenderers.RenderBox(mvp, glm::vec4(1.0f, 0.5f, 1.0f, 1.0f));
+        app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
-        float near = (std::sin(ctx.timeSec) + 1.5f) * 3.0f;
-        gl::Frustum frustum{-0.3f, 1.3f + std::sin(2.0f * ctx.timeSec), -0.3f, 0.3f, near, 10.0f};
-        // app->commonRenderers.RenderFrustum(mvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f));
+        float far = (std::sin(ctx.timeSec) + 2.5f) * 1.0f;
+        float frustumHeight = 0.2f;
+        float frustumWidth = frustumHeight * aspectRatio;
+        Frustum frustum = ProjectionToFrustum(proj);
+
+        // glm::mat4 frustumModel = glm::inverse(view);
+        // frustumModel = glm::rotate(frustumModel, rotationSpeed*1.5f, glm::vec3(0.0f, 0.0f, 1.0f));
+        // frustumModel = glm::translate(frustumModel, glm::vec3(1.0f, 1.0f, -5.0f));
+        app->commonRenderers.RenderFrustum(camera * firstInvView,
+            frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
+        app->commonRenderers.RenderAxes(camera * firstInvView, 0.5f, ColorCode::BLACK);
 
         {
             // glm::mat4 mvp = camera * model;

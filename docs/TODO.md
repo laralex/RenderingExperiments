@@ -1,3 +1,4 @@
+* framebuffer draw buffers management
 * render utils (billboard)
 * inverted Y axis
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
