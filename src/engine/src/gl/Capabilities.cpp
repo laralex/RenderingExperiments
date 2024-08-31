@@ -2,16 +2,16 @@
 
 namespace engine::gl {
 
-bool GlCapabilities::isInitialized    = false;
-GLint GlCapabilities::maxTextureUnits = 0xDEAD;
-GLint GlCapabilities::numExtensions   = 0xDEAD;
-GLint GlCapabilities::majorVersion    = 0xDEAD;
-GLint GlCapabilities::minorVersion    = 0xDEAD;
-GLint GlCapabilities::maxUboBindings  = 0xDEAD;
-GLint GlCapabilities::maxUboBlocksVertex  = 0xDEAD;
-GLint GlCapabilities::maxUboBlocksFragment  = 0xDEAD;
-GLint GlCapabilities::maxUboBlocksGeometry  = 0xDEAD;
-GLint GlCapabilities::uboOffsetAlignment  = 0xDEAD;
+bool GlCapabilities::isInitialized         = false;
+GLint GlCapabilities::maxTextureUnits      = 0xDEAD;
+GLint GlCapabilities::numExtensions        = 0xDEAD;
+GLint GlCapabilities::majorVersion         = 0xDEAD;
+GLint GlCapabilities::minorVersion         = 0xDEAD;
+GLint GlCapabilities::maxUboBindings       = 0xDEAD;
+GLint GlCapabilities::maxUboBlocksVertex   = 0xDEAD;
+GLint GlCapabilities::maxUboBlocksFragment = 0xDEAD;
+GLint GlCapabilities::maxUboBlocksGeometry = 0xDEAD;
+GLint GlCapabilities::uboOffsetAlignment   = 0xDEAD;
 
 void GlCapabilities::Initialize() {
     if (isInitialized) { return; }

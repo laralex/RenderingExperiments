@@ -66,14 +66,17 @@ auto ImageLoader::Load(CpuView<uint8_t> encodedImageData, int32_t numDesiredChan
     assert(encodedImageData.byteStride = sizeof(uint8_t));
 
     LoadInfo result{};
-    if (int ok = stbi_info_from_memory(encodedImageData.data, encodedImageData.NumElements(),
-            &result.width, &result.height, &result.numChannelsInFile); ok == 0) {
+    if (int ok = stbi_info_from_memory(
+            encodedImageData.data, encodedImageData.NumElements(), &result.width, &result.height,
+            &result.numChannelsInFile);
+        ok == 0) {
         latestError_ = stbi_failure_reason();
         return std::nullopt;
     }
 
-    auto decodedImageData = stbi_load_from_memory(encodedImageData.data, encodedImageData.NumElements(),
-            &result.width, &result.height, &result.numChannelsInFile, numDesiredChannels);
+    auto decodedImageData = stbi_load_from_memory(
+        encodedImageData.data, encodedImageData.NumElements(), &result.width, &result.height, &result.numChannelsInFile,
+        numDesiredChannels);
     if (!decodedImageData) {
         latestError_ = stbi_failure_reason();
         return std::nullopt;
@@ -89,13 +92,12 @@ auto ImageLoader::Load(CpuView<uint8_t> encodedImageData, int32_t numDesiredChan
     }
 
     loadedImages_[nextImageId_] = decodedImageData;
-    result.numChannelsDecoded = numDesiredChannels;
-    result.numDecodedBytes = result.width * result.height * result.numChannelsDecoded * sizeof(uint8_t);
-    result.loadedImageId = nextImageId_;
+    result.numChannelsDecoded   = numDesiredChannels;
+    result.numDecodedBytes      = result.width * result.height * result.numChannelsDecoded * sizeof(uint8_t);
+    result.loadedImageId        = nextImageId_;
     ++nextImageId_;
     return std::optional{result};
 }
-
 
 } // namespace engine
 
@@ -107,27 +109,24 @@ auto LoadShaderCode(std::string_view const filepath, CpuView<ShaderDefine const>
     return code;
 }
 
-auto LoadTexture[[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture> {
+auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture> {
     auto cpuImage = args.loader.Load(args.filepath, args.numChannels);
     if (!cpuImage) {
         XLOGE("Failed to load texture: {}", args.loader.LatestError());
         return std::nullopt;
     }
     assert(cpuImage);
-    auto texture = gl::Texture::Allocate2D(GL_TEXTURE_2D,
-        glm::ivec3(cpuImage->width, cpuImage->height, 0), args.format, args.name);
-    auto textureGuard = gl::TextureCtx{texture}
-        .Fill2D(gl::TextureCtx::FillArgs{
-            .dataFormat = GL_RGB,
-            .dataType = GL_UNSIGNED_BYTE,
-            .data = args.loader.ImageData(cpuImage->loadedImageId),
-            .size = texture.Size(),
-            .mipLevel = 0,
-        });
+    auto texture = gl::Texture::Allocate2D(
+        GL_TEXTURE_2D, glm::ivec3(cpuImage->width, cpuImage->height, 0), args.format, args.name);
+    auto textureGuard = gl::TextureCtx{texture}.Fill2D(gl::TextureCtx::FillArgs{
+        .dataFormat = GL_RGB,
+        .dataType   = GL_UNSIGNED_BYTE,
+        .data       = args.loader.ImageData(cpuImage->loadedImageId),
+        .size       = texture.Size(),
+        .mipLevel   = 0,
+    });
 
-    if (args.withMips) {
-        (void)textureGuard.GenerateMipmaps();
-    }
+    if (args.withMips) { (void)textureGuard.GenerateMipmaps(); }
     return texture;
 }
 

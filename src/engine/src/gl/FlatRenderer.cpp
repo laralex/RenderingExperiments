@@ -17,7 +17,7 @@ constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
 constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
 
 constexpr GLint UNIFORM_MVP_LOCATION = 0;
-constexpr GLint UBO_BINDING  = 5; // global for GL
+constexpr GLint UBO_BINDING          = 5; // global for GL
 
 } // namespace
 

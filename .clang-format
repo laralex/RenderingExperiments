@@ -19,7 +19,6 @@ AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: WithoutElse
 
 EmptyLineBeforeAccessModifier: LogicalBlock
-IndentAccessModifiers: false
 AccessModifierOffset: -4
 IndentCaseBlocks: false
 IndentCaseLabels: false

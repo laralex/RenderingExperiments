@@ -28,7 +28,7 @@ public:
 
 // TODO: remove inline, move to cpp
 inline void RenderCtx::Update(int64_t currentTimeNs, int64_t frameIdx, RenderCtx& destination) const {
-    destination.frameIdx = frameIdx;
+    destination.frameIdx        = frameIdx;
     destination.timeNs          = currentTimeNs;
     destination.timeSec         = static_cast<float>(currentTimeNs / 1000) * 0.000001;
     destination.prevTimeNs      = this->timeNs;

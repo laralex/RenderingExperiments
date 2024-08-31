@@ -8,7 +8,7 @@
 namespace {
 
 constexpr GLint UNIFORM_MVP_LOCATION   = 0;
-constexpr GLint UBO_BINDING    = 0; // global for GL
+constexpr GLint UBO_BINDING            = 0; // global for GL
 constexpr GLint UNIFORM_COLOR_LOCATION = 100;
 
 constexpr float THICKNESS = 0.01f;
@@ -177,7 +177,7 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
         "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
         "FrustumRenderer");
     assert(maybeProgram);
-    renderer.program_ = std::move(*maybeProgram);
+    renderer.program_     = std::move(*maybeProgram);
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     renderer.ubo_ =

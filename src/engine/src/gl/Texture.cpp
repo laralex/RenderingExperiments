@@ -120,7 +120,8 @@ auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) && -> TextureCt
 
 static void Fill2DImpl(GLenum target, TextureCtx::FillArgs const& args) {
     GLint offsetX = 0, offsetY = 0;
-    GLCALL(glTexSubImage2D(target, args.mipLevel, offsetX, offsetY, args.size.x, args.size.y, args.dataFormat, args.dataType, args.data));
+    GLCALL(glTexSubImage2D(
+        target, args.mipLevel, offsetX, offsetY, args.size.x, args.size.y, args.dataFormat, args.dataType, args.data));
 }
 
 auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) & -> TextureCtx& {

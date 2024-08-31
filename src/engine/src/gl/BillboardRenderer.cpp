@@ -16,7 +16,7 @@ namespace engine::gl {
 auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
-    constexpr GLint UNIFORM_COLOR_LOCATION = 0;
+    constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
     BillboardRenderer renderer;
 
     gl::ShaderDefine const defines[] = {
@@ -32,7 +32,7 @@ auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
         CpuView{defines, std::size(defines)}, "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram_ = std::move(*maybeProgram);
-    auto programGuard = UniformCtx{renderer.quadVaoProgram_};
+    auto programGuard        = UniformCtx{renderer.quadVaoProgram_};
     programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, 1.0f, 0.42f, 1.0f, 1.0f);
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 

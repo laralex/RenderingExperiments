@@ -38,14 +38,14 @@ namespace engine::gl {
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
-    axesRenderer_                = AxesRenderer::Allocate();
-    boxRenderer_                 = BoxRenderer::Allocate();
-    frustumRenderer_             = FrustumRenderer::Allocate();
-    billboardRenderer_           = BillboardRenderer::Allocate();
-    constexpr size_t MAX_LINES   = 10'000;
-    lineRenderer_                = LineRenderer::Allocate(MAX_LINES);
+    axesRenderer_               = AxesRenderer::Allocate();
+    boxRenderer_                = BoxRenderer::Allocate();
+    frustumRenderer_            = FrustumRenderer::Allocate();
+    billboardRenderer_          = BillboardRenderer::Allocate();
+    constexpr size_t MAX_LINES  = 10'000;
+    lineRenderer_               = LineRenderer::Allocate(MAX_LINES);
     constexpr size_t MAX_POINTS = 10'000;
-    pointRenderer_         = PointRenderer::Allocate(MAX_POINTS);
+    pointRenderer_              = PointRenderer::Allocate(MAX_POINTS);
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -81,12 +81,11 @@ void CommonRenderers::Initialize() {
         42,
         255,
     };
-    (void)gl::TextureCtx{stubColorTexture_}.Fill2D({
-        .dataFormat = GL_RGB,
-        .dataType = GL_UNSIGNED_BYTE,
-        .data = TEXTURE_DATA_STUB_COLOR,
-        .size = stubColorTexture_.Size()
-    });
+    (void)gl::TextureCtx{stubColorTexture_}.Fill2D(
+        {.dataFormat = GL_RGB,
+         .dataType   = GL_UNSIGNED_BYTE,
+         .data       = TEXTURE_DATA_STUB_COLOR,
+         .size       = stubColorTexture_.Size()});
 }
 
 void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {

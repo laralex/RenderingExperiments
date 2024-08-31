@@ -76,9 +76,9 @@ constexpr GLint ATTRIB_POSITION_LOCATION           = 0;
 constexpr GLint ATTRIB_UV_LOCATION                 = 1;
 constexpr GLint ATTRIB_NORMAL_LOCATION             = 2;
 constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
-constexpr GLint UNIFORM_TEXTURE_BINDING           = 0;
+constexpr GLint UNIFORM_TEXTURE_BINDING            = 0;
 constexpr GLint UNIFORM_MVP_LOCATION               = 10;
-constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
+constexpr GLint UBO_SAMPLER_TILING_BINDING         = 4;
 constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
 
 static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
@@ -108,23 +108,20 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
-    auto boxCpuMesh = BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f}, false);
-    app->boxMesh    = gl::AllocateBoxMesh(
-        boxCpuMesh,
+    app->boxMesh = gl::AllocateBoxMesh(
+        BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f}, false),
         gl::GpuMesh::AttributesLayout{
-               .positionLocation = ATTRIB_POSITION_LOCATION,
-               .uvLocation       = ATTRIB_UV_LOCATION,
-               .normalLocation   = ATTRIB_NORMAL_LOCATION,
+            .positionLocation = ATTRIB_POSITION_LOCATION,
+            .uvLocation       = ATTRIB_UV_LOCATION,
+            .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    auto uvSphere = UvSphereMesh::Generate({
-        .numMeridians       = 20,
-        .numParallels       = 20,
-        .clockwiseTriangles = false,
-    });
-
     app->sphereMesh = gl::AllocateUvSphereMesh(
-        uvSphere,
+        UvSphereMesh::Generate({
+            .numMeridians       = 20,
+            .numParallels       = 20,
+            .clockwiseTriangles = false,
+        }),
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
@@ -152,38 +149,22 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    // for (int i = 0; i < planeMesh.vertexData.size(); ++i) {
-    //     auto ii = i % planeMesh.vertexData.size();
-    //     app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
-    //     app->debugLines.PushRay(planeMesh.vertexPositions[ii], planeMesh.vertexData[ii].normal * 0.2f);
-    // }
-    // app->debugLines.SetTransform(glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0.0f, 0.0f}));
-    // for (int i = 0; i < planeMesh.vertexData.size(); ++i) {
-    //     // app->debugLines.SetColor(static_cast<ColorCode>(i % static_cast<int>(ColorCode::NUM_COLORS)));
-    //     app->debugLines.PushRay(
-    //         planeMesh.vertexPositions[i],
-    //         glm::cross(planeMesh.vertexData[i].normal, glm::vec3{0.0f, 0.0f, -1.0f}) * -0.2f);
-    // }
     int off = 1;
     for (int i = off; i < off + 8 /* planeMesh.indices.size() */; ++i) {
-        // if (i % planeSize.x == 0) {
-        //     app->debugPoints.SetColor(static_cast<ColorCode>(
-        //         (i / planeSize.x)  % static_cast<int>(ColorCode::NUM_COLORS)));
-        // }
         auto vi = planeMesh.indices[i];
         app->debugPoints.SetColor(static_cast<ColorCode>((i - off) % 4));
         app->debugPoints.PushPoint(planeMesh.vertexPositions[vi], 0.03f);
     }
 
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
-        .loader = app->imageLoader,
-        .filepath = "data/app/textures/shrek.jpeg",
-        .format = GL_RGB8,
+        .loader      = app->imageLoader,
+        .filepath    = "data/app/textures/shrek.jpeg",
+        .format      = GL_RGB8,
         .numChannels = 3,
     });
     assert(maybeTexture);
 
-    app->texture = std::move(*maybeTexture);
+    app->texture          = std::move(*maybeTexture);
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
         GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;

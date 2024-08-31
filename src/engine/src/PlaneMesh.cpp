@@ -28,9 +28,9 @@ auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwi
     uvScale.x *= -1;
     for (int32_t row = 0; row < numSegments.y; ++row) {
         for (int32_t col = 0; col < numSegments.x; ++col) {
-            glm::vec3 position = glm::vec3{static_cast<float>(col), static_cast<float>(row), 0.0f};
+            glm::vec3 position              = glm::vec3{static_cast<float>(col), static_cast<float>(row), 0.0f};
             mesh.vertexPositions[vertexIdx] = position + centerOffset;
-            mesh.vertexData[vertexIdx] = {{glm::vec2{position} * uvScale}};
+            mesh.vertexData[vertexIdx]      = {{glm::vec2{position} * uvScale}};
             if (vertexDataIdx >= std::size(SEGMENT_DATA)) { vertexDataIdx = 0; }
             ++vertexIdx;
         }

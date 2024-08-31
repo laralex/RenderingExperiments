@@ -122,8 +122,8 @@ void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32
 }
 
 void PointRenderer::LimitInstances(int32_t numInstances) {
-    lastInstance_ = std::min(
-        numInstances, static_cast<int32_t>(instancesBuffer_.SizeBytes() / sizeof(PointRendererInput::Point)));
+    lastInstance_ =
+        std::min(numInstances, static_cast<int32_t>(instancesBuffer_.SizeBytes() / sizeof(PointRendererInput::Point)));
 }
 
 void PointRenderer::Fill(
@@ -132,7 +132,7 @@ void PointRenderer::Fill(
     auto const byteOffset = numPointsOffset * sizeof(T);
     auto const numBytes   = std::min(
         instancesBuffer_.SizeBytes() - byteOffset, // buffer limit
-        numPoints * sizeof(T)                     // argument limit
+        numPoints * sizeof(T)                      // argument limit
     );
     instancesBuffer_.Fill(points.data(), numBytes, byteOffset);
 }

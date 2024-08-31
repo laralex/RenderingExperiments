@@ -7,7 +7,8 @@
 
 namespace engine::gl {
 
-auto LinkProgram(std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name, bool logCode)
+auto LinkProgram(
+    std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name, bool logCode)
     -> std::optional<GpuProgram> {
     if (logCode) {
         XLOG("Compiling program [{}] type=vertex\n{}", name, vertexShaderCode);

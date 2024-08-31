@@ -22,9 +22,11 @@ struct ImageLoader final {
 
 public:
 #define Self ImageLoader
-    explicit Self(size_t temporaryBufferNumBytes = 4*1024*1024) noexcept
-        : temporaryBuffer_(temporaryBufferNumBytes), loadedImages_{},
-          nextImageId_{0}, latestError_{nullptr} {}
+    explicit Self(size_t temporaryBufferNumBytes = 4 * 1024 * 1024) noexcept
+        : temporaryBuffer_(temporaryBufferNumBytes)
+        , loadedImages_{}
+        , nextImageId_{0}
+        , latestError_{nullptr} { }
     ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
@@ -34,10 +36,10 @@ public:
 
     struct LoadInfo {
         int32_t loadedImageId;
-        int32_t numDecodedBytes = 0U;
-        int32_t width = 0;
-        int32_t height = 0;
-        int32_t numChannelsInFile = 0;
+        int32_t numDecodedBytes    = 0U;
+        int32_t width              = 0;
+        int32_t height             = 0;
+        int32_t numChannelsInFile  = 0;
         int32_t numChannelsDecoded = 0;
     };
 
@@ -51,7 +53,7 @@ private:
     constexpr static int32_t MAX_LOADED_IMAGES = 32;
     std::unordered_map<int32_t, uint8_t*> loadedImages_{};
     std::vector<uint8_t> temporaryBuffer_{};
-    int32_t nextImageId_ = 0;
+    int32_t nextImageId_     = 0;
     const char* latestError_ = nullptr;
 };
 
@@ -64,11 +66,11 @@ auto LoadShaderCode [[nodiscard]] (std::string_view const filepath, CpuView<Shad
 struct LoadTextureArgs final {
     ImageLoader& loader;
     std::string_view const filepath = {};
-    GLenum format = GL_NONE;
-    int32_t numChannels = 0;
-    std::string_view name = {};
-    bool withMips = false;
+    GLenum format                   = GL_NONE;
+    int32_t numChannels             = 0;
+    std::string_view name           = {};
+    bool withMips                   = false;
 };
-auto LoadTexture[[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture>;
+auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture>;
 
 } // namespace engine::gl
