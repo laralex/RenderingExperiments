@@ -20,7 +20,7 @@ public:
         GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name = {})
         -> GpuBuffer;
     auto Id [[nodiscard]] () const -> GLuint { return bufferId_; }
-    void Fill(GLvoid const* data, GLsizeiptr dataSize, GLintptr gpuByteOffset = 0) const;
+    void Fill(CpuMemory<GLvoid const> cpuData, GLintptr gpuByteOffset = 0) const;
     auto SizeBytes() const -> int32_t { return sizeBytes_; };
 
 private:

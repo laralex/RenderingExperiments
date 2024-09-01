@@ -196,7 +196,7 @@ void FrustumRenderer::Render(
         .nearFarThickness   = {frustum.near, frustum.far, thickness, 0.0},
     };
 
-    ubo_.Fill(&data, sizeof(data));
+    ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
     // programGuard.SetUbo(uboLocation_, UBO_BINDING);
 

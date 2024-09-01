@@ -66,7 +66,7 @@ void LineRenderer::Fill(
         attributeBuffer_.SizeBytes() - byteOffset, // buffer limit
         numLines * sizeof(T)                       // argument limit
     );
-    attributeBuffer_.Fill(lines.data(), numBytes, byteOffset);
+    attributeBuffer_.Fill(CpuMemory<GLvoid const>{lines.data(), numBytes}, byteOffset);
 }
 
 } // namespace engine::gl

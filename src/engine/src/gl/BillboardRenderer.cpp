@@ -47,7 +47,7 @@ void BillboardRenderer::Render(BillboardRenderArgs const& args) const {
     GpuProgram const& program = quadVaoProgram_;
     auto programGuard         = gl::UniformCtx(program);
 
-    ubo_.Fill(&args.shaderArgs, sizeof(args.shaderArgs));
+    ubo_.Fill(CpuMemory<GLvoid const>{&args.shaderArgs, sizeof(args.shaderArgs)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));
     // programGuard.SetUbo(uboLocation_, UBO_CONTEXT_BINDING);
 

@@ -138,7 +138,7 @@ void PointRenderer::Fill(
         instancesBuffer_.SizeBytes() - byteOffset, // buffer limit
         numPoints * sizeof(T)                      // argument limit
     );
-    instancesBuffer_.Fill(points.data(), numBytes, byteOffset);
+    instancesBuffer_.Fill(CpuMemory<GLvoid const>{points.data(), numBytes}, byteOffset);
 }
 
 } // namespace engine::gl

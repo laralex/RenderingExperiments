@@ -60,7 +60,7 @@ void FlatRenderer::Render(FlatRenderArgs const& args) const {
         .lightTowardsDirection = towardsLight,
     };
 
-    ubo_.Fill(&data, sizeof(data));
+    ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
 
     auto programGuard = gl::UniformCtx(program_);

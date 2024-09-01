@@ -92,7 +92,10 @@ template <typename T> struct CpuView {
 
     explicit operator bool() const { return data != nullptr; }
     operator CpuViewConst const&() const { return reinterpret_cast<CpuViewConst const&>(*this); }
+    auto Begin() const -> T* { return reinterpret_cast<T*>(data); }
+    auto End() const -> T* { return reinterpret_cast<T*>(dataEnd); }
     auto NumElements() const -> size_t { return (dataEnd - data) / byteStride; }
+    auto NumBytes() const -> size_t { return dataEnd - data; }
     auto IsContiguous() const -> bool { return byteStride == sizeof(T); }
     auto IsEmpty() const -> bool { return data == nullptr | std::distance(data, dataEnd) == 0; }
 };

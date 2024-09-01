@@ -171,7 +171,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     app->uboDataSamplerTiling.albedoIdx = 42;
     gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
-    app->uboSamplerTiling.Fill(&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling), 0);
+    app->uboSamplerTiling.Fill(CpuMemory<GLvoid const>{&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling)});
 
     app->outputColor =
         gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");

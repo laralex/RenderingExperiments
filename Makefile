@@ -70,6 +70,7 @@ obj_engine_ = \
 obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})
 ifeq (1,${USE_DEP_FILES})
 -include $(obj_engine:.o=.d)
+-include ${PRECOMPILED_HEADER:.pch=.d}
 endif
 
 .PHONY: wtf
