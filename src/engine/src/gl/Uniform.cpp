@@ -21,15 +21,15 @@ UniformCtx::~UniformCtx() noexcept {
     hasInstances_ = false;
 }
 
-auto UniformCtx::GetUboLocation(GpuProgram const& program, char const* programUboName) -> GLint {
+auto UniformCtx::GetUboLocation(GpuProgram const& program, std::string_view programUboName) -> GLint {
     GLint blockIndex;
-    GLCALL(blockIndex = glGetUniformBlockIndex(program.Id(), programUboName));
+    GLCALL(blockIndex = glGetUniformBlockIndex(program.Id(), programUboName.data()));
     return blockIndex;
 }
 
-auto UniformCtx::GetUboLocation(char const* programUboName) const -> GLint {
+auto UniformCtx::GetUboLocation(std::string_view programUboName) const -> GLint {
     GLint blockIndex;
-    GLCALL(blockIndex = glGetUniformBlockIndex(contextProgram_, programUboName));
+    GLCALL(blockIndex = glGetUniformBlockIndex(contextProgram_, programUboName.data()));
     return blockIndex;
 }
 

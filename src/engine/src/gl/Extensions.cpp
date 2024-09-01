@@ -5,7 +5,7 @@
 namespace engine::gl {
 
 bool GlExtensions::isInitialized = false;
-std::unordered_set<std::string> GlExtensions::allExtensions{};
+std::unordered_set<std::string, StringHash, std::equal_to<>> GlExtensions::allExtensions{};
 bool GlExtensions::hardcodedExtensions[static_cast<size_t>(Name::NUM_HARDCODED_EXTENSIONS)]{};
 
 void GlExtensions::Initialize() {
@@ -20,7 +20,8 @@ void GlExtensions::Initialize() {
         // XLOG("Extension {}", extensionName);
         allExtensions.insert(extensionName);
     }
-    auto supports = [](char const* ext) {
+    // NOTE: std::string_view doesn't work even with transparent hashing (StringHash)
+    auto supports = [](const char* ext) {
         bool supported = allExtensions.find(ext) != allExtensions.end();
         XLOG("Extension {} supported={}", ext, static_cast<int>(supported));
         return supported;
@@ -48,7 +49,7 @@ auto GlExtensions::NumExtensions() -> int32_t {
     return allExtensions.size();
 }
 
-auto GlExtensions::Supports(char const* extensionName) -> bool {
+auto GlExtensions::Supports(const char* extensionName) -> bool {
     assert(isInitialized);
     return allExtensions.find(extensionName) != allExtensions.end();
 }

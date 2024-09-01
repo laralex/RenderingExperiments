@@ -26,7 +26,7 @@ public:
         : temporaryBuffer_(temporaryBufferNumBytes)
         , loadedImages_{}
         , nextImageId_{0}
-        , latestError_{nullptr} { }
+        , latestError_{} { }
     ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
@@ -47,14 +47,14 @@ public:
     auto Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
 
     auto ImageData(int32_t loadedImageId) const -> CpuView<uint8_t const>;
-    auto LatestError() const -> char const* { return latestError_; };
+    auto LatestError() const -> std::string_view { return latestError_; };
 
 private:
     constexpr static int32_t MAX_LOADED_IMAGES = 32;
     std::unordered_map<int32_t, CpuView<uint8_t>> loadedImages_{};
     std::vector<uint8_t> temporaryBuffer_{};
     int32_t nextImageId_     = 0;
-    const char* latestError_ = nullptr;
+    std::string_view latestError_ = {};
 };
 
 } // namespace engine

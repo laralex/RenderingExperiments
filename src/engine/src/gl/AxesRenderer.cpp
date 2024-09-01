@@ -142,7 +142,7 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
         {.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = gl::ShaderDefine::INT32},
     };
 
-    auto makeProgram = [=](GpuProgram& out, char const* name) {
+    auto makeProgram = [=](GpuProgram& out, std::string_view name) {
         auto maybeProgram = gl::LinkProgramFromFiles(
             "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
             CpuView{defines, std::size(defines)}, name);

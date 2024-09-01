@@ -11,12 +11,12 @@ using namespace engine::gl;
 template <typename IndexT> struct AllocateMeshInfo {
     GpuMesh::AttributesLayout layout;
     std::vector<glm::vec3> const& vertexPositions{};
-    const char* vertexPositionsLabel{};
+    std::string_view vertexPositionsLabel{};
     void const* vertexData{};
-    const char* vertexDataLabel{};
+    std::string_view vertexDataLabel{};
     std::vector<IndexT> const& indices{};
-    const char* indicesLabel{};
-    const char* vaoLabel{};
+    std::string_view indicesLabel{};
+    std::string_view vaoLabel{};
     bool isClockwiseWinding;
     GLsizei vertexDataStride;
     GLsizei vertexDataUvOffset;

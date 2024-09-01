@@ -1,8 +1,14 @@
 #pragma once
 
+#include "engine/Precompiled.hpp"
 #include <glad/gl.h>
 
 #include <unordered_set>
+
+namespace engine{
+    struct StringHash;
+//     struct StringEqual;
+} // namespace engine
 
 namespace engine::gl {
 
@@ -44,12 +50,13 @@ public:
     static void Initialize();
     static auto IsInitialized [[nodiscard]] () -> bool { return isInitialized; }
     static auto NumExtensions [[nodiscard]] () -> int32_t;
+    // NOTE: std::string_view doesn't work even with transparent hashing (StringHash)
     static auto Supports [[nodiscard]] (char const* extensionName) -> bool;
     static auto Supports [[nodiscard]] (GlExtensions::Name extensionName) -> bool;
 
 private:
     static bool isInitialized;
-    static std::unordered_set<std::string> allExtensions;
+    static std::unordered_set<std::string, engine::StringHash, std::equal_to<>> allExtensions;
     static bool hardcodedExtensions[NUM_HARDCODED_EXTENSIONS];
 };
 

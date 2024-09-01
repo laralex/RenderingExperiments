@@ -18,8 +18,8 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
-    static auto GetUboLocation [[nodiscard]] (GpuProgram const& program, char const* programUboName) -> GLint;
-    auto GetUboLocation [[nodiscard]] (char const* programUboName) const -> GLint;
+    static auto GetUboLocation [[nodiscard]] (GpuProgram const& program, std::string_view programUboName) -> GLint;
+    auto GetUboLocation [[nodiscard]] (std::string_view programUboName) const -> GLint;
     void SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const;
 
     // NOTE: No CpuView wrapper used, because data length is guaranteed by function user

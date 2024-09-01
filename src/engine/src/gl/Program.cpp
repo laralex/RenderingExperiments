@@ -62,7 +62,7 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     static char infoLog[512];
     GLCALL(glGetShaderInfoLog(shader, 512, nullptr, infoLog));
     GLCALL(glDeleteShader(shader));
-    char const* typeLabel =
+    std::string_view typeLabel =
         (shaderType == GL_VERTEX_SHADER ? "vertex" : (shaderType == GL_FRAGMENT_SHADER ? "fragment" : "compute"));
     XLOGE("Failed to compile {} shader:\n{}", typeLabel, infoLog);
 

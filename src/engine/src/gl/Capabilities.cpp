@@ -17,7 +17,7 @@ GLint GlCapabilities::maxDrawBuffers       = 0xDEAD;
 void GlCapabilities::Initialize() {
     if (isInitialized) { return; }
 
-    auto getCapability = [](GLenum cap, char const* capStr, GLint& destination) {
+    auto getCapability = [](GLenum cap, std::string_view capStr, GLint& destination) {
         GLCALL(glGetIntegerv(cap, &destination));
         XLOG("GlCapabilities::{} = {}", capStr, destination);
     };

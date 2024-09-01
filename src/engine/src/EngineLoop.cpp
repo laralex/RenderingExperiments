@@ -42,6 +42,7 @@ namespace {
 
 std::optional<engine::EngineCtx> g_engineCtx = std::nullopt;
 
+// NOTE: can't use std::string_view (third party callback)
 void GlfwErrorCallback(int errCode, char const* message) { XLOGE("GLFW_ERROR({}): {}", errCode, message); }
 
 bool InitializeCommonResources() {
