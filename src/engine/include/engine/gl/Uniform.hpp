@@ -21,12 +21,17 @@ public:
     static auto GetUboLocation [[nodiscard]] (GpuProgram const& program, char const* programUboName) -> GLint;
     auto GetUboLocation [[nodiscard]] (char const* programUboName) const -> GLint;
     void SetUbo(GLuint programBinding, GLuint bufferBindingIdx) const;
+
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     void SetUniformMatrix2x2(
         GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     void SetUniformMatrix3x3(
         GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     void SetUniformMatrix4x4(
         GLint location, GLfloat const* values, GLsizei numMatrices = 1, GLboolean transpose = false);
+
     void SetUniformTexture(GLint location, GLint textureSlot);
 
     template <typename T> void SetUniformValue1(GLint location, T const value) {
@@ -43,6 +48,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformValue2(GLint location, T const* values2) {
         SetUniformValue2(location, values2[0], values2[1]);
     }
@@ -61,6 +67,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformValue3(GLint location, T const* values3) {
         SetUniformValue3(location, values3[0], values3[1], values3[2]);
     }
@@ -79,6 +86,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformValue4(GLint location, T const* values4) {
         SetUniformValue4(location, values4[0], values4[1], values4[2], values4[3]);
     }
@@ -98,6 +106,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformArrayOf1(GLint location, T const* values, GLsizei numValues) {
         if constexpr (std::is_same_v<T, GLint>) {
             GLCALL(glUniform1iv(location, numValues, values));
@@ -110,6 +119,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformArrayOf2(GLint location, T const* values, GLsizei numValues) {
         if constexpr (std::is_same_v<T, GLint>) {
             GLCALL(glUniform2iv(location, numValues, values));
@@ -122,6 +132,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformArrayOf3(GLint location, T const* values, GLsizei numValues) {
         if constexpr (std::is_same_v<T, GLint>) {
             GLCALL(glUniform3iv(location, numValues, values));
@@ -134,6 +145,7 @@ public:
         }
     }
 
+    // NOTE: No CpuView wrapper used, because data length is guaranteed by function user
     template <typename T> void SetUniformArrayOf4(GLint location, T const* values, GLsizei numValues) {
         if constexpr (std::is_same_v<T, GLint>) {
             GLCALL(glUniform4iv(location, numValues, values));

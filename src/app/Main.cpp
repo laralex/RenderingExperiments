@@ -167,7 +167,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     app->texture          = std::move(*maybeTexture);
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
-        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(UboDataSamplerTiling), "SamplerTiling UBO");
+        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)}, "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
     gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();

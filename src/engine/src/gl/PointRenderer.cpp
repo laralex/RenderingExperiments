@@ -26,16 +26,20 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
     // auto mesh = BoxMesh::Generate();
 
     PointRenderer renderer;
+    size_t numPositionsBytes = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
     renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh.vertexPositions.data(),
-        std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]), "PointRenderer/TemplatePositionsVBO");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+        CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes}, "PointRenderer/TemplatePositionsVBO");
+    size_t numDataBytes = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
     renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, mesh.vertexData.data(),
-        std::size(mesh.vertexData) * sizeof(mesh.vertexData[0]), "PointRenderer/TemplateVBO");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+        CpuMemory<const void>{mesh.vertexData.data(), numDataBytes}, "PointRenderer/TemplateVBO");
     renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, nullptr, maxPoints * sizeof(T), "PointRenderer/InstancesVBO");
+        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW,
+        CpuMemory<void const>{nullptr, maxPoints * sizeof(T)}, "PointRenderer/InstancesVBO");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0]),
+        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
+        CpuMemory<void const>{mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0])},
         "PointRenderer/TemplateEBO");
 
     renderer.vao_ = gl::Vao::Allocate("PointRenderer/VAO");

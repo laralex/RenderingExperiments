@@ -9,6 +9,7 @@ namespace engine {
 struct EngineCtx;
 using EngineHandle = EngineCtx*;
 
+// NOTE: no CpuView is used here, because this wrapper is not suitable for void data
 using RenderCallback = void (*)(RenderCtx const&, WindowCtx const&, void* userData);
 
 auto CreateEngine [[nodiscard]] () -> std::optional<EngineHandle>;

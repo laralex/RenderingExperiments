@@ -197,8 +197,11 @@ auto IcosphereMesh::Generate(GenerationArgs args) -> IcosphereMesh {
 
     if (args.clockwiseTriangles) {
         InvertTriangleWinding(mesh.indices);
-        InvertTriangleNormals(
-            mesh.vertexData.data(), offsetof(Vertex, normal), sizeof(Vertex), std::size(mesh.vertexData));
+        InvertTriangleNormals(CpuView<glm::vec3>{
+            /* data */ mesh.vertexData.data(),
+            /* numElements */ std::size(mesh.vertexData),
+            /* byteOffset  */ offsetof(Vertex, normal),
+            /* byteStride  */ sizeof(Vertex)});
     }
 
     mesh.isClockwiseWinding = args.clockwiseTriangles;

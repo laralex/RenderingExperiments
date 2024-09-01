@@ -113,9 +113,9 @@ auto BoxRenderer::Allocate() -> BoxRenderer {
 
     BoxRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "BoxRenderer Vertices");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{vertexData, sizeof(vertexData)}, "BoxRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "BoxRenderer Indices");
+        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)}, "BoxRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate("BoxRenderer");
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(

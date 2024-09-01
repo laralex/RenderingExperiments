@@ -64,17 +64,25 @@ constexpr glm::vec3 COLOR_PALETTE[]{
 // aka simplified std::ranges::views::strided_view from C++23
 // NOTE: currently only works with pointers to const (T = const Foo)
 template <typename T> struct CpuView {
-    uint8_t const* data;
-    uint8_t const* dataEnd;
+    using CpuViewConst = CpuView<std::add_const_t<T>>;
+    using BytePtr = std::conditional_t<std::is_const_v<T>, uint8_t const*, uint8_t*>;
+    using VoidPtr = std::conditional_t<std::is_const_v<T>, void const*, void*>;
+
+    BytePtr data;
+    BytePtr dataEnd;
     size_t byteStride;
 
     explicit CpuView()
         : data(nullptr)
         , dataEnd(nullptr)
         , byteStride(0) { }
-    explicit CpuView(T* data, size_t numElements, size_t byteStride = sizeof(T))
-        : data(reinterpret_cast<uint8_t const*>(data))
-        , dataEnd(reinterpret_cast<uint8_t const*>(data) + numElements * byteStride)
+
+    explicit CpuView(T* data, size_t numElements, ptrdiff_t byteOffset = 0, size_t byteStride = sizeof(T)) requires (!std::is_same_v<T, void const> && !std::is_same_v<T, void>)
+        : CpuView(reinterpret_cast<VoidPtr>(data), numElements, byteOffset, byteStride) { }
+
+    explicit CpuView(VoidPtr data, size_t numElements, ptrdiff_t byteOffset = 0, size_t byteStride = sizeof(T))
+        : data(reinterpret_cast<BytePtr>(data) + byteOffset)
+        , dataEnd(this->data + numElements * byteStride)
         , byteStride(byteStride) { }
 
     auto operator[](size_t idx) -> T* {
@@ -83,16 +91,38 @@ template <typename T> struct CpuView {
     }
 
     explicit operator bool() const { return data != nullptr; }
+    operator CpuViewConst const&() const { return reinterpret_cast<CpuViewConst const&>(*this); }
     auto NumElements() const -> size_t { return (dataEnd - data) / byteStride; }
+    auto IsContiguous() const -> bool { return byteStride == sizeof(T); }
+    auto IsEmpty() const -> bool { return data == nullptr | std::distance(data, dataEnd) == 0; }
 };
 
-struct string_equal {
+// CpuMemory is same as CpuView, but contiguous (i.e. byteStride is equal to datatype)
+template <typename T> struct CpuMemory : CpuView<T> {
+    explicit CpuMemory(T* data, size_t numElements, ptrdiff_t byteOffset = 0)
+        : CpuView<T>(data, numElements, byteOffset, sizeof(T)) { }
+    explicit CpuMemory() : CpuView<T>() { }
+};
+
+template <> struct CpuMemory<void> : CpuView<void> {
+    explicit CpuMemory(void* data, size_t numElements, ptrdiff_t byteOffset = 0)
+        : CpuView<void>(data, numElements, byteOffset, 1) { }
+    explicit CpuMemory() : CpuView<void>() { }
+};
+
+template <> struct CpuMemory<void const> : CpuView<void const> {
+    explicit CpuMemory(void const* data, size_t numElements, ptrdiff_t byteOffset = 0)
+        : CpuView<void const>(data, numElements, byteOffset, 1) { }
+    explicit CpuMemory() : CpuView<void const>() { }
+};
+
+struct StringEqual {
     using is_transparent = std::true_type;
 
     bool operator()(std::string_view l, std::string_view r) const noexcept { return l == r; }
 };
 
-struct string_hash {
+struct StringHash {
     using hash_type      = std::hash<std::string_view>;
     using is_transparent = void;
 
@@ -110,6 +140,6 @@ template <typename IntT> void InvertTriangleWinding(std::vector<IntT>& triangleI
 
 void InvertTriangleStripWinding(std::vector<uint16_t>& triangleIndices);
 
-void InvertTriangleNormals(void* vertexData, int32_t normalsByteOffset, int32_t vertexStride, int32_t numVertices);
+void InvertTriangleNormals(CpuView<glm::vec3> vertexData);
 
 } // namespace engine

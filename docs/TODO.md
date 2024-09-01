@@ -2,8 +2,7 @@
 * inverted Y axis
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * camera
-* incremental compilation
-* use cpuview instead of pointers somewhere
+* use cpuview instead of pointers somewhere [^//][*][^//]
 
 world pos, world orient:
 offset world position = simple

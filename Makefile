@@ -49,7 +49,7 @@ obj_engine_ = \
 	LineRendererInput.o PointRendererInput.o \
 	PlaneMesh.o Unprojection.o \
 	UvSphereMesh.o \
-	Prelude.o WindowContext.o \
+	Precompiled.o WindowContext.o \
 	gl/AxesRenderer.o \
 	gl/BoxRenderer.o gl/ProceduralMeshes.o \
 	gl/BillboardRenderer.o \
@@ -68,7 +68,7 @@ obj_engine_ = \
 	gl/Vao.o
 
 obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})
-ifdef ${USE_DEP_FILES}
+ifeq (1,${USE_DEP_FILES})
 -include $(obj_engine:.o=.d)
 endif
 
@@ -125,6 +125,7 @@ ${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},
 	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private $(if $(USE_PCH),-include-pch ${PRECOMPILED_HEADER},) -c $< -o $@
 
 ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
+	$(info > Precompiled header $@)
 	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c -o $@ -xc++-header $<
 
 # compiling third party

@@ -41,7 +41,8 @@ auto FlatRenderer::Allocate() -> FlatRenderer {
     renderer.program_ = std::move(*maybeProgram);
 
     renderer.ubo_ =
-        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboData), "FlatRenderer UBO");
+        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW,
+        CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     return renderer;

@@ -59,7 +59,7 @@ public:
     auto ClearDepth(GLfloat value) const -> FramebufferDrawCtx const&;
     auto ClearStencil(GLint value) const -> FramebufferDrawCtx const&;
     auto ClearDepthStencil(GLfloat depth, GLint stencil) const -> FramebufferDrawCtx const&;
-    auto Invalidate(uint32_t numAttachments, GLenum* attachments) const -> FramebufferDrawCtx const&;
+    auto Invalidate(CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const&;
 
     auto IsComplete [[nodiscard]] () const -> bool;
 

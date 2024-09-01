@@ -99,10 +99,10 @@ auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -
 // }
 
 // valid attachments: COLOR_ATTACHMENTi, DEPTH_ATTACHMENT, or STENCIL_ATTACHMENT
-auto FramebufferDrawCtx::Invalidate(uint32_t numAttachments, GLenum* attachments) const -> FramebufferDrawCtx const& {
+auto FramebufferDrawCtx::Invalidate(CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const& {
     assert(GlExtensions::IsInitialized());
     if (GlExtensions::Supports(GlExtensions::ARB_invalidate_subdata)) {
-        GLCALL(glInvalidateFramebuffer(framebufferTarget_, numAttachments, attachments));
+        GLCALL(glInvalidateFramebuffer(framebufferTarget_, attachments.NumElements(), attachments[0]));
     }
     return *this;
 }

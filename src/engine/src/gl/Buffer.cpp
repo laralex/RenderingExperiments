@@ -11,7 +11,7 @@ void GpuBuffer::Dispose() {
 }
 
 auto GpuBuffer::Allocate(
-    GLenum targetType, GLenum usage, GLvoid const* data, GLsizeiptr dataSize, std::string_view name) -> GpuBuffer {
+    GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name) -> GpuBuffer {
     {
         GLenum t = targetType;
         assert(
@@ -24,12 +24,12 @@ auto GpuBuffer::Allocate(
     GpuBuffer gpuBuffer{};
     GLCALL(glGenBuffers(1, &gpuBuffer.bufferId_));
     GLCALL(glBindBuffer(targetType, gpuBuffer.bufferId_));
-    GLCALL(glBufferData(targetType, dataSize, data, usage));
+    GLCALL(glBufferData(targetType, data.NumElements(), data[0], usage));
     GLCALL(glBindBuffer(targetType, 0));
 
     gpuBuffer.targetType_ = targetType;
     gpuBuffer.usage_      = usage;
-    gpuBuffer.sizeBytes_  = dataSize;
+    gpuBuffer.sizeBytes_  = data.NumElements();
 
     if (!name.empty()) {
         DebugLabel(gpuBuffer, name);

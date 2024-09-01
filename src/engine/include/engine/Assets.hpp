@@ -11,7 +11,7 @@ namespace engine {
 
 auto LoadTextFile [[nodiscard]] (std::string_view const filepath) -> std::string;
 
-using FileSizeCallback = std::function<std::pair<uint8_t*, size_t>(size_t)>;
+using FileSizeCallback = std::function<CpuMemory<uint8_t>(size_t)>;
 
 // Argument sizeCallback accepts the file length in bytes, and returns destination memory pointer + its length in bytes.
 // This allows to react on the file size to return an appropriate destination storage
@@ -44,14 +44,14 @@ public:
     };
 
     auto Load(std::string_view const filepath, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
-    auto Load(CpuView<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
+    auto Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
 
-    auto ImageData(int32_t loadedImageId) const -> uint8_t const*;
+    auto ImageData(int32_t loadedImageId) const -> CpuView<uint8_t const>;
     auto LatestError() const -> char const* { return latestError_; };
 
 private:
     constexpr static int32_t MAX_LOADED_IMAGES = 32;
-    std::unordered_map<int32_t, uint8_t*> loadedImages_{};
+    std::unordered_map<int32_t, CpuView<uint8_t>> loadedImages_{};
     std::vector<uint8_t> temporaryBuffer_{};
     int32_t nextImageId_     = 0;
     const char* latestError_ = nullptr;

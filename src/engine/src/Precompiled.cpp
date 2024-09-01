@@ -12,11 +12,10 @@ void InvertTriangleStripWinding(std::vector<uint16_t>& triangleIndices) {
     }
 }
 
-void InvertTriangleNormals(void* vertexData, int32_t normalsByteOffset, int32_t vertexStride, int32_t numVertices) {
-    char* begin = static_cast<char*>(vertexData);
-    char* end   = begin + numVertices * vertexStride;
-    for (char* normals = begin + normalsByteOffset; normals < end; normals = normals + vertexStride) {
-        glm::vec3* normal = reinterpret_cast<glm::vec3*>(normals);
+void InvertTriangleNormals(CpuView<glm::vec3> vertexData) {
+    int32_t numVertices = vertexData.NumElements();
+    for (int32_t i = 0; i < numVertices; ++i) {
+        glm::vec3* normal = vertexData[i];
         *normal *= -1.0f;
     }
 }

@@ -37,7 +37,7 @@ auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
-        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, nullptr, sizeof(BillboardRenderArgs::ShaderArgs), "BillboardRenderer UBO");
+        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<const void>{nullptr, sizeof(BillboardRenderArgs::ShaderArgs)}, "BillboardRenderer UBO");
     // TODO: customVaoProgram_
     // TODO: provided fragment shader
     return renderer;

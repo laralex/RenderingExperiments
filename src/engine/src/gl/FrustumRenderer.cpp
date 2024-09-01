@@ -143,9 +143,11 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
 
     FrustumRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertexData, sizeof(vertexData), "FrustumRenderer Vertices");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+        CpuMemory<void const>{vertexData, sizeof(vertexData)}, "FrustumRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices), "FrustumRenderer Indices");
+        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
+        CpuMemory<void const>{indices, sizeof(indices)}, "FrustumRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate("FrustumRenderer");
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
@@ -180,7 +182,8 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     renderer.ubo_ =
-        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, nullptr, sizeof(UboData), "FrustumRenderer UBO");
+        gl::GpuBuffer::Allocate(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW,
+        CpuMemory<void const>{nullptr, sizeof(UboData)}, "FrustumRenderer UBO");
 
     return renderer;
 }
