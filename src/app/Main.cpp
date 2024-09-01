@@ -159,7 +159,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
         .loader      = app->imageLoader,
-        .filepath    = "data/app/textures/ob.jpg",
+        .filepath    = "data/engine/textures/utils/uv_checker_512_512.jpg",
         .format      = GL_RGB8,
         .numChannels = 3,
     });
