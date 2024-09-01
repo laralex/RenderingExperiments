@@ -66,7 +66,7 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     // inner triangles
     for (int32_t p = 0; p < args.numParallels - 2; ++p) {
         auto curParallel  = p * args.numParallels + 1;
-        auto nextParallel = (p + 1) * args.numMeridians + 1;
+        auto nextParallel = (p + 1) * args.numParallels + 1;
         for (int32_t m = 0; m < args.numMeridians; ++m) {
             auto i0 = curParallel + m;
             auto i1 = curParallel + (m + 1) % args.numMeridians;

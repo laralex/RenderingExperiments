@@ -38,6 +38,11 @@ struct UboDataSamplerTiling {
     glm::vec4 uvScaleOffsets[256U];
 };
 
+enum class AppDebugMode {
+    NONE = 0,
+    WIREFRAME = 1,
+};
+
 struct Application final {
     ~Application() {
         XLOG("Disposing application", 0);
@@ -62,6 +67,7 @@ struct Application final {
     engine::LineRendererInput debugLines{};
     engine::PointRendererInput debugPoints{};
     engine::ImageLoader imageLoader{};
+    AppDebugMode debugMode{AppDebugMode::NONE};
 
     bool isInitialized = false;
 };
@@ -117,12 +123,13 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
+    auto sphere = UvSphereMesh::Generate({
+        .numMeridians       = 11,
+        .numParallels       = 6,
+        .clockwiseTriangles = false,
+    });
     app->sphereMesh = gl::AllocateUvSphereMesh(
-        UvSphereMesh::Generate({
-            .numMeridians       = 20,
-            .numParallels       = 20,
-            .clockwiseTriangles = false,
-        }),
+        sphere,
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
@@ -150,11 +157,15 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    int off = 1;
-    for (int i = off; i < off + 8 /* planeMesh.indices.size() */; ++i) {
-        auto vi = planeMesh.indices[i];
-        app->debugPoints.SetColor(static_cast<ColorCode>((i - off) % 4));
-        app->debugPoints.PushPoint(planeMesh.vertexPositions[vi], 0.03f);
+    auto const& debugMesh = sphere;
+    for (int32_t i = 0; i < 12 /* debugMesh.indices.size() / 3 */; ++i) {
+        auto vi0 = debugMesh.indices[3*i];
+        auto vi1 = debugMesh.indices[3*i+1];
+        auto vi2 = debugMesh.indices[3*i+2];
+        app->debugPoints.SetColor(static_cast<ColorCode>((i) % static_cast<int32_t>(ColorCode::NUM_COLORS)));
+        app->debugPoints.PushPoint(debugMesh.vertexPositions[vi0], 0.03f);
+        app->debugPoints.PushPoint(debugMesh.vertexPositions[vi1], 0.03f);
+        app->debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
     }
 
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
@@ -221,6 +232,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     glm::mat4 camera = proj * view;
 
+    if (app->debugMode == AppDebugMode::WIREFRAME) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+
     {
         // textured box
 
@@ -254,7 +269,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
         // gl::RenderVao(app->boxMesh.Vao());
-        gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
+        // gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
@@ -281,11 +296,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::vec3 lightPosition = gl::TransformOrigin(lightModel);
 
         glm::mat4 model = glm::mat4(1.0f);
-        model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
-        // model = glm::rotate(model, rotationSpeed * 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        float modelScale = 1.0f;
-        model            = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
-        model            = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
+        // model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+        // float modelScale = 1.0f;
+        // model            = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
+        // model            = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
         glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp     = camera * model;
@@ -309,6 +323,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             .invModel           = invModel,
         });
     }
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     {
         // present
@@ -414,13 +430,15 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
 
     auto oldCallbackP = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
         engine::QueueForNextFrame(engine, engine::UserActionType::RENDER, [=](void*) {
+            auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
             static bool setToWireframe = true;
             if (!pressed) { return; }
 
             if (setToWireframe) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                app->debugMode = AppDebugMode::WIREFRAME;
             } else {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                // TODO: this resets all debug modes
+                app->debugMode = AppDebugMode::NONE;
             }
             XLOG("Wireframe mode: {}", setToWireframe);
             setToWireframe = !setToWireframe;

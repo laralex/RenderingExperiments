@@ -18,6 +18,7 @@ void DestroyEngine(EngineHandle);
 auto GetWindowContext [[nodiscard]] (EngineHandle) -> WindowCtx&;
 auto SetRenderCallback [[nodiscard]] (EngineHandle, RenderCallback newCallback) -> RenderCallback;
 void SetApplicationData(EngineHandle, void* applicationData);
+auto GetApplicationData [[nodiscard]](EngineHandle engine) -> void*;
 void BlockOnLoop(EngineHandle);
 
 enum class UserActionType : size_t {
