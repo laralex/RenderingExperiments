@@ -86,11 +86,11 @@ constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
 constexpr GLint UNIFORM_TEXTURE_BINDING            = 0;
 constexpr GLint UNIFORM_MVP_LOCATION               = 10;
 constexpr GLint UBO_SAMPLER_TILING_BINDING         = 4;
-constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(1600, 900);
+constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(2500, 2000);
 
 static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
     using namespace engine;
-    glm::ivec2 screenSize = INTERMEDITE_RENDER_RESOLUTION;
+    glm::ivec2 maxScreenSize = INTERMEDITE_RENDER_RESOLUTION;
     gl::InitializeOpenGl();
     app->commonRenderers.Initialize();
     app->samplerNearestWrap = app->commonRenderers.CacheSampler(
@@ -124,8 +124,8 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         });
 
     auto sphere = UvSphereMesh::Generate({
-        .numMeridians       = 11,
-        .numParallels       = 6,
+        .numMeridians       = 7,
+        .numParallels       = 4,
         .clockwiseTriangles = false,
     });
     app->sphereMesh = gl::AllocateUvSphereMesh(
@@ -158,19 +158,23 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         });
 
     auto const& debugMesh = sphere;
-    for (int32_t i = 0; i < 12 /* debugMesh.indices.size() / 3 */; ++i) {
-        auto vi0 = debugMesh.indices[3*i];
-        auto vi1 = debugMesh.indices[3*i+1];
-        auto vi2 = debugMesh.indices[3*i+2];
-        app->debugPoints.SetColor(static_cast<ColorCode>((i) % static_cast<int32_t>(ColorCode::NUM_COLORS)));
-        app->debugPoints.PushPoint(debugMesh.vertexPositions[vi0], 0.03f);
-        app->debugPoints.PushPoint(debugMesh.vertexPositions[vi1], 0.03f);
-        app->debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
-    }
+    // app->debugPoints.SetColor(ColorCode::RED);
+    // for (int32_t i = 0; i < debugMesh.vertexPositions.size(); ++i) {
+    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[i], 0.03f);
+    // }
+    // for (int32_t i = 0; i < 12 /* debugMesh.indices.size() / 3 */; ++i) {
+    //     auto vi0 = debugMesh.indices[3*i];
+    //     auto vi1 = debugMesh.indices[3*i+1];
+    //     auto vi2 = debugMesh.indices[3*i+2];
+    //     app->debugPoints.SetColor(static_cast<ColorCode>((i) % static_cast<int32_t>(ColorCode::NUM_COLORS)));
+    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[vi0], 0.03f);
+    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[vi1], 0.03f);
+    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
+    // }
 
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
         .loader      = app->imageLoader,
-        .filepath    = "data/engine/textures/utils/uv_checker_512_512.jpg",
+        .filepath    = "data/engine/textures/utils/uv_checker_8x8_bright.png",
         .format      = GL_RGB8,
         .numChannels = 3,
     });
@@ -180,15 +184,15 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
         GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)}, "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
-    gl::SamplerTiling albedoTiling{glm::vec2{1.0f}, glm::vec2{0.0f}};
+    gl::SamplerTiling albedoTiling{glm::vec2{0.25f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
     app->uboSamplerTiling.Fill(CpuMemory<GLvoid const>{&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling)});
 
     app->outputColor =
-        gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_RGBA8, "Output color");
+        gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output color");
     app->outputDepth = gl::Texture::Allocate2D(
-        GL_TEXTURE_2D, glm::ivec3(screenSize.x, screenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
-    app->renderbuffer      = gl::Renderbuffer::Allocate2D(screenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
+        GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
+    app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
     (void)gl::FramebufferEditCtx{&app->outputFramebuffer, true}
         .AttachTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
@@ -207,7 +211,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    glm::ivec2 renderSize = app->outputColor.Size();
+    // glm::ivec2 renderSize = app->outputColor.Size();
+    glm::ivec2 renderSize = windowCtx.WindowSize();
     glm::ivec2 screenSize = windowCtx.WindowSize();
     float rotationSpeed   = ctx.timeSec * 0.5f;
 
@@ -240,20 +245,30 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         // textured box
 
         auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer, true};
-        fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f).ClearDepthStencil(1.0f, 0);
+        fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f);
+        fbGuard.ClearDepthStencil(1.0f, 0);
         GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
 
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 0.001f));
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        // model = glm::scale(model, glm::vec3(1.0f, 1.0f, 0.001f));
+        model = glm::translate(model, glm::vec3(3.0f, 3.0f, 0.0f));
 
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
 
-        auto programGuard = gl::UniformCtx(app->program);
 
         glm::mat4 mvp                = camera * model;
+
+        GLCALL(glEnable(GL_CULL_FACE));
+        GLCALL(glEnable(GL_DEPTH_TEST));
+        GLCALL(glDepthMask(GL_TRUE));
+        GLCALL(glFrontFace(GL_CCW));
+        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+
+        app->commonRenderers.RenderAxes(mvp, 0.4f, ColorCode::CYAN);
+
         constexpr GLint TEXTURE_SLOT = 0;
+        auto programGuard = gl::UniformCtx(app->program);
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
@@ -262,14 +277,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
 
-        GLCALL(glEnable(GL_CULL_FACE));
-        GLCALL(glEnable(GL_DEPTH_TEST));
-        GLCALL(glDepthMask(GL_TRUE));
-        GLCALL(glFrontFace(GL_CCW));
-        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-
         // gl::RenderVao(app->boxMesh.Vao());
-        // gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
+        gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
@@ -306,7 +315,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         // app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
         app->commonRenderers.RenderAxes(camera, 0.4f, ColorCode::BROWN);
-        app->commonRenderers.RenderAxes(camera * lightModel, 0.5f, ColorCode::YELLOW);
+        app->commonRenderers.RenderAxes(camera * lightModel, 0.2f, ColorCode::YELLOW);
 
         gl::GpuMesh const& mesh = app->sphereMesh;
         GLCALL(glEnable(GL_CULL_FACE));
@@ -333,7 +342,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         dstGuard.ClearDepthStencil(1.0f, 0);
         // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
         // .Invalidate(1, invalidateAttachments);
-        app->commonRenderers.Blit2D(app->outputColor.Id());
+        glm::vec2 fractionOfMaxResolution = glm::vec2{renderSize} / glm::vec2{app->outputColor.Size()};
+        app->commonRenderers.Blit2D(app->outputColor.Id(), fractionOfMaxResolution);
     }
 
     {
@@ -377,12 +387,17 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             });
         }
 
-        app->commonRenderers.RenderAxes(mvp, 0.5f);
+        app->commonRenderers.RenderAxes(mvp, 0.5f, ColorCode::WHITE);
 
         gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
     }
 
     {
+        GLCALL(glEnable(GL_CULL_FACE));
+        GLCALL(glEnable(GL_DEPTH_TEST));
+        GLCALL(glDepthMask(GL_TRUE));
+        GLCALL(glDepthFunc(GL_LEQUAL));
+
         auto debugGroupGuard = gl::DebugGroupCtx("Debug lines/points pass");
         auto fbGuard         = gl::FramebufferDrawCtx{0U, true};
         if (app->debugLines.IsDataDirty()) {

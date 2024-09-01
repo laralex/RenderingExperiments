@@ -1,7 +1,7 @@
 #include "engine/gl/PointRenderer.hpp"
 
-#include "engine/IcosphereMesh.hpp"
-// #include "engine/BoxMesh.hpp"
+// #include "engine/IcosphereMesh.hpp"
+#include "engine/BoxMesh.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
@@ -22,8 +22,8 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
 
     using T = PointRendererInput::Point;
 
-    auto mesh = IcosphereMesh::Generate({.numSubdivisions = 0, .duplicateSeam = true, .clockwiseTriangles = false});
-    // auto mesh = BoxMesh::Generate();
+    // auto mesh = IcosphereMesh::Generate({.numSubdivisions = 0, .duplicateSeam = true, .clockwiseTriangles = false});
+    auto mesh = BoxMesh::Generate();
 
     PointRenderer renderer;
     size_t numPositionsBytes = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
@@ -110,19 +110,19 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
-    renderer.lastInstance_ = -1;
+    renderer.lastInstance_ = maxPoints;
 
     return renderer;
 }
 
 void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
-    if (lastInstance_ <= 0) {
-        XLOGW("Limit of points is <= 0 in PointRenderer", 0);
+    if (lastInstance_ <= 0 || firstInstance >= lastInstance_) {
+        // XLOGW("Limit of points is <= 0 in PointRenderer", 0);
         return;
     }
     auto programGuard = UniformCtx{program_};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
-    RenderVaoInstanced(vao_, firstInstance, std::min(lastInstance_ - firstInstance, numInstances));
+    RenderVaoInstanced(vao_, std::min(firstInstance, lastInstance_), std::min(lastInstance_ - firstInstance, numInstances));
 }
 
 void PointRenderer::LimitInstances(int32_t numInstances) {
@@ -133,6 +133,9 @@ void PointRenderer::LimitInstances(int32_t numInstances) {
 void PointRenderer::Fill(
     std::vector<PointRendererInput::Point> const& points, int32_t numPoints, int32_t numPointsOffset) {
     using T               = typename std::decay<decltype(*points.begin())>::type;
+    if (std::size(points) == 0 | numPoints == 0) {\
+        return;
+    }
     auto const byteOffset = numPointsOffset * sizeof(T);
     auto const numBytes   = std::min(
         instancesBuffer_.SizeBytes() - byteOffset, // buffer limit

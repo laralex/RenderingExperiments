@@ -20,6 +20,7 @@ auto ComputeEquiareaSphereUv [[nodiscard]] (glm::vec3 unitSpherePosition) -> glm
 
 namespace engine {
 
+// adopted from https://danielsieger.com/blog/2021/03/27/generating-spheres.html
 auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     UvSphereMesh mesh;
     if (args.numMeridians <= 2) args.numMeridians = 3;
@@ -33,10 +34,10 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     mesh.vertexPositions.emplace_back(0.0f, 0.0f, 1.0f);
 
     // inner vertices
-    for (int32_t m = 0; m < args.numMeridians; ++m) {
-        auto phi = (PI * (m + 1)) / args.numMeridians;
-        for (int32_t p = 0; p < args.numParallels; ++p) {
-            auto theta = (2.0f * PI * p) / args.numParallels;
+    for (int32_t p = 0; p < args.numParallels - 1; ++p) {
+        auto phi = (PI * (p + 1)) / args.numParallels;
+        for (int32_t m = 0; m < args.numMeridians; ++m) {
+            auto theta = (2.0f * PI * m) / args.numMeridians;
             auto x     = std::sin(phi) * std::cos(theta);
             auto y     = std::sin(phi) * std::sin(theta);
             auto z     = std::cos(phi);
@@ -60,13 +61,13 @@ auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
         i1 = (m + 1) % args.numMeridians + args.numMeridians * (args.numParallels - 2) + 1;
         mesh.indices.emplace_back(southPoleIdx);
         mesh.indices.emplace_back(i1);
-        mesh.indices.emplace_back(i0);
+        mesh.indices.emplace_back(i0); // TODO: maybe swap with prev line
     }
 
     // inner triangles
     for (int32_t p = 0; p < args.numParallels - 2; ++p) {
-        auto curParallel  = p * args.numParallels + 1;
-        auto nextParallel = (p + 1) * args.numParallels + 1;
+        auto curParallel  = p * args.numMeridians + 1;
+        auto nextParallel = (p + 1) * args.numMeridians + 1;
         for (int32_t m = 0; m < args.numMeridians; ++m) {
             auto i0 = curParallel + m;
             auto i1 = curParallel + (m + 1) % args.numMeridians;
