@@ -48,6 +48,12 @@ struct Application final {
         XLOG("Disposing application", 0);
         engine::gl::DisposeOpenGl();
     }
+    glm::vec3 cameraPosition{10.0f, 0.0f, 2.0f};
+    glm::vec3 cameraForward{-1.0, 0.0f, 0.0f};
+    glm::vec3 cameraUp{0.0, 0.0f, 1.0f};
+
+    glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
+    glm::vec4 keyboardWasdPressed{0.0f};
 
     engine::gl::GpuMesh boxMesh{};
     engine::gl::GpuMesh sphereMesh{};
@@ -86,11 +92,10 @@ constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
 constexpr GLint UNIFORM_TEXTURE_BINDING            = 0;
 constexpr GLint UNIFORM_MVP_LOCATION               = 10;
 constexpr GLint UBO_SAMPLER_TILING_BINDING         = 4;
-constexpr glm::ivec2 INTERMEDITE_RENDER_RESOLUTION = glm::ivec2(2500, 2000);
 
 static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
     using namespace engine;
-    glm::ivec2 maxScreenSize = INTERMEDITE_RENDER_RESOLUTION;
+    glm::ivec2 maxScreenSize = windowCtx.WindowSize() * 4;
     gl::InitializeOpenGl();
     app->commonRenderers.Initialize();
     app->samplerNearestWrap = app->commonRenderers.CacheSampler(
@@ -211,28 +216,54 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    // glm::ivec2 renderSize = app->outputColor.Size();
     glm::ivec2 renderSize = windowCtx.WindowSize();
+    // glm::ivec2 renderSize = glm::vec2{windowCtx.WindowSize()} * (glm::sin(ctx.timeSec) * 0.7f + 1.0f);
     glm::ivec2 screenSize = windowCtx.WindowSize();
+    float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
+
+    // TODO: delta time
+    float CAMERA_MOVE_SENSITIVITY = 0.1f;
+    glm::vec3 sideDirection = glm::cross(app->cameraForward, app->cameraUp);
+    app->cameraPosition += (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z) * CAMERA_MOVE_SENSITIVITY * app->cameraForward;
+    app->cameraPosition += (app->keyboardWasdPressed.w - app->keyboardWasdPressed.y) * (CAMERA_MOVE_SENSITIVITY * sideDirection);
+
+    auto mouse = windowCtx.MousePressedState();
+    // XLOG("@@ Mouse {} {} {}", mouse.x, mouse.y, mouse.z);
+    constexpr float CAMERA_ROTATION_SENSITIVITY = 0.03f;
+    if (mouse.x > 0.0f) {
+        auto mouseDelta = windowCtx.MouseDelta();
+        app->cameraEulerRotation.z += mouseDelta.y * CAMERA_ROTATION_SENSITIVITY * aspectRatio; // yax
+        app->cameraEulerRotation.x += mouseDelta.x * CAMERA_ROTATION_SENSITIVITY; // pitch
+    }
+
+    app->cameraEulerRotation.x = glm::clamp(app->cameraEulerRotation.x, -89.0f, 89.0f); // anti gimbal lock
+
+    glm::vec3 direction;
+    direction.x = -cos(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
+    direction.y = -sin(glm::radians(app->cameraEulerRotation.x));
+    direction.z = -sin(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
+    app->cameraForward = glm::normalize(direction);
+
     float rotationSpeed   = ctx.timeSec * 0.5f;
 
     float cameraRadius    = 15.0f;
-    glm::mat4 cameraModel = glm::translate(
-        glm::mat4{1.0f},
-        glm::vec3(cameraRadius * glm::cos(rotationSpeed), cameraRadius * glm::sin(rotationSpeed), 3.0f));
+    // glm::mat4 cameraModel = glm::translate(
+    // glm::mat4{1.0f},
+    // glm::vec3(cameraRadius * glm::cos(rotationSpeed), cameraRadius * glm::sin(rotationSpeed), 3.0f));
     // cameraModel           = glm::rotate(cameraModel, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glm::vec3 cameraPosition = gl::TransformOrigin(cameraModel);
-    glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraUp       = glm::vec3(0.0f, 0.0f, 1.0f);
+    // glm::vec3 cameraPosition = gl::TransformOrigin(cameraModel);
+    // glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
+    // glm::vec3 cameraUp       = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::vec3 cameraPosition = app->cameraPosition;
+    glm::vec3 cameraTarget   = app->cameraPosition + app->cameraForward;
+    glm::vec3 cameraUp       = app->cameraUp;
     glm::mat4 view           = glm::lookAtRH(glm::vec3{cameraPosition}, cameraTarget, cameraUp);
 
     glm::mat4 firstView =
         glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(1.5f), cameraRadius * glm::sin(1.0f), 3.0f));
-    firstView              = glm::lookAtRH(gl::TransformOrigin(firstView), cameraTarget, cameraUp);
+    firstView              = glm::lookAtRH(gl::TransformOrigin(firstView), glm::vec3{0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
     glm::mat4 firstInvView = glm::inverse(firstView);
-
-    float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
     glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 50.0f);
 
     glm::mat4 camera = proj * view;
@@ -243,7 +274,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     {
         // textured box
-
         auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer, true};
         fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f);
         fbGuard.ClearDepthStencil(1.0f, 0);
@@ -285,7 +315,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
 
-        // if (windowCtx.MouseInsideWindow()) {
+        // if (windowCtx.IsMouseInsideWindow()) {
         //     gl::RenderVao(app->sphereMesh.Vao());
         // } else {
         //     gl::RenderVao(app->sphereMesh2.Vao());
@@ -420,12 +450,31 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 static auto ConfigureWindow(engine::EngineHandle engine) {
     auto& windowCtx     = engine::GetWindowContext(engine);
     GLFWwindow* window  = windowCtx.Window();
-    auto oldCallbackEsc = windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
+
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
+    });
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_A, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        app->keyboardWasdPressed.y += static_cast<float>(pressed) - static_cast<float>(released);
+    });
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_S, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        app->keyboardWasdPressed.z += static_cast<float>(pressed) - static_cast<float>(released);
+    });
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
+    });
+
+
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
         engine::QueueForNextFrame(
             engine, engine::UserActionType::WINDOW, [=](void*) { glfwSetWindowShouldClose(window, true); });
     });
 
-    auto oldCallbackF = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
         engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {
             static bool setToFullscreen = true;
             if (!pressed) { return; }
@@ -443,27 +492,25 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         });
     });
 
-    auto oldCallbackP = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
-        engine::QueueForNextFrame(engine, engine::UserActionType::RENDER, [=](void*) {
-            auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
-            static bool setToWireframe = true;
-            if (!pressed) { return; }
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        static bool setToWireframe = true;
+        if (!pressed) { return; }
 
-            if (setToWireframe) {
-                app->debugMode = AppDebugMode::WIREFRAME;
-            } else {
-                // TODO: this resets all debug modes
-                app->debugMode = AppDebugMode::NONE;
-            }
-            XLOG("Wireframe mode: {}", setToWireframe);
-            setToWireframe = !setToWireframe;
-        });
+        if (setToWireframe) {
+            app->debugMode = AppDebugMode::WIREFRAME;
+        } else {
+            // TODO: this resets all debug modes
+            app->debugMode = AppDebugMode::NONE;
+        }
+        XLOG("Wireframe mode: {}", setToWireframe);
+        setToWireframe = !setToWireframe;
     });
 
-    auto oldCallbackLeft = windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
+    (void)windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
         if (released) {
             auto mousePosition = windowCtx.MousePosition();
-            XLOG("LMB {} pos: {},{}", windowCtx.MouseInsideWindow(), mousePosition.x, mousePosition.y);
+            XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);
         }
     });
 }

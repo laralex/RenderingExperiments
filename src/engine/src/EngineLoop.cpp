@@ -185,9 +185,7 @@ void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int 
 void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
-    if (auto const found = ctx->mouseButtons_.find(button); found != ctx->mouseButtons_.end()) {
-        found->second(action == GLFW_PRESS, action == GLFW_RELEASE);
-    }
+    ctx->UpdateMouseButton(button, action, mods);
 }
 
 ENGINE_EXPORT auto CreateEngine() -> std::optional<EngineHandle> {
@@ -238,6 +236,7 @@ ENGINE_EXPORT void BlockOnLoop(EngineHandle engine) {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        windowCtx.OnFrameEnd();
 
         ++engine->frameIdx;
     }
