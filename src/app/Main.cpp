@@ -2,6 +2,7 @@
 #include "engine/BoxMesh.hpp"
 #include "engine/EngineLoop.hpp"
 #include "engine/IcosphereMesh.hpp"
+#include "engine/FirstPersonLocomotion.hpp"
 #include "engine/PlaneMesh.hpp"
 #include "engine/Unprojection.hpp"
 #include "engine/UvSphereMesh.hpp"
@@ -48,13 +49,10 @@ struct Application final {
         XLOG("Disposing application", 0);
         engine::gl::DisposeOpenGl();
     }
-    glm::vec3 cameraPosition{-10.0f, 0.0f, 2.0f};
-    glm::vec3 cameraForward{1.0, 0.0f, 0.0f};
-    glm::vec3 cameraUp{0.0, 0.0f, 1.0f};
-
-    glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
+    engine::FirstPersonLocomotion cameraMovement{};
+    // glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
     glm::vec4 keyboardWasdPressed{0.0f};
-
+    float keyboardAltPressed{0.0f};
     engine::gl::GpuMesh boxMesh{};
     engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuMesh sphereMesh2{};
@@ -206,6 +204,9 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         .CommitDrawbuffers();
 
     app->flatRenderer = gl::FlatRenderer::Allocate();
+
+    app->cameraMovement.SetPosition({-10.0f, 0.0f, 2.0f});
+    app->cameraMovement.SetOrientation({1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
 }
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
@@ -223,54 +224,40 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     // TODO: delta time
     float CAMERA_MOVE_SENSITIVITY = 0.1f;
-    glm::vec3 sideDirection = glm::cross(app->cameraForward, app->cameraUp);
-    app->cameraPosition += (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z) * CAMERA_MOVE_SENSITIVITY * app->cameraForward;
-    app->cameraPosition += (app->keyboardWasdPressed.w - app->keyboardWasdPressed.y) * (CAMERA_MOVE_SENSITIVITY * sideDirection);
+    float moveSensitivity = (1.0f - 0.75f * app->keyboardAltPressed) * CAMERA_MOVE_SENSITIVITY;
+    glm::vec2 cameraMoveDir((app->keyboardWasdPressed.w - app->keyboardWasdPressed.y), (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z));
+    float invDirLength = glm::inversesqrt(glm::dot(cameraMoveDir, cameraMoveDir));
+    if (invDirLength < 1.0f) {
+        cameraMoveDir *= invDirLength;
+    }
+    app->cameraMovement.MoveLocally(glm::vec3{cameraMoveDir.x, 0.0f, cameraMoveDir.y}, moveSensitivity);
 
     auto mouse = windowCtx.MousePressedState();
     // XLOG("@@ Mouse {} {} {}", mouse.x, mouse.y, mouse.z);
     constexpr float CAMERA_ROTATION_SENSITIVITY = 0.03f;
+    static glm::vec3 cameraRotationEuler{};
     if (mouse.x > 0.0f) {
         auto mouseDelta = windowCtx.MouseDelta();
-        app->cameraEulerRotation.z -= mouseDelta.y * CAMERA_ROTATION_SENSITIVITY * aspectRatio; // yax
-        app->cameraEulerRotation.x += mouseDelta.x * CAMERA_ROTATION_SENSITIVITY; // pitch
+        cameraRotationEuler.z -= mouseDelta.y * CAMERA_ROTATION_SENSITIVITY * aspectRatio; // yax
+        cameraRotationEuler.x += mouseDelta.x * CAMERA_ROTATION_SENSITIVITY; // pitch
     }
-
-    app->cameraEulerRotation.x = glm::clamp(app->cameraEulerRotation.x, -89.0f, 89.0f); // anti gimbal lock
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
-    direction.y = -sin(glm::radians(app->cameraEulerRotation.x));
-    direction.z = sin(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
-    app->cameraForward = glm::normalize(direction);
-
-    float rotationSpeed   = ctx.timeSec * 0.5f;
+    app->cameraMovement.SetOrientation(cameraRotationEuler);
+    glm::mat4 view           = app->cameraMovement.ComputeViewMatrix();
 
     float cameraRadius    = 15.0f;
-    // glm::mat4 cameraModel = glm::translate(
-    // glm::mat4{1.0f},
-    // glm::vec3(cameraRadius * glm::cos(rotationSpeed), cameraRadius * glm::sin(rotationSpeed), 3.0f));
-    // cameraModel           = glm::rotate(cameraModel, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // glm::vec3 cameraPosition = gl::TransformOrigin(cameraModel);
-    // glm::vec3 cameraTarget   = glm::vec3(0.0f, 0.0f, 0.0f);
-    // glm::vec3 cameraUp       = glm::vec3(0.0f, 0.0f, 1.0f);
-    glm::vec3 cameraPosition = app->cameraPosition;
-    glm::vec3 cameraTarget   = app->cameraPosition + app->cameraForward;
-    glm::vec3 cameraUp       = app->cameraUp;
-    glm::mat4 view           = glm::lookAtRH(glm::vec3{cameraPosition}, cameraTarget, cameraUp);
-
     glm::mat4 firstView =
         glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(1.5f), cameraRadius * glm::sin(1.0f), 3.0f));
     firstView              = glm::lookAtRH(gl::TransformOrigin(firstView), glm::vec3{0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
     glm::mat4 firstInvView = glm::inverse(firstView);
-    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 0.1f, 50.0f);
+    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 100.0f);
 
     glm::mat4 camera = proj * view;
 
     if (app->debugMode == AppDebugMode::WIREFRAME) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+
+    float rotationSpeed   = ctx.timeSec * 0.5f;
 
     {
         // textured box
@@ -468,6 +455,10 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        app->keyboardAltPressed += static_cast<float>(pressed) - static_cast<float>(released);
+    });
 
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
         engine::QueueForNextFrame(

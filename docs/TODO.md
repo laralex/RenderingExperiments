@@ -6,6 +6,7 @@
 * text rendering
 * libktx
 * fastgltf
+* frustum wrong far estimated
 
 world pos, world orient:
 offset world position = simple

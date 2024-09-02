@@ -2,7 +2,6 @@
 
 #include "engine/Precompiled.hpp"
 #include <functional>
-#include <glm/vec2.hpp>
 
 namespace engine {
 
