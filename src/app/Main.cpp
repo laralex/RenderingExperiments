@@ -50,9 +50,12 @@ struct Application final {
         engine::gl::DisposeOpenGl();
     }
     engine::FirstPersonLocomotion cameraMovement{};
+    engine::FirstPersonLocomotion debugCameraMovement{};
     // glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
     glm::vec4 keyboardWasdPressed{0.0f};
     float keyboardAltPressed{0.0f};
+    bool controlDebugCamera{false};
+    bool controlDebugCameraSwitched{false};
     engine::gl::GpuMesh boxMesh{};
     engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuMesh sphereMesh2{};
@@ -222,6 +225,14 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glm::ivec2 screenSize = windowCtx.WindowSize();
     float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
 
+    if (app->controlDebugCameraSwitched) {
+        if (app->controlDebugCamera) {
+            app->debugCameraMovement.Clone(app->cameraMovement);
+        }
+        app->controlDebugCameraSwitched = false;
+    }
+    auto& cameraMovement = app->controlDebugCamera ? app->debugCameraMovement : app->cameraMovement;
+
     // TODO: delta time
     float CAMERA_MOVE_SENSITIVITY = 0.1f;
     float moveSensitivity = (1.0f - 0.75f * app->keyboardAltPressed) * CAMERA_MOVE_SENSITIVITY;
@@ -230,26 +241,24 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     if (invDirLength < 1.0f) {
         cameraMoveDir *= invDirLength;
     }
-    app->cameraMovement.MoveLocally(glm::vec3{cameraMoveDir.x, 0.0f, cameraMoveDir.y}, moveSensitivity);
+    cameraMovement.MoveLocally(glm::vec3{cameraMoveDir.x, 0.0f, cameraMoveDir.y}, moveSensitivity);
 
     auto mouse = windowCtx.MousePressedState();
     // XLOG("@@ Mouse {} {} {}", mouse.x, mouse.y, mouse.z);
     constexpr float CAMERA_ROTATION_SENSITIVITY = 0.03f;
-    static glm::vec3 cameraRotationEuler{};
     if (mouse.x > 0.0f) {
         auto mouseDelta = windowCtx.MouseDelta();
-        cameraRotationEuler.z -= mouseDelta.y * CAMERA_ROTATION_SENSITIVITY * aspectRatio; // yax
-        cameraRotationEuler.x += mouseDelta.x * CAMERA_ROTATION_SENSITIVITY; // pitch
+        glm::vec3 deltaEuler = {mouseDelta.x, 0.0f, -mouseDelta.y * aspectRatio}; // yaw
+        cameraMovement.RotateLocally(deltaEuler * CAMERA_ROTATION_SENSITIVITY);
     }
-    app->cameraMovement.SetOrientation(cameraRotationEuler);
-    glm::mat4 view           = app->cameraMovement.ComputeViewMatrix();
+    glm::mat4 view           = cameraMovement.ComputeViewMatrix();
 
     float cameraRadius    = 15.0f;
     glm::mat4 firstView =
         glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(1.5f), cameraRadius * glm::sin(1.0f), 3.0f));
     firstView              = glm::lookAtRH(gl::TransformOrigin(firstView), glm::vec3{0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
     glm::mat4 firstInvView = glm::inverse(firstView);
-    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 75.0f);
+    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 40.0f);
 
     glm::mat4 camera = proj * view;
 
@@ -374,16 +383,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 mvp = camera * model;
         app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
-        float far           = (std::sin(ctx.timeSec) + 2.5f) * 1.0f;
-        float frustumHeight = 0.2f;
-        float frustumWidth  = frustumHeight * aspectRatio;
-        Frustum frustum     = ProjectionToFrustum(proj);
-
-        // glm::mat4 frustumModel = glm::inverse(view);
-        // frustumModel = glm::rotate(sustumModel, rotationSpeed*1.5f, glm::vec3(0.0f, 0.0f, 1.0f));
-        // frustumModel = glm::translate(frustumModel, glm::vec3(1.0f, 1.0f, -5.0f));
-        app->commonRenderers.RenderFrustum(camera * firstInvView, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
-        app->commonRenderers.RenderAxes(camera * firstInvView, 0.5f, ColorCode::BLACK);
+        if (app->controlDebugCamera) {
+            Frustum frustum     = ProjectionToFrustum(proj);
+            auto frustumMvp = camera * app->cameraMovement.ComputeModelMatrix();
+            app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
+            app->commonRenderers.RenderAxes(frustumMvp, 0.5f, ColorCode::BLACK);
+        }
 
         {
             // glm::mat4 mvp = camera * model;
@@ -453,6 +458,16 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [=](bool pressed, bool released) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
+    });
+
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [=](bool pressed, bool released) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        static bool controlDebugCamera = true;
+        if (pressed) {
+            app->controlDebugCameraSwitched = true;
+            app->controlDebugCamera = controlDebugCamera;
+            controlDebugCamera = !controlDebugCamera;
+        }
     });
 
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [=](bool pressed, bool released) {
