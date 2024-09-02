@@ -249,7 +249,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(1.5f), cameraRadius * glm::sin(1.0f), 3.0f));
     firstView              = glm::lookAtRH(gl::TransformOrigin(firstView), glm::vec3{0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
     glm::mat4 firstInvView = glm::inverse(firstView);
-    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 100.0f);
+    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 75.0f);
 
     glm::mat4 camera = proj * view;
 
@@ -380,7 +380,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         Frustum frustum     = ProjectionToFrustum(proj);
 
         // glm::mat4 frustumModel = glm::inverse(view);
-        // frustumModel = glm::rotate(frustumModel, rotationSpeed*1.5f, glm::vec3(0.0f, 0.0f, 1.0f));
+        // frustumModel = glm::rotate(sustumModel, rotationSpeed*1.5f, glm::vec3(0.0f, 0.0f, 1.0f));
         // frustumModel = glm::translate(frustumModel, glm::vec3(1.0f, 1.0f, -5.0f));
         app->commonRenderers.RenderFrustum(camera * firstInvView, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
         app->commonRenderers.RenderAxes(camera * firstInvView, 0.5f, ColorCode::BLACK);

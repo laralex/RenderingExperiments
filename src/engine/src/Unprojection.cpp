@@ -61,15 +61,16 @@ FrustumPlanes CameraToPlanes(glm::mat4 const& mvp, bool normalize) {
     return planes;
 }
 
+// proj in column major order
 Frustum ProjectionToFrustum(glm::mat4 const& proj) {
-    float near          = proj[2][3] / (proj[2][2] - 1);
-    float far           = proj[2][3] / (proj[2][2] + 1);
+    float near          = proj[3][2] / (proj[2][2] - 1);
+    float far           = proj[3][2] / (proj[2][2] + 1);
     glm::vec2 unproject = near / glm::vec2{proj[0][0], proj[1][1]};
     return Frustum{
-        /*left*/ (proj[0][2] - 1) * unproject.x,
-        /*right*/ (proj[0][2] + 1) * unproject.x,
-        /*bottom*/ (proj[1][2] - 1) * unproject.y,
-        /*top*/ (proj[1][2] + 1) * unproject.y,
+        /*left*/ (proj[2][0] - 1) * unproject.x,
+        /*right*/ (proj[2][0] + 1) * unproject.x,
+        /*bottom*/ (proj[2][1] - 1) * unproject.y,
+        /*top*/ (proj[2][1] + 1) * unproject.y,
         /*near*/ near,
         /*far*/ far,
     };
