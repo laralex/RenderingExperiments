@@ -3,6 +3,9 @@
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * compute shaders
 * camera
+* text rendering
+* libktx
+* fastgltf
 
 world pos, world orient:
 offset world position = simple

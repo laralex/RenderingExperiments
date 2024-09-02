@@ -48,8 +48,8 @@ struct Application final {
         XLOG("Disposing application", 0);
         engine::gl::DisposeOpenGl();
     }
-    glm::vec3 cameraPosition{10.0f, 0.0f, 2.0f};
-    glm::vec3 cameraForward{-1.0, 0.0f, 0.0f};
+    glm::vec3 cameraPosition{-10.0f, 0.0f, 2.0f};
+    glm::vec3 cameraForward{1.0, 0.0f, 0.0f};
     glm::vec3 cameraUp{0.0, 0.0f, 1.0f};
 
     glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
@@ -232,16 +232,16 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     constexpr float CAMERA_ROTATION_SENSITIVITY = 0.03f;
     if (mouse.x > 0.0f) {
         auto mouseDelta = windowCtx.MouseDelta();
-        app->cameraEulerRotation.z += mouseDelta.y * CAMERA_ROTATION_SENSITIVITY * aspectRatio; // yax
+        app->cameraEulerRotation.z -= mouseDelta.y * CAMERA_ROTATION_SENSITIVITY * aspectRatio; // yax
         app->cameraEulerRotation.x += mouseDelta.x * CAMERA_ROTATION_SENSITIVITY; // pitch
     }
 
     app->cameraEulerRotation.x = glm::clamp(app->cameraEulerRotation.x, -89.0f, 89.0f); // anti gimbal lock
 
     glm::vec3 direction;
-    direction.x = -cos(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
+    direction.x = cos(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
     direction.y = -sin(glm::radians(app->cameraEulerRotation.x));
-    direction.z = -sin(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
+    direction.z = sin(glm::radians(app->cameraEulerRotation.z)) * cos(glm::radians(app->cameraEulerRotation.x));
     app->cameraForward = glm::normalize(direction);
 
     float rotationSpeed   = ctx.timeSec * 0.5f;
