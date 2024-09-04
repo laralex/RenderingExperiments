@@ -2,11 +2,10 @@
 * inverted Y axis
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * compute shaders
-* camera
+* camera (projection, quaternion rotation, faster view matrix from 3 vectors)
 * text rendering
 * libktx
 * fastgltf
-* frustum wrong far estimated
 
 world pos, world orient:
 offset world position = simple

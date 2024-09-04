@@ -53,6 +53,7 @@ struct Application final {
     engine::FirstPersonLocomotion debugCameraMovement{};
     // glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
     glm::vec4 keyboardWasdPressed{0.0f};
+    float keyboardShiftPressed{0.0f};
     float keyboardAltPressed{0.0f};
     bool controlDebugCamera{false};
     bool controlDebugCameraSwitched{false};
@@ -236,29 +237,41 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     // TODO: delta time
     float CAMERA_MOVE_SENSITIVITY = 0.1f;
     float moveSensitivity = (1.0f - 0.75f * app->keyboardAltPressed) * CAMERA_MOVE_SENSITIVITY;
-    glm::vec2 cameraMoveDir((app->keyboardWasdPressed.w - app->keyboardWasdPressed.y), (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z));
-    float invDirLength = glm::inversesqrt(glm::dot(cameraMoveDir, cameraMoveDir));
-    if (invDirLength < 1.0f) {
-        cameraMoveDir *= invDirLength;
+    glm::vec3 cameraDeltaPosition{};
+    if (app->keyboardShiftPressed) {
+        cameraDeltaPosition.y = (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z) * 0.5f;
+    } else {
+        glm::vec2 cameraMoveDir((app->keyboardWasdPressed.w - app->keyboardWasdPressed.y), (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z));
+        float invDirLength = glm::inversesqrt(glm::dot(cameraMoveDir, cameraMoveDir));
+        if (invDirLength < 1.0f) {
+            cameraMoveDir *= invDirLength;
+        }
+        cameraDeltaPosition.x = cameraMoveDir.x;
+        cameraDeltaPosition.z = cameraMoveDir.y;
     }
-    cameraMovement.MoveLocally(glm::vec3{cameraMoveDir.x, 0.0f, cameraMoveDir.y}, moveSensitivity);
+    cameraMovement.MoveLocally(cameraDeltaPosition, moveSensitivity);
 
     auto mouse = windowCtx.MousePressedState();
     // XLOG("@@ Mouse {} {} {}", mouse.x, mouse.y, mouse.z);
     constexpr float CAMERA_ROTATION_SENSITIVITY = 0.03f;
     if (mouse.x > 0.0f) {
         auto mouseDelta = windowCtx.MouseDelta();
-        glm::vec3 deltaEuler = {mouseDelta.x, 0.0f, -mouseDelta.y * aspectRatio}; // yaw
-        cameraMovement.RotateLocally(deltaEuler * CAMERA_ROTATION_SENSITIVITY);
-    }
-    glm::mat4 view           = cameraMovement.ComputeViewMatrix();
+        glm::quat deltaRotation; // euler pitch+yaw to quat
+        glm::vec2 halfYawPitch{mouseDelta.x * 0.5f, -mouseDelta.y * aspectRatio * 0.5f};
+        glm::vec2 cos = glm::cos(halfYawPitch);
+        glm::vec2 sin = glm::sin(halfYawPitch);
+        deltaRotation.w = cos.y * cos.x;
+        deltaRotation.x = sin.y * sin.x;
+        deltaRotation.y = sin.y * cos.x;
+        deltaRotation.z = cos.y * sin.x;
 
-    float cameraRadius    = 15.0f;
-    glm::mat4 firstView =
-        glm::translate(glm::mat4{1.0f}, glm::vec3(cameraRadius * glm::cos(1.5f), cameraRadius * glm::sin(1.0f), 3.0f));
-    firstView              = glm::lookAtRH(gl::TransformOrigin(firstView), glm::vec3{0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
-    glm::mat4 firstInvView = glm::inverse(firstView);
-    glm::mat4 proj    = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 40.0f);
+        cameraMovement.RotateLocally(glm::radians(glm::vec3{mouseDelta.x, 0.0f, -mouseDelta.y * aspectRatio})*CAMERA_ROTATION_SENSITIVITY);
+        // cameraMovement.RotateLocally(deltaRotation * CAMERA_ROTATION_SENSITIVITY);
+    }
+
+    cameraMovement.CommitChanges();
+    glm::mat4 view = cameraMovement.ComputeViewMatrix();
+    glm::mat4 proj = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 40.0f);
 
     glm::mat4 camera = proj * view;
 
@@ -442,25 +455,25 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 static auto ConfigureWindow(engine::EngineHandle engine) {
     auto& windowCtx     = engine::GetWindowContext(engine);
     GLFWwindow* window  = windowCtx.Window();
-
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [=](bool pressed, bool released) {
+    using KeyModFlags = engine::WindowCtx::KeyModFlags;
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [=](bool pressed, bool released, KeyModFlags mods) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_A, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_A, [=](bool pressed, bool released, KeyModFlags) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardWasdPressed.y += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_S, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_S, [=](bool pressed, bool released, KeyModFlags) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardWasdPressed.z += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [=](bool pressed, bool released, KeyModFlags) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [=](bool pressed, bool released, KeyModFlags) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         static bool controlDebugCamera = true;
         if (pressed) {
@@ -470,17 +483,22 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         }
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [=](bool pressed, bool released, KeyModFlags) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardAltPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [=](bool pressed, bool released, KeyModFlags) {
+        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        app->keyboardShiftPressed += static_cast<float>(pressed) - static_cast<float>(released);
+    });
+
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(
             engine, engine::UserActionType::WINDOW, [=](void*) { glfwSetWindowShouldClose(window, true); });
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {
             static bool setToFullscreen = true;
             if (!pressed) { return; }
@@ -498,7 +516,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         });
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released, KeyModFlags) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         static bool setToWireframe = true;
         if (!pressed) { return; }
@@ -513,7 +531,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         setToWireframe = !setToWireframe;
     });
 
-    (void)windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released) {
+    (void)windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released, KeyModFlags) {
         if (released) {
             auto mousePosition = windowCtx.MousePosition();
             XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);

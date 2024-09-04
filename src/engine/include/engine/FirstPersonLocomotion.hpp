@@ -1,15 +1,15 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-
+#include "engine/CommonInterfaces.hpp"
 namespace engine {
 
-struct FirstPersonLocomotion final {
+class FirstPersonLocomotion final : public IDirty {
 
 public:
 #define Self FirstPersonLocomotion
     explicit Self()              = default;
-    ~Self() noexcept             = default;
+    virtual ~Self() override {}
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -20,11 +20,20 @@ public:
         // TODO: in theory can construct matrix in place, without extra calculation from 3 vectors we already have
         return glm::lookAtRH(position, position+forward, up);
     }
+
+    virtual void CommitChanges() override {
+        if (isDirtyOrient_) {
+            CommitGlobalRotChange();
+        } else if (isDirtyForwardUp_) {
+            CommitForwardUpChange();
+        }
+    }
+
     auto ComputeViewMatrix [[nodiscard]]() const -> glm::mat4 { return ComputeViewMatrix(position_, forwardDirection_, upDirection_); }
     auto ComputeModelMatrix [[nodiscard]]() const -> glm::mat4 { return glm::inverse(ComputeViewMatrix(position_, forwardDirection_, upDirection_)); }
 
-    auto Clone(FirstPersonLocomotion const& other) {
-        std::memcpy(this, &other, sizeof(FirstPersonLocomotion));
+    void Clone(FirstPersonLocomotion const& other) {
+        std::memcpy((void*)this, (void*)&other, sizeof(FirstPersonLocomotion));
     }
 
     auto Position[[nodiscard]]() const -> glm::vec3 { return position_; }
@@ -35,16 +44,17 @@ public:
     void SetOrientation(glm::vec3 forward, glm::vec3 up) {
         forwardDirection_ = forward;
         upDirection_ = up;
-        SyncRight();
-    }
-    void SetOrientation(glm::vec3 globalEuler) {
-        globalRotationEuler_ = globalEuler;
-        SyncOrientation();
+        isDirtyForwardUp_ = true;
     }
 
-    void RotateLocally(glm::vec3 deltaEuler) {
-        globalRotationEuler_ += deltaEuler;
-        SyncOrientation();
+    void SetOrientation(glm::quat globalOrient) {
+        globalOrientation_ = globalOrient;
+        isDirtyOrient_ = true;
+    }
+
+    void RotateLocally(glm::quat deltaRotation) {
+        globalOrientation_ = deltaRotation * globalOrientation_;
+        isDirtyOrient_ = true;
     }
 
     void MoveGlobally(glm::vec3 direction, float units) { position_ += direction * units; }
@@ -56,18 +66,25 @@ public:
     void MoveForward(float units) { MoveGlobally(forwardDirection_, units); }
 
 private:
-    void SyncRight() { rightDirection_ = glm::cross(forwardDirection_, upDirection_); }
-    void SyncOrientation() {
-        globalRotationEuler_.x = glm::clamp(globalRotationEuler_.x, -89.0f, 89.0f); // anti gimbal lock
+    void CommitForwardUpChange() {
+        rightDirection_ = glm::cross(forwardDirection_, upDirection_);
+        isDirtyForwardUp_ = false;
+    }
 
-        float cosx = glm::cos(glm::radians(globalRotationEuler_.x));
+    void CommitGlobalRotChange() {
+        glm::vec3 euler = glm::eulerAngles(globalOrientation_);
+        // euler.x = glm::clamp(euler.x, -89.0f, 89.0f); // anti gimbal lock
+
+        float cosx = glm::cos(euler.x);
         glm::vec3 direction{
-            glm::cos(glm::radians(globalRotationEuler_.z)) * cosx,
-            -glm::sin(glm::radians(globalRotationEuler_.x)),
-            glm::sin(glm::radians(globalRotationEuler_.z)) * cosx,
+            glm::cos(euler.z) * cosx,
+            -glm::sin(euler.x),
+            glm::sin(euler.z) * cosx,
         };
+
         forwardDirection_ = glm::normalize(direction);
-        SyncRight();
+        isDirtyOrient_ = false;
+        CommitForwardUpChange();
     }
 
     glm::vec3 position_{};
@@ -75,7 +92,9 @@ private:
     glm::vec3 upDirection_{};
     glm::vec3 rightDirection_{};
 
-    glm::vec3 globalRotationEuler_{};
+    glm::quat globalOrientation_ = glm::identity<glm::quat>();
+    bool isDirtyOrient_{false};
+    bool isDirtyForwardUp_{false};
 };
 
 } // namespace engine

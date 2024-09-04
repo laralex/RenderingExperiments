@@ -40,42 +40,46 @@ INCLUDE_DIR+=-I data
 LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
 
-obj_app_ = Main.o
-obj_app = $(addprefix ${BUILD_DIR}/app/, ${obj_app_})
+src_app_ = Main.cpp
+src_app = $(addprefix ${BUILD_DIR}/app/, ${src_app_})
+obj_app = ${src_app:.cpp=.o}
 
-obj_engine_ = \
-	Assets.o BoxMesh.o \
-	EngineLoop.o IcosphereMesh.o \
-	LineRendererInput.o PointRendererInput.o \
-	PlaneMesh.o Unprojection.o \
-	UvSphereMesh.o \
-	Precompiled.o WindowContext.o \
-	gl/AxesRenderer.o \
-	gl/BoxRenderer.o gl/ProceduralMeshes.o \
-	gl/BillboardRenderer.o \
-	gl/Buffer.o gl/Capabilities.o \
-	gl/Common.o gl/CommonRenderers.o \
-	gl/PointRenderer.o \
-	gl/Debug.o gl/FlatRenderer.o \
-	gl/FrustumRenderer.o gl/Guard.o \
-	gl/Init.o gl/LineRenderer.o \
-	gl/Extensions.o gl/Framebuffer.o \
-	gl/Program.o \
-	gl/Renderbuffer.o \
-	gl/Sampler.o gl/SamplersCache.o \
-	gl/Shader.o gl/Texture.o \
-	gl/TextureUnits.o gl/Uniform.o \
-	gl/Vao.o
+src_engine_ = \
+	Assets.cpp BoxMesh.cpp \
+	EngineLoop.cpp IcosphereMesh.cpp \
+	LineRendererInput.cpp PointRendererInput.cpp \
+	PlaneMesh.cpp Unprojection.cpp \
+	UvSphereMesh.cpp \
+	Precompiled.cpp WindowContext.cpp \
+	gl/AxesRenderer.cpp \
+	gl/BoxRenderer.cpp gl/ProceduralMeshes.cpp \
+	gl/BillboardRenderer.cpp \
+	gl/Buffer.cpp gl/Capabilities.cpp \
+	gl/Common.cpp gl/CommonRenderers.cpp \
+	gl/PointRenderer.cpp \
+	gl/Debug.cpp gl/FlatRenderer.cpp \
+	gl/FrustumRenderer.cpp gl/Guard.cpp \
+	gl/Init.cpp gl/LineRenderer.cpp \
+	gl/Extensions.cpp gl/Framebuffer.cpp \
+	gl/Program.cpp \
+	gl/Renderbuffer.cpp \
+	gl/Sampler.cpp gl/SamplersCache.cpp \
+	gl/Shader.cpp gl/Texture.cpp \
+	gl/TextureUnits.cpp gl/Uniform.cpp \
+	gl/Vao.cpp
 
-obj_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${obj_engine_})
+src_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${src_engine_})
+obj_engine = ${src_engine:.cpp=.o}
+
 ifeq (1,${USE_DEP_FILES})
--include $(obj_engine:.o=.d)
+-include $(src_engine:.cpp=.d)
+-include $(src_app:.cpp=.d)
 -include ${PRECOMPILED_HEADER:.pch=.d}
 endif
 
 .PHONY: wtf
 wtf:
-	$(info > Obj files: ${obj_engine})
+	$(info > SRC files: ${src_engine} ${src_app})
 
 .PHONY: run
 run: ${INSTALL_DIR}/run_app
@@ -99,6 +103,8 @@ build_app: ${BUILD_DIR}/engine/libengine.a ${BUILD_DIR}/app ${APP_EXE}
 
 .PHONY: build_engine
 build_engine: ${BUILD_DIR}/engine/src/gl ${BUILD_DIR}/engine/libengine.a
+
+.PHONY: patch_d_files
 
 .PHONY: ${INSTALL_DIR}/run_app
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}

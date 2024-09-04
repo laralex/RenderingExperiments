@@ -5,9 +5,6 @@
 
 namespace engine {
 
-using ButtonCallback = std::function<void(bool, bool)>;
-using AxisCallback   = std::function<void(float)>;
-
 class WindowCtx final {
 
 public:
@@ -20,6 +17,17 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
+    enum class KeyModFlags : int32_t {
+        SHIFT = 1 << 0,
+        CONTROL = 1 << 1,
+        ALT = 1 << 2,
+        SUPER = 1 << 3,
+        CAPSLOCK = 1 << 4,
+        NUMLOCK = 1 << 5,
+    };
+
+    using ButtonCallback = std::function<void(bool, bool, KeyModFlags)>;
+    using AxisCallback   = std::function<void(float)>;
     using GlfwKey         = int;
     using GlfwMouseButton = int;
 
@@ -60,5 +68,7 @@ private:
     friend void GlfwKeyCallback(GLFWwindow* window, GlfwKey key, int scancode, int action, int mods);
     // friend void GlfwMouseButtonCallback(GLFWwindow* window, GlfwMouseButton button, int action, int mods);
 };
+
+auto operator&(WindowCtx::KeyModFlags a, WindowCtx::KeyModFlags b) -> bool;
 
 } // namespace engine

@@ -178,7 +178,7 @@ void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int 
     auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     if (auto const found = ctx->keys_.find(key); found != ctx->keys_.end()) {
-        found->second(action == GLFW_PRESS, action == GLFW_RELEASE);
+        found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
     }
 }
 

@@ -23,7 +23,7 @@ public:
     auto ViewToWorld() const -> glm::mat4 const& { return world2view_; }
     auto ViewProjection() const -> glm::mat4 const& { return world2view2projection; }
 
-    // Must be called after finishing all `Set...` methods, in order to `Get...` methods to return up-to-date data
+    // Must be called after finishing all non-const methods, in order to const methods to return up-to-date data
     void CommitChanges();
     void SetPerspective(float verticalFov, float aspect, float zNear = 1.0f, float zFar = 100.0f);
     void SetOrtographic(float xLeft, float xRight, float yBottom, float yTop, float zNear = 1.0f, float zFar = 100.0f);

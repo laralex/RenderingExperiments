@@ -3,7 +3,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-using namespace engine;
+namespace engine {
 
 WindowCtx::WindowCtx(GLFWwindow* window)
     : window_(window) {
@@ -49,7 +49,7 @@ void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int m
         default: break;
     }
     if (auto const found = mouseButtons_.find(mouseButton); found != mouseButtons_.end()) {
-        found->second(action == GLFW_PRESS, action == GLFW_RELEASE);
+        found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
     }
 }
 
@@ -71,3 +71,10 @@ void WindowCtx::OnFrameEnd() {
     mousePosPrev_ = mousePos_;
     isNonFirstFrame_ = 1.0f;
 }
+
+auto operator&(WindowCtx::KeyModFlags a, WindowCtx::KeyModFlags b) -> bool {
+    using T = std::underlying_type_t<WindowCtx::KeyModFlags>;
+    return static_cast<T>(a) & static_cast<T>(b);
+}
+
+} // namespace engine
