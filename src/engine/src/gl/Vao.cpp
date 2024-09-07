@@ -85,7 +85,8 @@ auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, G
         assert(false && "VaoMutableCtx::LinkIndices provided unknown dataType");
         break;
     }
-    XLOGW("VaoMutableCtx::LinkIndices Not implemented shared_ptr bookeeping", 0);
+    // TODO:
+    // XLOGW("VaoMutableCtx::LinkIndices Not implemented shared_ptr bookeeping", 0);
     assert(
         indexBuffer.SizeBytes() % bytesPerIndex == 0
         && "Index buffer has memory size not divisible by sizeof(dataType)");

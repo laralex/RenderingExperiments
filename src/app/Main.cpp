@@ -68,6 +68,8 @@ struct Application final {
     engine::gl::Framebuffer outputFramebuffer{};
     engine::gl::Texture outputColor{};
     engine::gl::Texture outputDepth{};
+    engine::gl::Texture backbufferColor{};
+    engine::gl::Texture backbufferDepth{};
     engine::gl::Renderbuffer renderbuffer{};
     engine::gl::CommonRenderers commonRenderers{};
     engine::gl::FlatRenderer flatRenderer{};
@@ -175,7 +177,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
         .loader      = app->imageLoader,
         .filepath    = "data/engine/textures/utils/uv_checker_8x8_bright.png",
-        .format      = GL_RGB8,
+        .format      = GL_SRGB8,
         .numChannels = 3,
     });
     assert(maybeTexture);
@@ -188,16 +190,17 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
     app->uboSamplerTiling.Fill(CpuMemory<GLvoid const>{&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling)});
 
+    // GL_RGB10_A2, GL_R11F_G11F_B10F, GL_RGBA16F, GL_RGBA8
     app->outputColor =
-        gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output color");
+        gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output/Color");
     app->outputDepth = gl::Texture::Allocate2D(
-        GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output depth");
-    app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
+        GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output/Depth");
+    // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
-    (void)gl::FramebufferEditCtx{&app->outputFramebuffer, true}
+    (void)gl::FramebufferEditCtx{app->outputFramebuffer}
         .AttachTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
-        // .AttachTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth);
-        .AttachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer)
+        .AttachTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth)
+        // .AttachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer)
         .CommitDrawbuffers();
 
     app->flatRenderer = gl::FlatRenderer::Allocate();
@@ -268,7 +271,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     cameraMovement.CommitChanges();
     glm::mat4 view = cameraMovement.ComputeViewMatrix();
-    glm::mat4 proj = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 100.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 200.0f);
 
     glm::mat4 camera = proj * view;
 
@@ -278,9 +281,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     float rotationSpeed   = ctx.timeSec * 0.5f;
 
+    auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer};
     {
         // textured box
-        auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer, true};
         fbGuard.ClearColor(0, 0.1f, 0.2f, 0.3f, 0.0f);
         fbGuard.ClearDepthStencil(1.0f, 0);
         GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
@@ -332,14 +335,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     {
         // lighted box
         GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
-        auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer, true};
 
         float lightRadius = 2.0f;
         glm::mat4 lightModel = glm::mat4{1.0f};
         lightModel           = glm::rotate(lightModel, rotationSpeed * 5.5f, VEC_UP);
         lightModel           = glm::translate(lightModel,
             glm::vec3(lightRadius, lightRadius, lightRadius * glm::sin(ctx.timeSec) + 1.0f));
-        glm::vec3 lightPosition = gl::TransformOrigin(lightModel);
+        glm::vec4 lightPosition{gl::TransformOrigin(lightModel), 1.0f};
 
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -361,7 +363,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
-        glm::vec3 lightColor{1.0f, 1.0f, 1.0f};
+        glm::vec3 lightColor{0.2f, 0.2f, 0.2f};
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition = lightPosition,
             .lightColor = lightColor,
@@ -389,19 +391,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     {
-        // present
-        glViewport(0, 0, screenSize.x, screenSize.y);
-        auto dstGuard = gl::FramebufferDrawCtx{0U, true};
-        dstGuard.ClearDepthStencil(1.0f, 0);
-        // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
-        // .Invalidate(1, invalidateAttachments);
-        glm::vec2 fractionOfMaxResolution = glm::vec2{renderSize} / glm::vec2{app->outputColor.Size()};
-        app->commonRenderers.Blit2D(app->outputColor.Id(), fractionOfMaxResolution);
-    }
-
-    {
         auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
-        auto fbGuard         = gl::FramebufferDrawCtx{0U, true};
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed * 0.5f, VEC_UP);
@@ -441,6 +431,17 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
     }
 
+    fbGuard.GuardAnother(0U);
+    {
+        // present
+        glViewport(0, 0, screenSize.x, screenSize.y);
+        fbGuard.ClearDepthStencil(1.0f, 0);
+        // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
+        // .Invalidate(1, invalidateAttachments);
+        glm::vec2 fractionOfMaxResolution = glm::vec2{renderSize} / glm::vec2{app->outputColor.Size()};
+        app->commonRenderers.Blit2D(app->outputColor.Id(), fractionOfMaxResolution);
+    }
+
     {
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
@@ -448,7 +449,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthFunc(GL_LEQUAL));
 
         auto debugGroupGuard = gl::DebugGroupCtx("Debug lines/points pass");
-        auto fbGuard         = gl::FramebufferDrawCtx{0U, true};
         if (app->debugLines.IsDataDirty()) {
             app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
             app->debugLines.Clear();
@@ -564,6 +564,10 @@ auto main() -> int {
 
     auto* engine = *maybeEngine;
     ConfigureWindow(engine);
+
+    engine::QueueForNextFrame(engine, engine::UserActionType::RENDER, [](void* applicationData){
+        GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
+    });
 
     {
         Application app;

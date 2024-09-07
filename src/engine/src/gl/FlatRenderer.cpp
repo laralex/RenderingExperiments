@@ -8,10 +8,10 @@ namespace {
 
 struct UboData {
     alignas(16) glm::mat4 mvp;
-    alignas(16) glm::vec4 ambientColor;
+    alignas(16) glm::vec4 ambientIntensity;
     alignas(16) glm::vec4 materialColor;
     alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec4 lightTowardsDirection;
+    alignas(16) glm::vec4 lightModelPosition;
 };
 
 constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
@@ -50,16 +50,19 @@ auto FlatRenderer::Allocate() -> FlatRenderer {
 
 void FlatRenderer::Render(FlatRenderArgs const& args) const {
     // direction towards light in model space
-    glm::vec4 towardsLight = args.invModel * glm::vec4{args.lightWorldPosition, 1.0f};
-    towardsLight /= towardsLight.w;
+    glm::vec4 lightModelPosition = args.invModel * args.lightWorldPosition;
+    lightModelPosition /= lightModelPosition.w;
+    if (std::abs(args.lightWorldPosition.w) < 0.0001f) {
+        lightModelPosition.w = 0.0f;
+    }
     // towardsLight = glm::normalize(towardsLight);
 
     UboData data{
         .mvp = args.mvp,
-        .ambientColor          = glm::vec4{0.1, 0.1, 0.1, 1.0},
+        .ambientIntensity      = glm::vec4{0.01, 0.01, 0.01, 1.0},
         .materialColor         = glm::vec4{args.materialColor, 1.0},
         .lightColor            = glm::vec4{args.lightColor, 1.0},
-        .lightTowardsDirection = towardsLight,
+        .lightModelPosition = lightModelPosition,
     };
 
     ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});

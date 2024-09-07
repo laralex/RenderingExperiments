@@ -34,7 +34,7 @@ private:
     // TODO: assert with capabilities
     constexpr static size_t MAX_DRAW_BUFFERS = 8U;
     GlHandle fbId_{GL_NONE};
-    GLenum drawBuffers_[MAX_DRAW_BUFFERS] = {};
+    GLenum drawBuffers_[MAX_DRAW_BUFFERS] = {GL_COLOR_ATTACHMENT0}; // others are GL_NONE
 
     friend class FramebufferEditCtx;
 };
@@ -44,14 +44,15 @@ private:
 class FramebufferDrawCtx final {
 public:
 #define Self FramebufferDrawCtx
-    explicit Self(Framebuffer const& useFramebuffer, bool bindAsDraw = false) noexcept;
-    explicit Self(GLuint useFramebuffer, bool bindAsDraw = false) noexcept;
+    explicit Self(Framebuffer const& useFramebuffer, bool bindAsDraw = true) noexcept;
+    explicit Self(GLuint useFramebuffer, bool bindAsDraw = true) noexcept;
     ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = default;
 #undef Self
+    void GuardAnother(GLuint useFramebuffer, bool bindAsDraw = true) noexcept;
 
     auto ClearColor(GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) const -> FramebufferDrawCtx const&;
     auto ClearColor(GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) const -> FramebufferDrawCtx const&;
@@ -77,12 +78,12 @@ private:
 class FramebufferEditCtx final {
 public:
 #define Self FramebufferEditCtx
-    explicit Self(Framebuffer* useFramebuffer, bool bindAsDraw = false) noexcept;
+    explicit Self(Framebuffer& useFramebuffer, bool bindAsDraw = true) noexcept;
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
-    Self& operator=(Self&&)      = default;
+    Self& operator=(Self&&)      = delete;
 #undef Self
     auto AttachTexture(GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;
@@ -96,7 +97,7 @@ public:
     auto IsComplete [[nodiscard]] () const -> bool { return ctx_.IsComplete(); };
 
 private:
-    Framebuffer* fb_ = nullptr;
+    Framebuffer& fb_;
     FramebufferDrawCtx ctx_;
 };
 

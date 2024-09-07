@@ -13,12 +13,12 @@ FramebufferDrawCtx::FramebufferDrawCtx(Framebuffer const& useFramebuffer, bool b
 
 FramebufferDrawCtx::FramebufferDrawCtx(GLuint useFramebuffer, bool bindAsDraw) noexcept {
     // XLOG("FramebufferCtx ctor {}", useFramebuffer);
-    assert(!hasInstances_);
-    contextFramebuffer_ = GlHandle{useFramebuffer};
-    framebufferTarget_  = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
-    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
+    assert(!hasInstances_ && "FramebufferDrawCtx another already exists in the scope");
+    GuardAnother(useFramebuffer, bindAsDraw);
     hasInstances_ = true;
 }
+
+
 
 FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
     // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
@@ -27,6 +27,13 @@ FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
     contextFramebuffer_.UnsafeReset();
     GLCALL(glBindFramebuffer(framebufferTarget_, 0U));
     hasInstances_ = false;
+}
+
+void FramebufferDrawCtx::GuardAnother(GLuint useFramebuffer, bool bindAsDraw) noexcept {
+    // safe, because FramebufferDrawCtx doesn't own any resources, no leaking
+    contextFramebuffer_.UnsafeAssign(GlHandle{useFramebuffer});
+    framebufferTarget_  = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
+    GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
 }
 
 Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE); }
@@ -116,8 +123,8 @@ auto FramebufferDrawCtx::IsComplete() const -> bool {
     return isComplete;
 }
 
-FramebufferEditCtx::FramebufferEditCtx(Framebuffer* useFramebuffer, bool bindAsDraw) noexcept
-    : ctx_{*useFramebuffer, bindAsDraw}
+FramebufferEditCtx::FramebufferEditCtx(Framebuffer& useFramebuffer, bool bindAsDraw) noexcept
+    : ctx_{useFramebuffer, bindAsDraw}
     , fb_{useFramebuffer} { }
 
 auto FramebufferEditCtx::AttachTexture(GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
@@ -146,8 +153,9 @@ auto FramebufferEditCtx::AttachTexture(GLenum attachment, Texture const& tex, GL
     }
 
     if (updated) {
+        // can be nullptr for backbuffer
         int32_t const drawBuffer      = attachment - GL_COLOR_ATTACHMENT0;
-        fb_->drawBuffers_[drawBuffer] = attachment;
+        fb_.drawBuffers_[drawBuffer] = attachment;
         assert(IsComplete());
     } else {
         assert(false && "Failed to set framebuffer attachment");
@@ -159,13 +167,13 @@ auto FramebufferEditCtx::AttachRenderbuffer(GLenum attachment, Renderbuffer cons
     -> FramebufferEditCtx const& {
     GLCALL(glFramebufferRenderbuffer(ctx_.BoundTarget(), attachment, rb.RenderbufferSlotTarget(), rb.Id()));
     int32_t const drawBuffer      = attachment - GL_COLOR_ATTACHMENT0;
-    fb_->drawBuffers_[drawBuffer] = attachment;
+    fb_.drawBuffers_[drawBuffer] = attachment;
     return *this;
 }
 
 auto FramebufferEditCtx::CommitDrawbuffers() const -> FramebufferEditCtx const& {
     assert(ctx_.BoundTarget() == GL_DRAW_FRAMEBUFFER);
-    GLCALL(glDrawBuffers(static_cast<GLsizei>(Framebuffer::MAX_DRAW_BUFFERS), fb_->drawBuffers_));
+    GLCALL(glDrawBuffers(static_cast<GLsizei>(Framebuffer::MAX_DRAW_BUFFERS), fb_.drawBuffers_));
     return *this;
 }
 
