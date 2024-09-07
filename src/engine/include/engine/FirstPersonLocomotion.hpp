@@ -2,6 +2,8 @@
 
 #include "engine/Precompiled.hpp"
 #include "engine/CommonInterfaces.hpp"
+#include <glm/gtc/quaternion.hpp>
+
 namespace engine {
 
 class FirstPersonLocomotion final : public IDirty {
@@ -47,50 +49,69 @@ public:
         isDirtyForwardUp_ = true;
     }
 
-    void SetOrientation(glm::quat globalOrient) {
-        globalOrientation_ = globalOrient;
-        isDirtyOrient_ = true;
+    // void SetOrientation(glm::quat globalOrient) {
+    //     globalOrientation_ = globalOrient;
+    //     isDirtyOrient_ = true;
+    // }
+
+    void RotateLocally(glm::vec2 deltaYawPitchRadians) {
+        if (deltaYawPitchRadians.x == 0.0f & deltaYawPitchRadians.y == 0.0f) {
+            return;
+        }
+        glm::quat yawRot = glm::angleAxis(deltaYawPitchRadians.x, VEC_UP);
+        glm::quat pitchRot = 
+        // glm::identity<glm::quat>();
+        glm::angleAxis(deltaYawPitchRadians.y, yawRot * VEC_RIGHT);
+        globalOrientation_ = glm::normalize(pitchRot * globalOrientation_ * yawRot);
+        forwardDirection_ = globalOrientation_ * VEC_FORWARD;
+        // forwardDirection_ * glm::mat3_cast(deltaRotation);
+        glm::vec3 localRight = glm::cross(forwardDirection_, VEC_UP);
+        upDirection_ = glm::cross(localRight, forwardDirection_);
+        // auto& q = globalOrientation_;
+        // XLOG("xyz {} {} {} w {} len {}", q.x, q.y, q.z, q.w, glm::length(q));
+        isDirtyForwardUp_ = true;
     }
 
-    void RotateLocally(glm::quat deltaRotation) {
-        globalOrientation_ = deltaRotation * globalOrientation_;
-        isDirtyOrient_ = true;
+    void MoveGlobally(glm::vec3 direction) { position_ += direction; }
+    void MoveLocally(glm::vec3 direction) {
+        if (direction.x != 0.0f) {
+            position_ += direction.x * glm::cross(forwardDirection_, upDirection_);
+        }
+        position_ += direction.y * upDirection_ + direction.z * forwardDirection_;
     }
-
-    void MoveGlobally(glm::vec3 direction, float units) { position_ += direction * units; }
-    void MoveLocally(glm::vec3 direction, float units) {
-        position_ += (direction.x * rightDirection_ + direction.y * upDirection_ + direction.z * forwardDirection_) * units;
-    }
-    void MoveRight(float units) { MoveGlobally(rightDirection_, units); }
-    void MoveUp(float units) { MoveGlobally(upDirection_, units); }
-    void MoveForward(float units) { MoveGlobally(forwardDirection_, units); }
+    void MoveRight(float units) { MoveGlobally(glm::cross(forwardDirection_, upDirection_) * units); }
+    void MoveUp(float units) { MoveGlobally(VEC_UP * units); }
+    void MoveForward(float units) { MoveGlobally(forwardDirection_ * units); }
 
 private:
     void CommitForwardUpChange() {
-        rightDirection_ = glm::cross(forwardDirection_, upDirection_);
-        isDirtyForwardUp_ = false;
+        if (isDirtyForwardUp_) {
+            isDirtyForwardUp_ = false;
+        }
     }
 
     void CommitGlobalRotChange() {
-        glm::vec3 euler = glm::eulerAngles(globalOrientation_);
-        // euler.x = glm::clamp(euler.x, -89.0f, 89.0f); // anti gimbal lock
+        if (isDirtyOrient_) {
+            // glm::vec3 euler = glm::eulerAngles(globalOrientation_);
+            // // euler.x = glm::clamp(euler.x, -89.0f, 89.0f); // anti gimbal lock
+            // glm::vec
+            // float cosx = glm::cos(euler.x);
+            // glm::vec3 direction{
+            //     glm::cos(euler.z) * cosx,
+            //     -glm::sin(euler.x),
+            //     glm::sin(euler.z) * cosx,
+            // };
 
-        float cosx = glm::cos(euler.x);
-        glm::vec3 direction{
-            glm::cos(euler.z) * cosx,
-            -glm::sin(euler.x),
-            glm::sin(euler.z) * cosx,
-        };
 
-        forwardDirection_ = glm::normalize(direction);
-        isDirtyOrient_ = false;
-        CommitForwardUpChange();
+            isDirtyForwardUp_ = true;
+            CommitForwardUpChange();
+            isDirtyOrient_ = false;
+        }
     }
 
     glm::vec3 position_{};
     glm::vec3 forwardDirection_{};
     glm::vec3 upDirection_{};
-    glm::vec3 rightDirection_{};
 
     glm::quat globalOrientation_ = glm::identity<glm::quat>();
     bool isDirtyOrient_{false};

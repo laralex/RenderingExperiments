@@ -80,13 +80,6 @@ struct Application final {
     bool isInitialized = false;
 };
 
-constexpr uint8_t textureData[] = {
-    80,  40,  40,  // 01
-    80,  120, 80,  // 03
-    120, 120, 160, // 11
-    200, 160, 160, // 13
-};
-
 constexpr GLint ATTRIB_POSITION_LOCATION           = 0;
 constexpr GLint ATTRIB_UV_LOCATION                 = 1;
 constexpr GLint ATTRIB_NORMAL_LOCATION             = 2;
@@ -123,7 +116,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
     app->program = std::move(*maybeProgram);
 
     app->boxMesh = gl::AllocateBoxMesh(
-        BoxMesh::Generate(glm::vec3{2.5f, 2.5f, 1.0f}, false),
+        BoxMesh::Generate(VEC_ONES, true),
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
@@ -146,7 +139,7 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
         IcosphereMesh::Generate({
             .numSubdivisions    = 1,
             .duplicateSeam      = false,
-            .clockwiseTriangles = false,
+            .clockwiseTriangles = true,
         }),
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
@@ -209,8 +202,8 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     app->flatRenderer = gl::FlatRenderer::Allocate();
 
-    app->cameraMovement.SetPosition({-10.0f, 0.0f, 2.0f});
-    app->cameraMovement.SetOrientation({1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
+    app->cameraMovement.SetPosition({0.0f, 10.0f, 2.0f});
+    app->cameraMovement.SetOrientation(VEC_FORWARD, VEC_UP);
 }
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
@@ -241,7 +234,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     if (app->keyboardShiftPressed) {
         cameraDeltaPosition.y = (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z) * 0.5f;
     } else {
-        glm::vec2 cameraMoveDir((app->keyboardWasdPressed.w - app->keyboardWasdPressed.y), (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z));
+        glm::vec2 cameraMoveDir(
+            (app->keyboardWasdPressed.w - app->keyboardWasdPressed.y),
+            (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z));
         float invDirLength = glm::inversesqrt(glm::dot(cameraMoveDir, cameraMoveDir));
         if (invDirLength < 1.0f) {
             cameraMoveDir *= invDirLength;
@@ -249,29 +244,31 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         cameraDeltaPosition.x = cameraMoveDir.x;
         cameraDeltaPosition.z = cameraMoveDir.y;
     }
-    cameraMovement.MoveLocally(cameraDeltaPosition, moveSensitivity);
+    cameraMovement.MoveLocally(cameraDeltaPosition * moveSensitivity);
 
     auto mouse = windowCtx.MousePressedState();
     // XLOG("@@ Mouse {} {} {}", mouse.x, mouse.y, mouse.z);
-    constexpr float CAMERA_ROTATION_SENSITIVITY = 0.03f;
+    constexpr float CAMERA_ROTATION_SENSITIVITY = 0.05f;
     if (mouse.x > 0.0f) {
         auto mouseDelta = windowCtx.MouseDelta();
         glm::quat deltaRotation; // euler pitch+yaw to quat
-        glm::vec2 halfYawPitch{mouseDelta.x * 0.5f, -mouseDelta.y * aspectRatio * 0.5f};
-        glm::vec2 cos = glm::cos(halfYawPitch);
-        glm::vec2 sin = glm::sin(halfYawPitch);
+        glm::vec2 yawPitch{mouseDelta.x, -mouseDelta.y * aspectRatio};
+        glm::vec2 quatAngle = glm::radians(yawPitch * 0.5f); // quat angle is half the angle of rotation
+        glm::vec2 cos = glm::cos(quatAngle);
+        glm::vec2 sin = glm::sin(quatAngle);
         deltaRotation.w = cos.y * cos.x;
         deltaRotation.x = sin.y * sin.x;
         deltaRotation.y = sin.y * cos.x;
         deltaRotation.z = cos.y * sin.x;
+        deltaRotation = glm::normalize(deltaRotation);
 
-        cameraMovement.RotateLocally(glm::radians(glm::vec3{mouseDelta.x, 0.0f, -mouseDelta.y * aspectRatio})*CAMERA_ROTATION_SENSITIVITY);
+        cameraMovement.RotateLocally(glm::radians(glm::vec2{mouseDelta.x, -mouseDelta.y})*CAMERA_ROTATION_SENSITIVITY);
         // cameraMovement.RotateLocally(deltaRotation * CAMERA_ROTATION_SENSITIVITY);
     }
 
     cameraMovement.CommitChanges();
     glm::mat4 view = cameraMovement.ComputeViewMatrix();
-    glm::mat4 proj = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 40.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(30.0f), aspectRatio, 1.0f, 100.0f);
 
     glm::mat4 camera = proj * view;
 
@@ -316,12 +313,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
         gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
 
-        // gl::RenderVao(app->boxMesh.Vao());
         gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-        model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        model = glm::translate(model, VEC_ONES);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera * model));
 
         // if (windowCtx.IsMouseInsideWindow()) {
@@ -338,9 +334,11 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
         auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer, true};
 
+        float lightRadius = 2.0f;
         glm::mat4 lightModel = glm::mat4{1.0f};
-        lightModel           = glm::rotate(lightModel, rotationSpeed * 5.5f, glm::vec3(0.0f, 0.0f, 1.0f));
-        lightModel           = glm::translate(lightModel, glm::vec3(2.0f, 2.0f, 2.0f * glm::sin(ctx.timeSec) + 1.0f));
+        lightModel           = glm::rotate(lightModel, rotationSpeed * 5.5f, VEC_UP);
+        lightModel           = glm::translate(lightModel,
+            glm::vec3(lightRadius, lightRadius, lightRadius * glm::sin(ctx.timeSec) + 1.0f));
         glm::vec3 lightPosition = gl::TransformOrigin(lightModel);
 
         glm::mat4 model = glm::mat4(1.0f);
@@ -363,10 +361,26 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
+        glm::vec3 lightColor{1.0f, 1.0f, 1.0f};
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition = lightPosition,
+            .lightColor = lightColor,
+            .materialColor = glm::vec3{0.3, 1.0, 0.1},
             .primitive          = GL_TRIANGLES,
             .vaoWithNormal      = mesh.Vao(),
+            .mvp                = mvp,
+            .invModel           = invModel,
+        });
+
+        model = glm::scale(glm::mat4{1.0f}, glm::vec3{15.0f});
+        invModel = glm::inverse(model);
+        mvp = camera * model;
+        app->flatRenderer.Render(gl::FlatRenderArgs{
+            .lightWorldPosition = lightPosition,
+            .lightColor = lightColor,
+            .materialColor = glm::vec3{1.0f, 1.0f, 1.0f},
+            .primitive          = GL_TRIANGLES,
+            .vaoWithNormal      = app->boxMesh.Vao(),
             .mvp                = mvp,
             .invModel           = invModel,
         });
@@ -390,8 +404,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto fbGuard         = gl::FramebufferDrawCtx{0U, true};
 
         glm::mat4 model{1.0};
-        model = glm::rotate(model, rotationSpeed * 0.5f, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(1.6f, 0.0f, 0.0f));
+        model = glm::rotate(model, rotationSpeed * 0.5f, VEC_UP);
+        model = glm::translate(model, VEC_RIGHT * 1.6f);
 
         glm::mat4 mvp = camera * model;
         app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));

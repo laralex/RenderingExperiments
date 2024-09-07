@@ -33,6 +33,8 @@ private:
 
 struct FlatRenderArgs {
     glm::vec3 lightWorldPosition;
+    glm::vec3 lightColor;
+    glm::vec3 materialColor;
     GLenum primitive;
     Vao const& vaoWithNormal;
     glm::mat4 const& mvp;

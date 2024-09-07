@@ -20,4 +20,9 @@ void InvertTriangleNormals(CpuView<glm::vec3> vertexData) {
     }
 }
 
+auto RotateByQuaternion[[nodiscard]](glm::vec3 v, glm::quat q) -> glm::vec3 {
+    glm::vec3 qaxis{q.x, q.y, q.z};
+    return v + 2.0f*glm::cross(qaxis, glm::cross(qaxis,v) + q.w*v);
+}
+
 } // namespace engine

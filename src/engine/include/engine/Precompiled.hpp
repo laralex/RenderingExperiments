@@ -62,6 +62,11 @@ constexpr glm::vec3 COLOR_PALETTE[]{
     {1.0f, 0.0f, 1.0f}, {0.2f, 0.1f, 0.0f}, {0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 0.0f},
 };
 
+constexpr glm::vec3 VEC_UP{0.0f, 0.0f, 1.0f};
+constexpr glm::vec3 VEC_RIGHT{1.0f, 0.0f, 0.0f};
+constexpr glm::vec3 VEC_FORWARD{0.0f, -1.0f, 0.0f};
+constexpr glm::vec3 VEC_ONES{1.0f, 1.0f, 1.0f};
+
 // aka simplified std::ranges::views::strided_view from C++23
 // NOTE: currently only works with pointers to const (T = const Foo)
 template <typename T> struct CpuView {
@@ -145,5 +150,7 @@ template <typename IntT> void InvertTriangleWinding(std::vector<IntT>& triangleI
 void InvertTriangleStripWinding(std::vector<uint16_t>& triangleIndices);
 
 void InvertTriangleNormals(CpuView<glm::vec3> vertexData);
+
+auto RotateByQuaternion[[nodiscard]](glm::vec3 v, glm::quat q) -> glm::vec3;
 
 } // namespace engine
