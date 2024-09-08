@@ -11,4 +11,4 @@ layout(location = UNIFORM_MVP_LOCATION) uniform mat4 u_MVP;
 void main() {
     v_Uv = in_Uv;
     gl_Position = u_MVP * vec4(in_Pos, 1.0);
-}
+} // main

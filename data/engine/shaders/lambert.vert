@@ -10,10 +10,7 @@ out highp vec3 v_Position;
 out mediump vec2 v_Uv;
 out highp vec3 v_Normal;
 
-struct Light {
-    highp vec4 color;
-    highp vec4 modelPosition;
-};
+#include "common/struct_light"
 
 layout(std140, binding = UBO_BINDING) uniform Ubo {
     highp mat4 u_MVP;
@@ -29,4 +26,4 @@ void main() {
     // spot light
     // directional light
     gl_Position = u_MVP * vec4(in_Position, 1.0);
-}
+} // main

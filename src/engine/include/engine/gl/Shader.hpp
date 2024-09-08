@@ -1,10 +1,32 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
+#include <unordered_map>
 
-namespace engine::gl {
+namespace engine::gl::shader {
 
-struct ShaderDefine {
+using IncludeRegistry = std::unordered_map<std::string, std::string, engine::StringHash, std::equal_to<>>;
+void LoadCommonIncludes(IncludeRegistry& out);
+void LoadVertexIncludes(IncludeRegistry& out);
+void LoadFragmentIncludes(IncludeRegistry& out);
+void LoadComputeCodegenComponents(IncludeRegistry& out);
+
+struct ShaderParsing final {
+    enum class PartType {
+        ORIGINAL_CODE,
+        INCLUDE_KEY,
+        DELIMITER,
+    };
+    struct Part final {
+        std::string_view text;
+        PartType type;
+    };
+    std::vector<Part> parts;
+};
+
+auto ParseParts[[nodiscard]](std::string_view code) -> ShaderParsing;
+
+struct Define final {
     std::string_view name = {};
     union {
         int32_t i32;
@@ -23,6 +45,9 @@ struct ShaderDefine {
     bool highPrecision = true;
 };
 
-auto AddShaderDefines [[nodiscard]] (std::string_view code, CpuView<ShaderDefine const> defines) -> std::string;
+auto GenerateCode[[nodiscard]](std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines) -> std::string;
 
-} // namespace engine::gl
+auto InjectDefines [[nodiscard]] (std::string_view code, CpuView<Define const> defines) -> std::string;
+void InjectDefines(std::stringstream& destination, CpuView<Define const> defines);
+
+} // namespace engine::gl::shader

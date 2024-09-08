@@ -27,10 +27,10 @@ auto LinkProgram(
 }
 
 auto LinkProgramFromFiles(
-    std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<ShaderDefine const> defines,
+    std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<shader::Define const> defines,
     std::string_view name, bool logCode) -> std::optional<GpuProgram> {
-    std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, defines);
-    std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, defines);
+    std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
+    std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);
     return LinkProgram(vertexShaderCode, fragmentShaderCode, name, logCode);
 }
 

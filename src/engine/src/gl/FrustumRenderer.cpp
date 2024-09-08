@@ -166,12 +166,12 @@ auto FrustumRenderer::Allocate() -> FrustumRenderer {
              .offset          = offsetof(Vertex, isNear)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UBO_FRUSTUM", .value = UBO_BINDING, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UBO_FRUSTUM", .value = UBO_BINDING, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(

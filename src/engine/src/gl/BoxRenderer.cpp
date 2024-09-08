@@ -134,14 +134,14 @@ auto BoxRenderer::Allocate() -> BoxRenderer {
              .offset          = offsetof(Vertex, innerMarker)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
         {.name  = "ATTRIB_INNER_MARKER_LOCATION",
          .value = ATTRIB_INNER_MARKER_LOCATION,
-         .type  = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
+         .type  = gl::shader::Define::INT32},
+        {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(

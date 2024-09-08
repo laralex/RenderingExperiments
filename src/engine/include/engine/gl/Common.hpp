@@ -8,17 +8,20 @@ namespace engine {
 template <typename T> struct CpuView;
 } // namespace engine
 
+namespace engine::gl::shader {
+struct Define;
+}  // namespace engine::gl::shader
+
 namespace engine::gl {
 
 struct GpuProgram;
-struct ShaderDefine;
 struct Vao;
 
 auto LinkProgram [[nodiscard]] (
     std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {},
     bool logCode = false) -> std::optional<GpuProgram>;
 auto LinkProgramFromFiles [[nodiscard]] (
-    std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<ShaderDefine const> defines,
+    std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<shader::Define const> defines,
     std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
 
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);

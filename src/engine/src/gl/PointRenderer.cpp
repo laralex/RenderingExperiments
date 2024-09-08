@@ -95,13 +95,13 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
              .instanceDivisor = 1})
         .MakeIndexed(renderer.indexBuffer_, indexType);
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_COLOR", .value = ATTRIB_INSTANCE_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_INSTANCE_MATRIX", .value = ATTRIB_INSTANCE_MATRIX_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_COLOR", .value = ATTRIB_INSTANCE_COLOR_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_INSTANCE_MATRIX", .value = ATTRIB_INSTANCE_MATRIX_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(

@@ -16,9 +16,9 @@ constexpr GLint BLIT_TEXTURE_SLOT             = 0; // TODO: 1 and above slots do
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "UNIFORM_TEXTURE", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "UNIFORM_TEXTURE", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(

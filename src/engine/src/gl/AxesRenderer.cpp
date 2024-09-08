@@ -135,11 +135,11 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
              .offset          = offsetof(Vertex, colorIdx)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = gl::shader::Define::INT32},
     };
 
     auto makeProgram = [=](GpuProgram& out, std::string_view name) {

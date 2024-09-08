@@ -19,12 +19,12 @@ auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
     constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
     BillboardRenderer renderer;
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "UBO_BINDING", .value = UBO_CONTEXT_BINDING, .type = gl::ShaderDefine::INT32},
-        // {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "UBO_BINDING", .value = UBO_CONTEXT_BINDING, .type = gl::shader::Define::INT32},
+        // {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
         {.name  = "UNIFORM_TEXTURE_LOCATION",
          .value = BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION,
-         .type  = gl::ShaderDefine::INT32},
+         .type  = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(

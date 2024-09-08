@@ -37,10 +37,10 @@ auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
              .offset          = offsetof(LineRendererInput::Vertex, colorIdx)})
         .MakeUnindexed(maxLines * 2);
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(

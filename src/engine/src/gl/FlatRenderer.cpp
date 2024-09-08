@@ -27,16 +27,16 @@ namespace engine::gl {
 auto FlatRenderer::Allocate() -> FlatRenderer {
     FlatRenderer renderer;
 
-    gl::ShaderDefine const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::ShaderDefine::INT32},
-        {.name = "UBO_BINDING", .value = UBO_BINDING, .type = gl::ShaderDefine::INT32},
+    gl::shader::Define const defines[] = {
+        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::shader::Define::INT32},
+        {.name = "UBO_BINDING", .value = UBO_BINDING, .type = gl::shader::Define::INT32},
     };
 
     auto maybeProgram = gl::LinkProgramFromFiles(
         "data/engine/shaders/lambert.vert", "data/engine/shaders/lambert.frag", CpuView{defines, std::size(defines)},
-        "Lambert diffuse");
+        "Lambert diffuse", false);
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 

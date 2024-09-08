@@ -21,5 +21,5 @@ const vec3 COLORS[12] = vec3[](
 
 void main() {
     out_FragColor.xyz = COLORS[v_ColorIdx];
-}
+} // main
 

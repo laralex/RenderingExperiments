@@ -102,12 +102,6 @@ auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredCh
 
 namespace engine::gl {
 
-auto LoadShaderCode(std::string_view const filepath, CpuView<ShaderDefine const> defines) -> std::string {
-    std::string code = LoadTextFile(filepath);
-    if (defines) { code = AddShaderDefines(code, defines); }
-    return code;
-}
-
 auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture> {
     auto cpuImageInfo = args.loader.Load(args.filepath, args.numChannels);
     if (!cpuImageInfo) {
@@ -131,3 +125,25 @@ auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Te
 }
 
 } // namespace engine::gl
+
+namespace engine::gl::shader {
+auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines) -> std::string {
+    std::string code = LoadTextFile(filepath);
+    static bool isInitialized = false;
+    static IncludeRegistry includeCommon{};
+    static IncludeRegistry includeVertex{};
+    static IncludeRegistry includeFragment{};
+    if (!isInitialized) {
+        LoadCommonIncludes(includeCommon);
+        includeVertex.insert(includeCommon.begin(), includeCommon.end());
+        LoadVertexIncludes(includeVertex);
+        includeFragment.insert(includeCommon.begin(), includeCommon.end());
+        LoadFragmentIncludes(includeFragment);
+        isInitialized = true;
+    };
+    auto const& includeRegistry = type == ShaderType::VERTEX ? includeVertex : includeFragment;
+    code = GenerateCode(code, includeRegistry, defines);
+    return code;
+}
+
+} // namespace engine::gl::shader

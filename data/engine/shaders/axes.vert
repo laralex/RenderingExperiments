@@ -12,4 +12,4 @@ layout(location = UNIFORM_SCALE) uniform vec3 u_Scale;
 void main() {
     v_ColorIdx = in_ColorIdx;
     gl_Position = u_MVP * vec4(in_Pos*u_Scale, 1.0);
-}
+} // main
