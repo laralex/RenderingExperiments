@@ -108,7 +108,7 @@ build_engine: ${BUILD_DIR}/engine/src/gl ${BUILD_DIR}/engine/libengine.a
 
 .PHONY: ${INSTALL_DIR}/run_app
 ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
-	find data -regex '.*\.\(vert\|frag\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
+	find data -regex '.*\.\(vert\|frag\|comp\|inc\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	find data -regex '.*\.\(jpg\|jpeg\|png\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	cp ${APP_EXE} $@
 

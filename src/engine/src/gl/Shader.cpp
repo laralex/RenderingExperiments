@@ -5,15 +5,27 @@
 #include <sstream>
 #include <regex>
 
+namespace {
+
+using namespace engine::gl::shader;
+
+void AddInclude(IncludeRegistry& out, char const* key, std::string&& text) {
+    out[key] = IncludeEntry{
+        .text = std::move(text),
+    };
+}
+
+} // namespace anonymous
+
 namespace engine::gl::shader {
 
 void LoadCommonIncludes(IncludeRegistry& out) {
-    out["common/version/330"] = "#version 330 core";
-    out["common/version/420"] = "#version 420 core";
-    out["common/consts"] = LoadTextFile("data/engine/shaders/include/constants.inc");
-    out["common/gradient_noise"] = LoadTextFile("data/engine/shaders/include/gradient_noise.inc");
-    out["common/screen_space_dither"] = LoadTextFile("data/engine/shaders/include/screen_space_dither.inc");
-    out["common/struct_light"] = LoadTextFile("data/engine/shaders/include/struct_light.inc");
+    AddInclude(out, "common/version/330", "#version 330 core");
+    AddInclude(out, "common/version/420", "#version 420 core");
+    AddInclude(out, "common/consts", LoadTextFile("data/engine/shaders/include/constants.inc"));
+    AddInclude(out, "common/gradient_noise", LoadTextFile("data/engine/shaders/include/gradient_noise.inc"));
+    AddInclude(out, "common/screen_space_dither", LoadTextFile("data/engine/shaders/include/screen_space_dither.inc"));
+    AddInclude(out, "common/struct_light", LoadTextFile("data/engine/shaders/include/struct_light.inc"));
 }
 
 void LoadVertexIncludes(IncludeRegistry& out) {
@@ -21,8 +33,8 @@ void LoadVertexIncludes(IncludeRegistry& out) {
 }
 
 void LoadFragmentIncludes(IncludeRegistry& out) {
-    out["frag/gradient_noise/apply"] =
-        "   out_FragColor += (1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0);";
+    AddInclude(out, "frag/gradient_noise/apply",
+        "   out_FragColor += (1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0);");
 }
 
 auto ParseParts(std::string_view code) -> ShaderParsing {
@@ -144,23 +156,29 @@ auto GenerateCode[[nodiscard]](std::string_view originalCode, IncludeRegistry co
     ++partIt;
     assert(partIt->type == ShaderParsing::PartType::DELIMITER && partIt->text == "<post_version>");
     InjectDefines(ss, defines);
+    ss << "#line 2\n";
 
+    int64_t originalLine = 2;
     while(partIt != parsing.parts.end()) {
         switch(partIt->type) {
         case ShaderParsing::PartType::ORIGINAL_CODE:
+            originalLine += std::count(std::begin(partIt->text), std::end(partIt->text), '\n');
             ss << partIt->text;
             break;
         case ShaderParsing::PartType::DELIMITER:
-            ss << "\n//" << partIt->text << '\n';
+            //ss << "\n//" << partIt->text << '\n';
             break;
         case ShaderParsing::PartType::INCLUDE_KEY:
             // TODO: conversion std::string_view to std::string
             // !! EXTRA ALLOCATIONS
+            originalLine += 1;
             auto find = includeRegistry.find(std::string{partIt->text});
             if (find != includeRegistry.end()) {
+                ss << "#line 1 " << '\n';
                 ss << "// begin include: " << partIt->text << '\n';
-                ss << find->second << '\n';
+                ss << find->second.text << '\n';
                 ss << "// end include: " << partIt->text << '\n';
+                ss << "#line " << originalLine << '\n';
             } else {
                 ss << "// !! MISSING INCLUDE: " << partIt->text << '\n';
                 XLOGW("Missing shader include: {}", partIt->text);
@@ -204,6 +222,7 @@ auto InjectDefines(std::string_view code, CpuView<shader::Define const> defines)
     auto versionEnd = code.find('\n') + 1;
     ss << code.substr(0U, versionEnd);
     InjectDefines(ss, defines);
+    ss << "#line 2\n"; // reset line counter for meaningful shader compilation errors
     ss << code.substr(versionEnd);
     return ss.str();
 }

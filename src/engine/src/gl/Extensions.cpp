@@ -36,6 +36,7 @@ void GlExtensions::Initialize() {
     hardcodedExtensions[ARB_ES3_2_compatibility]                = supports("GL_ARB_ES3_2_compatibility");
     hardcodedExtensions[ARB_invalidate_subdata]                 = supports("GL_ARB_invalidate_subdata");
     hardcodedExtensions[ARB_framebuffer_sRGB]                   = supports("GL_ARB_framebuffer_sRGB");
+    hardcodedExtensions[ARB_shading_language_include]           = supports("GL_ARB_shading_language_include");
     hardcodedExtensions[ARB_texture_storage]                    = supports("GL_ARB_texture_storage");
     hardcodedExtensions[ARB_texture_storage_multisample]        = supports("GL_ARB_texture_storage_multisample");
     hardcodedExtensions[EXT_debug_label]                        = supports("GL_EXT_debug_label");

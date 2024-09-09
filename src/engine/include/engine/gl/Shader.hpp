@@ -5,7 +5,11 @@
 
 namespace engine::gl::shader {
 
-using IncludeRegistry = std::unordered_map<std::string, std::string, engine::StringHash, std::equal_to<>>;
+struct IncludeEntry final {
+    std::string text;
+};
+
+using IncludeRegistry = std::unordered_map<std::string, IncludeEntry, engine::StringHash, std::equal_to<>>;
 void LoadCommonIncludes(IncludeRegistry& out);
 void LoadVertexIncludes(IncludeRegistry& out);
 void LoadFragmentIncludes(IncludeRegistry& out);
