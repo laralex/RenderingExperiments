@@ -145,54 +145,18 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
             ShaderParsing::PartType::ORIGINAL_CODE);
     };
 
-    auto versionEnd = code.find('\n');
+    auto versionEnd = code.find("#version");
     if (versionEnd == std::string_view::npos) {
         XLOGW("Failed to parse shader version", 0);
         versionEnd = 0U;
     } else {
-        versionEnd += 1;
+        versionEnd = code.find('\n', versionEnd)+1;
     }
     push(code.substr(0U, versionEnd), ShaderParsing::PartType::ORIGINAL_CODE);
     push("<post_version>", ShaderParsing::PartType::DELIMITER);
     parseEnd = versionEnd;
 
-    constexpr std::string_view mainSigBeginPattern = "void main(";
-    auto mainSignatureBegin = code.find(mainSigBeginPattern, parseEnd);
-    if (mainSignatureBegin == std::string_view::npos) {
-        XLOGW("Failed to parse shader main signature beginning", 0);
-        mainSignatureBegin = parseEnd;
-    }
-
-    parseIncludes(mainSignatureBegin);
-    push("<pre_main>", ShaderParsing::PartType::DELIMITER);
-    parseEnd = mainSignatureBegin;
-
-    constexpr std::string_view mainSigEndPattern = "{";
-    auto mainSignatureEnd = code.find(mainSigEndPattern, parseEnd);
-    if (mainSignatureEnd == std::string_view::npos) {
-        XLOGW("Failed to parse shader main signature end", 0);
-        mainSignatureEnd = parseEnd;
-    } else {
-        mainSignatureEnd += 1;
-    }
-
-    push(code.substr(mainSignatureBegin, mainSignatureEnd - mainSignatureBegin), ShaderParsing::PartType::ORIGINAL_CODE);
-    parseEnd = mainSignatureEnd;
-    push("<begin_main>", ShaderParsing::PartType::DELIMITER);
-
-    // TODO: a crutch for easier parsing, all shaders must end "main" with this pattern
-    constexpr std::string_view mainBodyEndPattern = "} // main";
-    auto mainBodyEnd = code.find(mainBodyEndPattern, parseEnd);
-    if (mainBodyEnd == std::string_view::npos) {
-        XLOGW("Failed to parse shader main body end", 0);
-        mainBodyEnd = parseEnd;
-    }
-    parseIncludes(mainBodyEnd);
-    push("<end_main>", ShaderParsing::PartType::DELIMITER);
-    parseEnd = mainBodyEnd;
-
     parseIncludes(std::size(code));
-    push("<post_main>", ShaderParsing::PartType::DELIMITER);
     parseEnd = std::size(code);
 
     return parse;
