@@ -27,10 +27,10 @@ THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
 	${BUILD_DIR}/third_party/stb/stb_image.o
 
-CC=ccache clang++
+CC=ccache clang++-17
 
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
-COMPILE_FLAGS=-std=c++20 $(if $(USE_DEP_FILES),-MMD,) $(if $(COMPILER_DUMP),-save-stats,) $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,)
+COMPILE_FLAGS=-std=c++20 $(if $(USE_DEP_FILES),-MMD,) $(if $(COMPILER_DUMP),-save-stats,) $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,) -Wno-c99-designator
 INCLUDE_DIR+=-I src/engine/include
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
@@ -114,10 +114,10 @@ ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 
 ${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${BUILD_DIR}/engine/libengine.a
 	$(info > Linking $@)
-	${CC} $^ ${LDFLAGS} -o $@
+	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 # linking engine library
-${BUILD_DIR}/engine/libengine.a: ${THIRD_PARTY_DEPS} ${obj_engine}
+${BUILD_DIR}/engine/libengine.a: ${obj_engine}
 	$(info > Linking $@)
 	@ar r $@ ${obj_engine}
 
@@ -127,7 +127,7 @@ ${BUILD_DIR}/app/%.o: src/app/%.cpp
 	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c $< -o $@
 
 # compiling engine sources
-${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},)
+${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},) ${THIRD_PARTY_DEPS}
 	$(info > Compiling $@)
 	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private $(if $(USE_PCH),-include-pch ${PRECOMPILED_HEADER},) -c $< -o $@
 
@@ -139,7 +139,7 @@ ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
 
-${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
+${BUILD_DIR}/third_party/glfw/src/src/libglfw3.a:
 	cmake -S third_party/glfw -B $(dir $@) && cmake --build $(dir $@)
 
 ${BUILD_DIR}/third_party/glad/gl.o:

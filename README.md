@@ -5,6 +5,7 @@ Originated from famous [Learnopengl.com](https://learnopengl.com/) tutorial.
 Now it's a playground for my simple graphical experiments - more concerned about rendering algorithms and scientific papers, less concerned about maximizing performance (though within realtime) 
 
 Features:
+- shader code generation
 - the engine code is isolated from application as a compiled library
 
 ## Build

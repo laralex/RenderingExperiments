@@ -7,7 +7,7 @@
 namespace engine {
 
 ENGINE_EXPORT auto LoadTextFile(std::string_view const filepath) -> std::string {
-    std::stringstream ss;
+    std::ostringstream ss;
     std::ifstream file(filepath.data());
     if (!file.is_open()) {
         XLOGE("Failed to load text file: {}", filepath);

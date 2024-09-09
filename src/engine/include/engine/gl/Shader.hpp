@@ -7,6 +7,7 @@ namespace engine::gl::shader {
 
 struct IncludeEntry final {
     std::string text;
+    int64_t recursionLimit;
 };
 
 using IncludeRegistry = std::unordered_map<std::string, IncludeEntry, engine::StringHash, std::equal_to<>>;
@@ -26,6 +27,7 @@ struct ShaderParsing final {
         PartType type;
     };
     std::vector<Part> parts;
+    int64_t numIncludes = 0;
 };
 
 auto ParseParts[[nodiscard]](std::string_view code) -> ShaderParsing;
