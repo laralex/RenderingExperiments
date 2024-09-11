@@ -14,16 +14,17 @@ out highp vec3 v_Normal;
 
 layout(std140, binding = UBO_BINDING) uniform Ubo {
     highp mat4 u_MVP;
+    highp mat4 u_ModelToWorld;
+    highp mat3 u_NormalToWorld;
     highp vec4 u_AmbientIntensity;
     highp vec4 u_MaterialColor;
     Light u_Light;
 };
 
 void main() {
-    v_Position = in_Position;
+    vec4 worldPosition = u_ModelToWorld * vec4(in_Position, 1.0);
+    // v_Position = worldPosition.xyz / worldPosition.w;
     v_Uv = in_Uv;
-    v_Normal = in_Normal;
-    // spot light
-    // directional light
+    v_Normal = u_NormalToWorld * in_Normal;
     gl_Position = u_MVP * vec4(in_Position, 1.0);
 } // main

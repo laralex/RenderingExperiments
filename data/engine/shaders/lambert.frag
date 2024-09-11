@@ -10,6 +10,8 @@ layout(location=0) out vec4 out_FragColor;
 
 layout(std140, binding = UBO_BINDING) uniform Ubo {
     highp mat4 u_MVP;
+    highp mat4 u_ModelToWorld;
+    highp mat3 u_NormalToWorld;
     highp vec4 u_AmbientIntensity;
     highp vec4 u_MaterialColor;
     Light u_Light;
@@ -19,13 +21,12 @@ layout(std140, binding = UBO_BINDING) uniform Ubo {
 #include "common/gradient_noise"
 
 vec4 EvaluateLight(Light light) {
-    highp float cos = max(0.0, dot(normalize(v_Normal), normalize(light.modelPosition.xyz - v_Position)));
+    highp float cos = max(0.0, dot(normalize(v_Normal), normalize(light.worldPosition.xyz - v_Position)));
     return (INV_PI * cos) * light.color;
 }
 
 void main() {
-    vec4 diffuseColor = u_MaterialColor;
-    vec4 accumulatedLighting = diffuseColor * u_AmbientIntensity;
+    vec4 accumulatedLighting = u_AmbientIntensity;
     accumulatedLighting += EvaluateLight(u_Light);
     out_FragColor = u_MaterialColor * accumulatedLighting;
     out_FragColor += #include "frag/gradient_noise/eval";

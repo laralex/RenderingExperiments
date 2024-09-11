@@ -346,10 +346,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
         // float modelScale = 1.0f;
-        // model            = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
+        // model            = glm::scale(model, glm::vec3(1.0f, 1.0f, 200.0f));
         // model            = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
-        glm::mat invModel = glm::inverse(model);
         glm::mat4 mvp     = camera * model;
 
         // app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
@@ -371,11 +370,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             .primitive          = GL_TRIANGLES,
             .vaoWithNormal      = mesh.Vao(),
             .mvp                = mvp,
-            .invModel           = invModel,
+            .modelToWorld           = model,
         });
 
         model = glm::scale(glm::mat4{1.0f}, glm::vec3{15.0f});
-        invModel = glm::inverse(model);
         mvp = camera * model;
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition = lightPosition,
@@ -384,7 +382,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             .primitive          = GL_TRIANGLES,
             .vaoWithNormal      = app->boxMesh.Vao(),
             .mvp                = mvp,
-            .invModel           = invModel,
+            .modelToWorld           = model,
         });
     }
 

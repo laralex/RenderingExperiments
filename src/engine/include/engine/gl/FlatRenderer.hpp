@@ -38,7 +38,7 @@ struct FlatRenderArgs {
     GLenum primitive;
     Vao const& vaoWithNormal;
     glm::mat4 const& mvp;
-    glm::mat4 const& invModel;
+    glm::mat4 const& modelToWorld;
 };
 
 } // namespace engine::gl
