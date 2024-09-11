@@ -19,7 +19,7 @@ layout(std140, binding = UBO_BINDING) uniform Ubo {
 #include "common/gradient_noise"
 
 vec4 EvaluateLight(Light light) {
-    highp float cos = max(0.0, dot(v_Normal, normalize(light.modelPosition.xyz - v_Position)));
+    highp float cos = max(0.0, dot(normalize(v_Normal), normalize(light.modelPosition.xyz - v_Position)));
     return (INV_PI * cos) * light.color;
 }
 
