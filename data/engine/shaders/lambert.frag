@@ -28,7 +28,7 @@ void main() {
     vec4 accumulatedLighting = diffuseColor * u_AmbientIntensity;
     accumulatedLighting += EvaluateLight(u_Light);
     out_FragColor = u_MaterialColor * accumulatedLighting;
-    #include "frag/gradient_noise/apply"
+    out_FragColor += #include "frag/gradient_noise/eval";
     // out_FragColor.xyz += ScreenSpaceDither(gl_FragCoord.xy);
     // out_FragColor = vec4(v_TowardsLightModelDir, 1.0);
     // out_FragColor = vec4(cos, cos, cos, 1.0);

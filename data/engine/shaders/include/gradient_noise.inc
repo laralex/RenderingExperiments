@@ -4,5 +4,3 @@
 float GradientNoise(in vec2 uv) {
 	return fract(52.9829189 * fract(dot(uv, vec2(0.06711056, 0.00583715))));
 }
-
-#include "common/screen_space_dither"

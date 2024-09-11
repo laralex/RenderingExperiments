@@ -8,6 +8,7 @@ namespace engine::gl::shader {
 struct IncludeEntry final {
     std::string text;
     int64_t recursionLimit;
+    bool isInline;
 };
 
 using IncludeRegistry = std::unordered_map<std::string, IncludeEntry, engine::StringHash, std::equal_to<>>;

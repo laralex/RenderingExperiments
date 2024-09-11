@@ -10,16 +10,18 @@ namespace {
 
 using namespace engine::gl::shader;
 
-void AddInclude(IncludeRegistry& out, char const* key, std::string&& text, int32_t recursionLimit) {
+void AddInclude(IncludeRegistry& out, char const* key, std::string&& text, int32_t recursionLimit, bool isInline = false) {
     out[key] = IncludeEntry {
         .text = std::move(text),
         .recursionLimit = recursionLimit,
+        .isInline = isInline,
     };
 }
 
 using ParsingIt = decltype(ShaderParsing::parts.begin());
 auto WriteShaderParsing(std::stringstream& destination, ParsingIt begin, ParsingIt end, IncludeRegistry const& registry, int64_t firstOriginalLine) {
     int64_t originalLine = firstOriginalLine;
+    int64_t includeCount = 0;
     while(begin != end) {
         switch(begin->type) {
         case ShaderParsing::PartType::ORIGINAL_CODE:
@@ -33,12 +35,17 @@ auto WriteShaderParsing(std::stringstream& destination, ParsingIt begin, Parsing
             // TODO: conversion std::string_view to std::string
             // !! EXTRA ALLOCATIONS
             originalLine += 1;
+            ++includeCount;
             auto find = registry.find(std::string{begin->text});
             if (find != registry.end()) {
-                destination << "// included: " << begin->text << '\n';
-                destination << "#line 1 " << '\n';
+                if (!find->second.isInline) {
+                    destination << "// included: " << begin->text << '\n';
+                    destination << "#line " << includeCount * 1000000 << '\n';
+                }
                 destination << find->second.text << '\n';
-                destination << "#line " << originalLine << '\n';
+                if (!find->second.isInline) {
+                    destination << "#line " << originalLine << '\n';
+                }
             } else {
                 destination << "// !! MISSING INCLUDE: " << begin->text << '\n';
                 XLOGW("Missing shader include: {}", begin->text);
@@ -97,8 +104,8 @@ void LoadVertexIncludes(IncludeRegistry& out) {
 }
 
 void LoadFragmentIncludes(IncludeRegistry& out) {
-    AddInclude(out, "frag/gradient_noise/apply",
-        "   out_FragColor += (1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0);", 0);
+    bool const isInline = true;
+    AddInclude(out, "frag/gradient_noise/eval","(1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0)", 0, isInline);
     ExpandRegistryRecursively(out);
 }
 
@@ -118,7 +125,7 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
         constexpr static std::string_view includeBeginPattern = "#include \"";
         // NOTE: for some reason, include line must be ended with new line
         // otherwise parsing goes wild, starts capturing last " into include path
-        constexpr static std::string_view includeEndPattern = "\"\n";
+        constexpr static std::string_view includeEndPattern = "\"";
 
         while (parseEnd < codeEnd) {
             auto includeBegin = code.find(includeBeginPattern, parseEnd);
@@ -130,7 +137,7 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
             if (backScan-1 >= parseEnd && code[backScan] == '/' && code[backScan-1] == '/') {
                 break; // include was commented out
             }
-            auto includeEnd = code.find(includeEndPattern, includeBegin);
+            auto includeEnd = code.find(includeEndPattern, includeBegin + std::size(includeBeginPattern));
             if (includeEnd == std::string_view::npos || includeBegin >= codeEnd) {
                 break;
             }

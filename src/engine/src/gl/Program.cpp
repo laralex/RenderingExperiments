@@ -1,6 +1,12 @@
 #include "engine/gl/Program.hpp"
 #include "engine_private/Prelude.hpp"
 
+namespace {
+
+constexpr bool LOG_FAILED_SHADER_CODE = true;
+
+} // namespace anonymous
+
 namespace engine::gl {
 
 ENGINE_EXPORT void GpuProgram::Dispose() {
@@ -64,8 +70,7 @@ ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GL
     GLCALL(glDeleteShader(shader));
     std::string_view typeLabel =
         (shaderType == GL_VERTEX_SHADER ? "vertex" : (shaderType == GL_FRAGMENT_SHADER ? "fragment" : "compute"));
-    XLOGE("Failed to compile {} shader:\n{}", typeLabel, infoLog);
-
+    XLOGE("Failed to compile {} shader:\n{}\n{}", typeLabel, LOG_FAILED_SHADER_CODE ? code : "", infoLog);
     return GL_NONE;
 }
 
