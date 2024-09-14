@@ -26,17 +26,17 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
     auto mesh = BoxMesh::Generate();
 
     PointRenderer renderer;
-    size_t numPositionsBytes = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
+    size_t numPositionsBytes      = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
     renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes}, "PointRenderer/TemplatePositionsVBO");
-    size_t numDataBytes = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes},
+        "PointRenderer/TemplatePositionsVBO");
+    size_t numDataBytes            = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
     renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        CpuMemory<const void>{mesh.vertexData.data(), numDataBytes}, "PointRenderer/TemplateVBO");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexData.data(), numDataBytes},
+        "PointRenderer/TemplateVBO");
     renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW,
-        CpuMemory<void const>{nullptr, maxPoints * sizeof(T)}, "PointRenderer/InstancesVBO");
+        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxPoints * sizeof(T)},
+        "PointRenderer/InstancesVBO");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         CpuMemory<void const>{mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0])},
@@ -122,7 +122,8 @@ void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32
     }
     auto programGuard = UniformCtx{program_};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
-    RenderVaoInstanced(vao_, std::min(firstInstance, lastInstance_), std::min(lastInstance_ - firstInstance, numInstances));
+    RenderVaoInstanced(
+        vao_, std::min(firstInstance, lastInstance_), std::min(lastInstance_ - firstInstance, numInstances));
 }
 
 void PointRenderer::LimitInstances(int32_t numInstances) {
@@ -132,10 +133,8 @@ void PointRenderer::LimitInstances(int32_t numInstances) {
 
 void PointRenderer::Fill(
     std::vector<PointRendererInput::Point> const& points, int32_t numPoints, int32_t numPointsOffset) {
-    using T               = typename std::decay<decltype(*points.begin())>::type;
-    if (std::size(points) == 0 | numPoints == 0) {\
-        return;
-    }
+    using T = typename std::decay<decltype(*points.begin())>::type;
+    if (std::size(points) == 0 | numPoints == 0) { return; }
     auto const byteOffset = numPointsOffset * sizeof(T);
     auto const numBytes   = std::min(
         instancesBuffer_.SizeBytes() - byteOffset, // buffer limit

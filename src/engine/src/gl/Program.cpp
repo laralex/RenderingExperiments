@@ -5,7 +5,7 @@ namespace {
 
 constexpr bool LOG_FAILED_SHADER_CODE = true;
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl {
 

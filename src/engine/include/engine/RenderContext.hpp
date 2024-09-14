@@ -12,8 +12,8 @@ public:
     ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
-    Self(Self&&)                 = delete;
-    Self& operator=(Self&&)      = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
 #undef Self
 
     int64_t frameIdx{0};

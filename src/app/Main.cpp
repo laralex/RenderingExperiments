@@ -1,8 +1,8 @@
 #include "engine/Assets.hpp"
 #include "engine/BoxMesh.hpp"
 #include "engine/EngineLoop.hpp"
-#include "engine/IcosphereMesh.hpp"
 #include "engine/FirstPersonLocomotion.hpp"
+#include "engine/IcosphereMesh.hpp"
 #include "engine/PlaneMesh.hpp"
 #include "engine/Unprojection.hpp"
 #include "engine/UvSphereMesh.hpp"
@@ -25,11 +25,22 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <optional>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #define ENABLE_RENDERDOC 0
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+#include <cr.h>
+#pragma clang diagnostic pop
+
+using ExternalUpdateCallback = bool (*)(engine::WindowCtx const&);
+ExternalUpdateCallback g_externalUpdate;
+using ExternalDestroyCallback = void (*)();
+ExternalDestroyCallback g_externalDestroyCallback;
 
 struct UboDataSamplerTiling {
     GLint albedoIdx   = 0;
@@ -40,7 +51,7 @@ struct UboDataSamplerTiling {
 };
 
 enum class AppDebugMode {
-    NONE = 0,
+    NONE      = 0,
     WIREFRAME = 1,
 };
 
@@ -82,15 +93,15 @@ struct Application final {
     bool isInitialized = false;
 };
 
-constexpr GLint ATTRIB_POSITION_LOCATION           = 0;
-constexpr GLint ATTRIB_UV_LOCATION                 = 1;
-constexpr GLint ATTRIB_NORMAL_LOCATION             = 2;
-constexpr GLint UNIFORM_TEXTURE_LOCATION           = 0;
-constexpr GLint UNIFORM_TEXTURE_BINDING            = 0;
-constexpr GLint UNIFORM_MVP_LOCATION               = 10;
-constexpr GLint UBO_SAMPLER_TILING_BINDING         = 4;
+constexpr GLint ATTRIB_POSITION_LOCATION   = 0;
+constexpr GLint ATTRIB_UV_LOCATION         = 1;
+constexpr GLint ATTRIB_NORMAL_LOCATION     = 2;
+constexpr GLint UNIFORM_TEXTURE_LOCATION   = 0;
+constexpr GLint UNIFORM_TEXTURE_BINDING    = 0;
+constexpr GLint UNIFORM_MVP_LOCATION       = 10;
+constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
 
-static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
+static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
     using namespace engine;
     glm::ivec2 maxScreenSize = windowCtx.WindowSize() * 4;
     gl::InitializeOpenGl();
@@ -125,10 +136,10 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
 
-    auto sphere = UvSphereMesh::Generate({
-        .numMeridians       = 7,
-        .numParallels       = 4,
-        .clockwiseTriangles = false,
+    auto sphere     = UvSphereMesh::Generate({
+            .numMeridians       = 7,
+            .numParallels       = 4,
+            .clockwiseTriangles = false,
     });
     app->sphereMesh = gl::AllocateUvSphereMesh(
         sphere,
@@ -184,18 +195,20 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 
     app->texture          = std::move(*maybeTexture);
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
-        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)}, "SamplerTiling UBO");
+        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
+        "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
     gl::SamplerTiling albedoTiling{glm::vec2{0.25f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
     app->uboSamplerTiling.Fill(CpuMemory<GLvoid const>{&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling)});
 
     // GL_RGB10_A2, GL_R11F_G11F_B10F, GL_RGBA16F, GL_RGBA8
-    app->outputColor =
-        gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output/Color");
+    app->outputColor = gl::Texture::Allocate2D(
+        GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output/Color");
     app->outputDepth = gl::Texture::Allocate2D(
         GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output/Depth");
-    // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test renderbuffer");
+    // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test
+    // renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
     (void)gl::FramebufferEditCtx{app->outputFramebuffer}
         .AttachTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
@@ -212,27 +225,25 @@ static void InitializeApplication(engine::RenderCtx const& ctx, engine::WindowCt
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto* app = static_cast<Application*>(appData);
-    if (!app->isInitialized) {
-        InitializeApplication(ctx, windowCtx, app);
+    if (!app->isInitialized) [[unlikely]] {
+        ConfigureApplication(ctx, windowCtx, app);
         app->isInitialized = true;
     }
 
     glm::ivec2 renderSize = windowCtx.WindowSize();
     // glm::ivec2 renderSize = glm::vec2{windowCtx.WindowSize()} * (glm::sin(ctx.timeSec) * 0.7f + 1.0f);
     glm::ivec2 screenSize = windowCtx.WindowSize();
-    float aspectRatio = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
+    float aspectRatio     = static_cast<float>(screenSize.x) / static_cast<float>(screenSize.y);
 
     if (app->controlDebugCameraSwitched) {
-        if (app->controlDebugCamera) {
-            app->debugCameraMovement.Clone(app->cameraMovement);
-        }
+        if (app->controlDebugCamera) { app->debugCameraMovement.Clone(app->cameraMovement); }
         app->controlDebugCameraSwitched = false;
     }
     auto& cameraMovement = app->controlDebugCamera ? app->debugCameraMovement : app->cameraMovement;
 
     // TODO: delta time
     float CAMERA_MOVE_SENSITIVITY = 0.1f;
-    float moveSensitivity = (1.0f - 0.75f * app->keyboardAltPressed) * CAMERA_MOVE_SENSITIVITY;
+    float moveSensitivity         = (1.0f - 0.75f * app->keyboardAltPressed) * CAMERA_MOVE_SENSITIVITY;
     glm::vec3 cameraDeltaPosition{};
     if (app->keyboardShiftPressed) {
         cameraDeltaPosition.y = (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z) * 0.5f;
@@ -241,9 +252,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             (app->keyboardWasdPressed.w - app->keyboardWasdPressed.y),
             (app->keyboardWasdPressed.x - app->keyboardWasdPressed.z));
         float invDirLength = glm::inversesqrt(glm::dot(cameraMoveDir, cameraMoveDir));
-        if (invDirLength < 1.0f) {
-            cameraMoveDir *= invDirLength;
-        }
+        if (invDirLength < 1.0f) { cameraMoveDir *= invDirLength; }
         cameraDeltaPosition.x = cameraMoveDir.x;
         cameraDeltaPosition.z = cameraMoveDir.y;
     }
@@ -257,15 +266,16 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::quat deltaRotation; // euler pitch+yaw to quat
         glm::vec2 yawPitch{mouseDelta.x, -mouseDelta.y * aspectRatio};
         glm::vec2 quatAngle = glm::radians(yawPitch * 0.5f); // quat angle is half the angle of rotation
-        glm::vec2 cos = glm::cos(quatAngle);
-        glm::vec2 sin = glm::sin(quatAngle);
-        deltaRotation.w = cos.y * cos.x;
-        deltaRotation.x = sin.y * sin.x;
-        deltaRotation.y = sin.y * cos.x;
-        deltaRotation.z = cos.y * sin.x;
-        deltaRotation = glm::normalize(deltaRotation);
+        glm::vec2 cos       = glm::cos(quatAngle);
+        glm::vec2 sin       = glm::sin(quatAngle);
+        deltaRotation.w     = cos.y * cos.x;
+        deltaRotation.x     = sin.y * sin.x;
+        deltaRotation.y     = sin.y * cos.x;
+        deltaRotation.z     = cos.y * sin.x;
+        deltaRotation       = glm::normalize(deltaRotation);
 
-        cameraMovement.RotateLocally(glm::radians(glm::vec2{mouseDelta.x, -mouseDelta.y})*CAMERA_ROTATION_SENSITIVITY);
+        cameraMovement.RotateLocally(
+            glm::radians(glm::vec2{mouseDelta.x, -mouseDelta.y}) * CAMERA_ROTATION_SENSITIVITY);
         // cameraMovement.RotateLocally(deltaRotation * CAMERA_ROTATION_SENSITIVITY);
     }
 
@@ -275,11 +285,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     glm::mat4 camera = proj * view;
 
-    if (app->debugMode == AppDebugMode::WIREFRAME) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
+    if (app->debugMode == AppDebugMode::WIREFRAME) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
 
-    float rotationSpeed   = ctx.timeSec * 0.5f;
+    float rotationSpeed = ctx.timeSec * 0.5f;
 
     auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer};
     {
@@ -295,8 +303,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
 
-
-        glm::mat4 mvp                = camera * model;
+        glm::mat4 mvp = camera * model;
 
         GLCALL(glEnable(GL_CULL_FACE));
         GLCALL(glEnable(GL_DEPTH_TEST));
@@ -307,7 +314,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->commonRenderers.RenderAxes(mvp, 0.4f, ColorCode::CYAN);
 
         constexpr GLint TEXTURE_SLOT = 0;
-        auto programGuard = gl::UniformCtx(app->program);
+        auto programGuard            = gl::UniformCtx(app->program);
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
@@ -336,12 +343,12 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         // lighted box
         GLCALL(glViewport(0, 0, renderSize.x, renderSize.y));
 
-        float lightRadius = 2.0f;
+        float lightRadius    = 2.0f;
         glm::mat4 lightModel = glm::mat4{1.0f};
         lightModel           = glm::rotate(lightModel, rotationSpeed * 5.5f, VEC_UP);
-        lightModel           = glm::translate(lightModel,
-            glm::vec3(lightRadius, lightRadius, lightRadius * glm::sin(ctx.timeSec) + 1.0f));
-        glm::vec4 lightPosition{gl::TransformOrigin(lightModel), 1.0f};
+        lightModel =
+            glm::translate(lightModel, glm::vec3(lightRadius, lightRadius, lightRadius /* * glm::sin(ctx.timeSec) */ + 1.0f));
+        glm::vec3 lightPosition{gl::TransformOrigin(lightModel)};
 
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, glm::pi<float>() * 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -349,7 +356,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         // model            = glm::scale(model, glm::vec3(1.0f, 1.0f, 200.0f));
         // model            = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
 
-        glm::mat4 mvp     = camera * model;
+        glm::mat4 mvp = camera * model;
 
         // app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
         app->commonRenderers.RenderAxes(camera, 0.4f, ColorCode::BROWN);
@@ -364,25 +371,29 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         glm::vec3 lightColor{0.2f, 0.2f, 0.2f};
         app->flatRenderer.Render(gl::FlatRenderArgs{
-            .lightWorldPosition = lightPosition,
-            .lightColor = lightColor,
-            .materialColor = glm::vec3{0.3, 1.0, 0.1},
-            .primitive          = GL_TRIANGLES,
-            .vaoWithNormal      = mesh.Vao(),
-            .mvp                = mvp,
-            .modelToWorld           = model,
+            .lightWorldPosition        = lightPosition,
+            .lightColor                = lightColor,
+            .eyeWorldPosition          = cameraMovement.Position(),
+            .materialColor             = glm::vec3{0.3, 1.0, 0.1},
+            .materialSpecularIntensity = 1.0f,
+            .primitive                 = GL_TRIANGLES,
+            .vaoWithNormal             = mesh.Vao(),
+            .mvp                       = mvp,
+            .modelToWorld              = model,
         });
 
         model = glm::scale(glm::mat4{1.0f}, glm::vec3{15.0f});
-        mvp = camera * model;
+        mvp   = camera * model;
         app->flatRenderer.Render(gl::FlatRenderArgs{
-            .lightWorldPosition = lightPosition,
-            .lightColor = lightColor,
-            .materialColor = glm::vec3{1.0f, 1.0f, 1.0f},
-            .primitive          = GL_TRIANGLES,
-            .vaoWithNormal      = app->boxMesh.Vao(),
-            .mvp                = mvp,
-            .modelToWorld           = model,
+            .lightWorldPosition        = lightPosition,
+            .lightColor                = lightColor,
+            .eyeWorldPosition          = cameraMovement.Position(),
+            // .materialColor             = glm::vec3{1.0f, 1.0f, 1.0f},
+            .materialSpecularIntensity = 1.0f,
+            .primitive                 = GL_TRIANGLES,
+            .vaoWithNormal             = app->boxMesh.Vao(),
+            .mvp                       = mvp,
+            .modelToWorld              = model,
         });
     }
 
@@ -399,7 +410,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
         if (app->controlDebugCamera) {
-            Frustum frustum     = ProjectionToFrustum(proj);
+            Frustum frustum = ProjectionToFrustum(proj);
             auto frustumMvp = camera * app->cameraMovement.ComputeModelMatrix();
             app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
             app->commonRenderers.RenderAxes(frustumMvp, 0.5f, ColorCode::BLACK);
@@ -465,9 +476,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 }
 
 static auto ConfigureWindow(engine::EngineHandle engine) {
-    auto& windowCtx     = engine::GetWindowContext(engine);
-    GLFWwindow* window  = windowCtx.Window();
-    using KeyModFlags = engine::WindowCtx::KeyModFlags;
+    auto& windowCtx    = engine::GetWindowContext(engine);
+    GLFWwindow* window = windowCtx.Window();
+    using KeyModFlags  = engine::WindowCtx::KeyModFlags;
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [=](bool pressed, bool released, KeyModFlags mods) {
         auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
@@ -486,12 +497,12 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        auto* app                      = static_cast<Application*>(engine::GetApplicationData(engine));
         static bool controlDebugCamera = true;
         if (pressed) {
             app->controlDebugCameraSwitched = true;
-            app->controlDebugCamera = controlDebugCamera;
-            controlDebugCamera = !controlDebugCamera;
+            app->controlDebugCamera         = controlDebugCamera;
+            controlDebugCamera              = !controlDebugCamera;
         }
     });
 
@@ -529,7 +540,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+        auto* app                  = static_cast<Application*>(engine::GetApplicationData(engine));
         static bool setToWireframe = true;
         if (!pressed) { return; }
 
@@ -551,32 +562,85 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 }
 
-auto main() -> int {
+static engine::EngineHandle g_engineHandle;
+static std::unique_ptr<Application> g_app;
+auto ColdStartApplication[[nodiscard]]() -> bool {
     XLOG("! Compiled in DEBUG mode", 0);
 
-    auto maybeEngine = engine::CreateEngine();
-    if (maybeEngine == std::nullopt) {
-        XLOGE("App failed to initialize the engine", 0);
-        return -1;
+    assert(!g_app);
+    g_engineHandle = engine::CreateEngine();
+    engine::ColdStartEngine(g_engineHandle);
+    g_app = std::make_unique<Application>();
+    engine::SetApplicationData(g_engineHandle, &*g_app);
+
+    ConfigureWindow(g_engineHandle);
+
+    engine::QueueForNextFrame(
+        g_engineHandle, engine::UserActionType::RENDER, [](void* applicationData) { GLCALL(glEnable(GL_FRAMEBUFFER_SRGB)); });
+
+
+    auto _ = engine::SetRenderCallback(g_engineHandle, Render);
+    return true;
+}
+
+auto DestroyApplication() -> bool {
+    if (g_externalDestroyCallback) {
+        g_externalDestroyCallback();
+    }
+    g_app.reset();
+    (void)engine::DestroyEngine(g_engineHandle);
+    return true;
+}
+
+auto main() -> int {
+    if (ColdStartApplication() == false) {
+        return 1;
+    }
+    while(true){
+        // if (g_externalUpdate) [[likely]] {
+        //     g_externalUpdate( windowCtx);
+        // }
+        auto tickResult = engine::TickEngine(g_engineHandle);
+        if (tickResult != engine::EngineError::SUCCESS) {
+            break;
+        }
+    }
+    if (DestroyApplication() == false) {
+        return 2;
     }
 
-    auto* engine = *maybeEngine;
-    ConfigureWindow(engine);
-
-    engine::QueueForNextFrame(engine, engine::UserActionType::RENDER, [](void* applicationData){
-        GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
-    });
-
-    {
-        Application app;
-        engine::SetApplicationData(engine, &app);
-
-        auto _ = engine::SetRenderCallback(engine, Render);
-        engine::BlockOnLoop(engine);
-    }
-
-    engine::DestroyEngine(engine);
-
-    XLOG("App closed gracefully", 0);
     return 0;
+}
+
+struct HotReloadState {
+    engine::EngineHandle engine;
+    std::shared_ptr<engine::EnginePersistentData> engineData;
+};
+
+// Hot reloading "guest" part
+CR_EXPORT auto cr_main(cr_plugin *ctx, cr_op operation) -> int {
+    assert(ctx != nullptr);
+    static HotReloadState* state{nullptr};
+    switch (operation) {
+        case CR_STEP:
+            return static_cast<int>(engine::TickEngine(state->engine));
+        case CR_LOAD:
+            XLOGW("HotReload::load v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
+            if (state != nullptr) {
+                return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData));
+            }
+            state = reinterpret_cast<HotReloadState*>(ctx->userdata);
+            state->engine = engine::CreateEngine();
+            return static_cast<int>(engine::ColdStartEngine(state->engine));
+        case CR_UNLOAD:
+            // preparing to a new reload
+            XLOGW("HotReload::unload v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
+            state->engineData = engine::DestroyEngine(state->engine);
+            return 0;
+        case CR_CLOSE:
+            // the plugin will close and not reload anymore
+            XLOGW("HotReload::destroy v{}", ctx->version);
+            (void)engine::DestroyEngine(state->engine);
+            return 0;
+    }
 }

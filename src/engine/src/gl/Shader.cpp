@@ -1,35 +1,41 @@
-#include <engine/gl/Shader.hpp>
 #include <engine/Assets.hpp>
+#include <engine/gl/Shader.hpp>
 #include <engine_private/Prelude.hpp>
 
-#include <sstream>
 #include <iostream>
 #include <regex>
+#include <sstream>
 
 namespace {
 
 using namespace engine::gl::shader;
 
-void AddInclude(IncludeRegistry& out, char const* key, std::string&& text, int32_t recursionLimit, bool isInline = false) {
-    out[key] = IncludeEntry {
-        .text = std::move(text),
+constexpr int64_t INCLUDE_LINE_NUMBER_BASE = 1'000'000;
+
+void AddInclude(
+    IncludeRegistry& out, char const* key, std::string&& text, int32_t recursionLimit, bool isMultiline = true) {
+    out[key] = IncludeEntry{
+        .text           = std::move(text),
         .recursionLimit = recursionLimit,
-        .isInline = isInline,
+        .isMultiline       = isMultiline,
     };
 }
 
 using ParsingIt = decltype(ShaderParsing::parts.begin());
-auto WriteShaderParsing(std::stringstream& destination, ParsingIt begin, ParsingIt end, IncludeRegistry const& registry, int64_t firstOriginalLine) {
+auto WriteShaderParsing(
+    std::stringstream& destination, ParsingIt begin, ParsingIt end, IncludeRegistry const& registry,
+    int64_t firstOriginalLine) {
     int64_t originalLine = firstOriginalLine;
     int64_t includeCount = 0;
-    while(begin != end) {
-        switch(begin->type) {
+    bool isFirstInclude = firstOriginalLine < INCLUDE_LINE_NUMBER_BASE;
+    while (begin != end) {
+        switch (begin->type) {
         case ShaderParsing::PartType::ORIGINAL_CODE:
             originalLine += std::count(std::begin(begin->text), std::end(begin->text), '\n');
             destination << begin->text;
             break;
         case ShaderParsing::PartType::DELIMITER:
-            //ss << "\n//" << begin->text << '\n';
+            // ss << "\n//" << begin->text << '\n';
             break;
         case ShaderParsing::PartType::INCLUDE_KEY:
             // TODO: conversion std::string_view to std::string
@@ -37,40 +43,45 @@ auto WriteShaderParsing(std::stringstream& destination, ParsingIt begin, Parsing
             originalLine += 1;
             ++includeCount;
             auto find = registry.find(std::string{begin->text});
-            if (find != registry.end()) {
-                if (!find->second.isInline) {
-                    destination << "// included: " << begin->text << '\n';
-                    destination << "#line " << includeCount * 1000000 << '\n';
-                }
-                destination << find->second.text << '\n';
-                if (!find->second.isInline) {
-                    destination << "#line " << originalLine << '\n';
-                }
-            } else {
-                destination << "// !! MISSING INCLUDE: " << begin->text << '\n';
-                XLOGW("Missing shader include: {}", begin->text);
+            if (find == registry.end()) {
+                destination << "// !! MISSING INCLUDE IN REGISTRY: " << begin->text << '\n';
+                XLOGW("Missing shader include in registry: {}", begin->text);
+                break;
             }
+            auto const& expandedInclude = find->second;
+            if (expandedInclude.text.size() == 0) {
+                destination << "// !! EMPTY INCLUDE TEXT: " << begin->text << '\n';
+                XLOGW("Empty shader include text of: {}", begin->text);
+                break;
+            }
+            if (expandedInclude.isMultiline) {
+                destination << "// included: "<< begin->text << '\n';
+            }
+            if (expandedInclude.isMultiline && isFirstInclude) {
+                destination << "#line " << includeCount * INCLUDE_LINE_NUMBER_BASE << '\n';
+            }
+            destination << expandedInclude.text;
+            if (expandedInclude.isMultiline && isFirstInclude) { destination << '\n' << "#line " << originalLine << '\n'; }
             break;
         }
         ++begin;
     }
 }
 
-auto GenerateCodeRecursively[[nodiscard]](std::string_view code, IncludeRegistry const& includeRegistry, int32_t recursLimit) -> std::string {
+auto GenerateCodeRecursively
+    [[nodiscard]] (std::string_view code, IncludeRegistry const& includeRegistry, int32_t recursLimit) -> std::string {
     std::stringstream ss0, ss1;
     ss0 << code;
-    auto* readStream = &ss0;
+    auto* readStream  = &ss0;
     auto* writeStream = &ss1;
     while(recursLimit-- > 0) {
         // TODO: optimize string copy here
         // clang still doesn't support C++20 readStream.view() for fuck's sake
         std::string currentCode = readStream->str(); // must outlive parsing
-        auto parsing = ParseParts(currentCode);
-        if (parsing.numIncludes <= 0) {
-            break;
-        }
+        auto parsing            = ParseParts(currentCode);
+        if (parsing.numIncludes <= 0) { break; }
         writeStream->seekp(0);
-        WriteShaderParsing(*writeStream, parsing.parts.begin(), parsing.parts.end(), includeRegistry, 1);
+        WriteShaderParsing(*writeStream, parsing.parts.begin(), parsing.parts.end(), includeRegistry, INCLUDE_LINE_NUMBER_BASE);
         std::swap(readStream, writeStream);
     }
     // readStream was written last
@@ -78,34 +89,35 @@ auto GenerateCodeRecursively[[nodiscard]](std::string_view code, IncludeRegistry
 }
 
 auto ExpandRegistryRecursively(IncludeRegistry& includeRegistry) {
-    for(auto& kv : includeRegistry) {
+    for (auto& kv : includeRegistry) {
         if (kv.second.recursionLimit <= 0) { continue; }
         kv.second.text = GenerateCodeRecursively(kv.second.text, includeRegistry, kv.second.recursionLimit);
     }
 }
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl::shader {
 
 void LoadCommonIncludes(IncludeRegistry& out) {
     AddInclude(out, "common/version/330", "#version 330 core", 0);
-    AddInclude(out, "common/version/420", "#version 420 core",0);
+    AddInclude(out, "common/version/420", "#version 420 core", 0);
     AddInclude(out, "common/consts", LoadTextFile("data/engine/shaders/include/constants.inc"), 0);
     AddInclude(out, "common/gradient_noise", LoadTextFile("data/engine/shaders/include/gradient_noise.inc"), 1);
-    AddInclude(out, "common/screen_space_dither", LoadTextFile("data/engine/shaders/include/screen_space_dither.inc"), 0);
-    AddInclude(out, "common/struct_light", LoadTextFile("data/engine/shaders/include/struct_light.inc"), 0);
+    AddInclude(
+        out, "common/screen_space_dither", LoadTextFile("data/engine/shaders/include/screen_space_dither.inc"), 0);
+    AddInclude(out, "common/struct/light", LoadTextFile("data/engine/shaders/include/struct_light.inc"), 0);
+    AddInclude(out, "common/struct/material", LoadTextFile("data/engine/shaders/include/struct_material.inc"), 0);
+    AddInclude(out, "common/ubo/material", LoadTextFile("data/engine/shaders/include/ubo_material.inc"), 1);
 
     ExpandRegistryRecursively(out);
 }
 
-void LoadVertexIncludes(IncludeRegistry& out) {
-
-}
+void LoadVertexIncludes(IncludeRegistry& out) { }
 
 void LoadFragmentIncludes(IncludeRegistry& out) {
-    bool const isInline = true;
-    AddInclude(out, "frag/gradient_noise/eval","(1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0)", 0, isInline);
+    AddInclude(
+        out, "frag/gradient_noise/eval", "(1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0)", 0, false);
     ExpandRegistryRecursively(out);
 }
 
@@ -114,14 +126,12 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
     parse.parts.reserve(64);
 
     auto parseEnd = 0U;
-    auto push = [&](std::string_view text, ShaderParsing::PartType type) {
+    auto push     = [&](std::string_view text, ShaderParsing::PartType type) {
         if (std::size(text) == 0) { return; }
         parse.parts.push_back({text, type});
-        if (type == ShaderParsing::PartType::INCLUDE_KEY) {
-            ++parse.numIncludes;
-        }
+        if (type == ShaderParsing::PartType::INCLUDE_KEY) { ++parse.numIncludes; }
     };
-    auto parseIncludes = [&](auto codeEnd){
+    auto parseIncludes = [&](auto codeEnd) {
         constexpr static std::string_view includeBeginPattern = "#include \"";
         // NOTE: for some reason, include line must be ended with new line
         // otherwise parsing goes wild, starts capturing last " into include path
@@ -129,27 +139,25 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
 
         while (parseEnd < codeEnd) {
             auto includeBegin = code.find(includeBeginPattern, parseEnd);
-            if (includeBegin == std::string_view::npos || includeBegin >= codeEnd) {
-                break;
-            }
+            if (includeBegin == std::string_view::npos || includeBegin >= codeEnd) { break; }
             auto backScan = includeBegin - 1;
-            while(backScan >= parseEnd && code[backScan] == ' ') {--backScan;}
-            if (backScan-1 >= parseEnd && code[backScan] == '/' && code[backScan-1] == '/') {
+            while (backScan >= parseEnd && code[backScan] == ' ') {
+                --backScan;
+            }
+            if (backScan - 1 >= parseEnd && code[backScan] == '/' && code[backScan - 1] == '/') {
                 break; // include was commented out
             }
             auto includeEnd = code.find(includeEndPattern, includeBegin + std::size(includeBeginPattern));
-            if (includeEnd == std::string_view::npos || includeBegin >= codeEnd) {
-                break;
-            }
+            if (includeEnd == std::string_view::npos || includeBegin >= codeEnd) { break; }
             push(code.substr(parseEnd, includeBegin - parseEnd), ShaderParsing::PartType::ORIGINAL_CODE);
             parseEnd = includeBegin + std::size(includeBeginPattern);
-            push(code.substr(parseEnd, includeEnd - parseEnd),
-                ShaderParsing::PartType::INCLUDE_KEY);
+            push(code.substr(parseEnd, includeEnd - parseEnd), ShaderParsing::PartType::INCLUDE_KEY);
             parseEnd = includeEnd + std::size(includeEndPattern);
-            while(parseEnd < codeEnd && (code[parseEnd] == ' ' || code[parseEnd] == '\n')) {++parseEnd;}
+            while (parseEnd < codeEnd && (code[parseEnd] == ' ' /* || code[parseEnd] == '\n' */)) {
+                ++parseEnd;
+            }
         }
-        push(code.substr(parseEnd, codeEnd - parseEnd),
-            ShaderParsing::PartType::ORIGINAL_CODE);
+        push(code.substr(parseEnd, codeEnd - parseEnd), ShaderParsing::PartType::ORIGINAL_CODE);
     };
 
     auto versionEnd = code.find("#version");
@@ -157,7 +165,7 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
         XLOGW("Failed to parse shader version", 0);
         versionEnd = 0U;
     } else {
-        versionEnd = code.find('\n', versionEnd)+1;
+        versionEnd = code.find('\n', versionEnd) + 1;
     }
     push(code.substr(0U, versionEnd), ShaderParsing::PartType::ORIGINAL_CODE);
     push("<post_version>", ShaderParsing::PartType::DELIMITER);
@@ -169,7 +177,9 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
     return parse;
 }
 
-auto GenerateCode[[nodiscard]](std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines) -> std::string {
+auto GenerateCode
+    [[nodiscard]] (std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines)
+    -> std::string {
     auto parsing = shader::ParseParts(originalCode);
     std::stringstream ss;
     auto partIt = parsing.parts.begin();
@@ -185,6 +195,9 @@ auto GenerateCode[[nodiscard]](std::string_view originalCode, IncludeRegistry co
 }
 
 void InjectDefines(std::stringstream& destination, CpuView<shader::Define const> defines) {
+    if constexpr (engine::DEBUG_BUILD) {
+        destination << "#define DEBUG 1\n";
+    }
     size_t numDefines = defines.NumElements();
     for (size_t i = 0; i < numDefines; ++i) {
         shader::Define const& define = *defines[i];

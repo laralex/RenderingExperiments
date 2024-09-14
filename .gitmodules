@@ -13,3 +13,6 @@
 [submodule "third_party/stb"]
 	path = third_party/stb
 	url = https://github.com/nothings/stb.git
+[submodule "third_party/cr"]
+	path = third_party/cr
+	url = https://github.com/fungos/cr

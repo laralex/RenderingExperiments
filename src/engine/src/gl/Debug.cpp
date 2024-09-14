@@ -19,10 +19,9 @@ void GLAPIENTRY DebugOutputCallback(
     GLenum source, GLenum type, GLuint /*id*/, GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam) {
 #ifdef XDEBUG
-    // NVIDIA: Buffer detailed info: Buffer object 15 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
-    if (source == 0x8246U) {
-        return;
-    }
+    // NVIDIA: Buffer detailed info: Buffer object 15 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will
+    // use VIDEO memory as the source for buffer object operations.
+    if (source == 0x8246U) { return; }
     auto logLevel = spdlog::level::level_enum::warn;
     switch (type) {
     case GL_DEBUG_TYPE_ERROR:
@@ -127,7 +126,8 @@ auto GetDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, 
 void LogDebugLabel(GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std::string_view message) {
     constexpr size_t maxDebugLabelSize = 256U;
     static char debugLabel[maxDebugLabelSize];
-    auto bytesWritten = GetDebugLabel(objectTypeKhr, objectTypeExt, objectId, engine::CpuMemory{debugLabel, maxDebugLabelSize});
+    auto bytesWritten =
+        GetDebugLabel(objectTypeKhr, objectTypeExt, objectId, engine::CpuMemory{debugLabel, maxDebugLabelSize});
     XLOG("{} (name={})", message, debugLabel);
 }
 

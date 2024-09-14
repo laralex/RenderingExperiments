@@ -4,22 +4,46 @@
 #include "engine/RenderContext.hpp"
 #include "engine/WindowContext.hpp"
 
+#include <memory>
+
 namespace engine {
 
 struct EngineCtx;
 using EngineHandle = EngineCtx*;
+struct EnginePersistentData;
+
+enum class EngineError : int32_t {
+    SUCCESS = 0,
+    WINDOW_CLOSED_NORMALLY = 1,
+    ERROR_ENGINE_NULL = 100,
+    ERROR_ENGINE_NOT_INITIALIZED = 100,
+    WINDOW_CREATION_ERROR = 200,
+    WINDOW_USAGE_ERROR = 300,
+};
 
 // NOTE: no CpuView is used here, because this wrapper is not suitable for void data
 using RenderCallback = void (*)(RenderCtx const&, WindowCtx const&, void* userData);
 
-auto CreateEngine [[nodiscard]] () -> std::optional<EngineHandle>;
-void DestroyEngine(EngineHandle);
+// Just create engine handle
+auto CreateEngine [[nodiscard]] () -> EngineHandle;
+
+// Initialize, allocate engine resources
+auto ColdStartEngine [[nodiscard]](EngineHandle) -> EngineError;
+
+// Initialize, reuse allocated engine resources
+auto HotStartEngine [[nodiscard]](EngineHandle, std::shared_ptr<EnginePersistentData>) -> EngineError;
+
+// Destroy engine handle (can't use anymore), returns engine resources, suitable for HotStartEngine
+auto DestroyEngine [[nodiscard]] (EngineHandle) -> std::shared_ptr<EnginePersistentData>;
+
+// Update inner state, provided render callback is also called
+auto TickEngine [[nodiscard]] (EngineHandle) -> EngineError;
 
 auto GetWindowContext [[nodiscard]] (EngineHandle) -> WindowCtx&;
 auto SetRenderCallback [[nodiscard]] (EngineHandle, RenderCallback newCallback) -> RenderCallback;
 void SetApplicationData(EngineHandle, void* applicationData);
-auto GetApplicationData [[nodiscard]](EngineHandle engine) -> void*;
-void BlockOnLoop(EngineHandle);
+auto GetApplicationData [[nodiscard]] (EngineHandle engine) -> void*;
+
 
 enum class UserActionType : size_t {
     RENDER = 0,

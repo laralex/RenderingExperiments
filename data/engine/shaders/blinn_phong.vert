@@ -10,16 +10,8 @@ out highp vec3 v_Position;
 out mediump vec2 v_Uv;
 out highp vec3 v_Normal;
 
-#include "common/struct_light"
-
-layout(std140, binding = UBO_BINDING) uniform Ubo {
-    highp mat4 u_MVP;
-    highp mat4 u_ModelToWorld;
-    highp mat3 u_NormalToWorld;
-    highp vec4 u_AmbientIntensity;
-    highp vec4 u_MaterialColor;
-    Light u_Light;
-};
+#include "common/struct/light"
+#include "common/ubo/material"
 
 void main() {
     vec4 worldPosition = u_ModelToWorld * vec4(in_Position, 1.0);

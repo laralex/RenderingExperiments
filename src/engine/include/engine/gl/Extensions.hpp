@@ -5,8 +5,8 @@
 
 #include <unordered_set>
 
-namespace engine{
-    struct StringHash;
+namespace engine {
+struct StringHash;
 //     struct StringEqual;
 } // namespace engine
 

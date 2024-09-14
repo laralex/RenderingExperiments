@@ -6,9 +6,9 @@
 namespace engine::gl::shader {
 
 struct IncludeEntry final {
-    std::string text;
-    int64_t recursionLimit;
-    bool isInline;
+    std::string text = "/*NO_INCLUDE_TEXT*/";
+    int64_t recursionLimit = 0;
+    bool isMultiline = true;
 };
 
 using IncludeRegistry = std::unordered_map<std::string, IncludeEntry, engine::StringHash, std::equal_to<>>;
@@ -31,7 +31,7 @@ struct ShaderParsing final {
     int64_t numIncludes = 0;
 };
 
-auto ParseParts[[nodiscard]](std::string_view code) -> ShaderParsing;
+auto ParseParts [[nodiscard]] (std::string_view code) -> ShaderParsing;
 
 struct Define final {
     std::string_view name = {};
@@ -52,7 +52,9 @@ struct Define final {
     bool highPrecision = true;
 };
 
-auto GenerateCode[[nodiscard]](std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines) -> std::string;
+auto GenerateCode
+    [[nodiscard]] (std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines)
+    -> std::string;
 
 auto InjectDefines [[nodiscard]] (std::string_view code, CpuView<Define const> defines) -> std::string;
 void InjectDefines(std::stringstream& destination, CpuView<Define const> defines);

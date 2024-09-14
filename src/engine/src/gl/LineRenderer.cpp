@@ -17,8 +17,8 @@ auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
 
     LineRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, 
-        CpuMemory<void const>{nullptr, maxLines * sizeof(LineRendererInput::Line)}, "LineRenderer Vertices");
+        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxLines * sizeof(LineRendererInput::Line)},
+        "LineRenderer Vertices");
     renderer.vao_ = gl::Vao::Allocate("LineRenderer VAO");
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(

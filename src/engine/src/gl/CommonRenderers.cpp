@@ -9,9 +9,9 @@
 
 namespace {
 
-constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION = 0;
+constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION  = 0;
 constexpr GLint BLIT_UNIFORM_UV_SCALE_LOCATION = 1;
-constexpr GLint BLIT_TEXTURE_SLOT             = 0; // TODO: 1 and above slots don't work
+constexpr GLint BLIT_TEXTURE_SLOT              = 0; // TODO: 1 and above slots don't work
 
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
@@ -41,13 +41,13 @@ namespace engine::gl {
 void CommonRenderers::Initialize() {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
-    axesRenderer_               = AxesRenderer::Allocate();
-    boxRenderer_                = BoxRenderer::Allocate();
-    frustumRenderer_            = FrustumRenderer::Allocate();
-    billboardRenderer_          = BillboardRenderer::Allocate();
+    axesRenderer_      = AxesRenderer::Allocate();
+    boxRenderer_       = BoxRenderer::Allocate();
+    frustumRenderer_   = FrustumRenderer::Allocate();
+    billboardRenderer_ = BillboardRenderer::Allocate();
 
-    lineRenderer_               = LineRenderer::Allocate(MAX_LINES);
-    pointRenderer_              = PointRenderer::Allocate(MAX_POINTS);
+    lineRenderer_  = LineRenderer::Allocate(MAX_LINES);
+    pointRenderer_ = PointRenderer::Allocate(MAX_POINTS);
 
     datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
@@ -194,8 +194,9 @@ void CommonRenderers::OnFrameEnd() {
     if (debugPoints_.IsDataDirty()) {
         if (pointsFirstExternalIdx_ > 0) {
             if (debugPoints_.DataSize() > pointsFirstExternalIdx_) {
-                XLOGW("Too many internal points, some will be ignored (actual={}, limit={})",
-                    debugPoints_.DataSize(), pointsFirstExternalIdx_);
+                XLOGW(
+                    "Too many internal points, some will be ignored (actual={}, limit={})", debugPoints_.DataSize(),
+                    pointsFirstExternalIdx_);
             }
             pointRenderer_.Fill(debugPoints_.Data(), pointsFirstExternalIdx_, 0);
         } else {

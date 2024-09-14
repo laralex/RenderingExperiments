@@ -43,10 +43,17 @@ void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int m
     // TODO: reduce overhead
     float state = static_cast<float>(action == GLFW_PRESS) - (action == GLFW_RELEASE);
     switch (mouseButton) {
-        case GLFW_MOUSE_BUTTON_LEFT: mousePress_.x = state; break;
-        case GLFW_MOUSE_BUTTON_MIDDLE: mousePress_.y = state; break;
-        case GLFW_MOUSE_BUTTON_RIGHT: mousePress_.z = state; break;
-        default: break;
+    case GLFW_MOUSE_BUTTON_LEFT:
+        mousePress_.x = state;
+        break;
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+        mousePress_.y = state;
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        mousePress_.z = state;
+        break;
+    default:
+        break;
     }
     if (auto const found = mouseButtons_.find(mouseButton); found != mouseButtons_.end()) {
         found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
@@ -56,19 +63,23 @@ void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int m
 auto WindowCtx::IsMousePressed(GlfwMouseButton mouseButton) const -> float {
     // TODO: reduce overhead
     switch (mouseButton) {
-        case GLFW_MOUSE_BUTTON_LEFT: return mousePress_.x;
-        case GLFW_MOUSE_BUTTON_MIDDLE: return mousePress_.y;
-        case GLFW_MOUSE_BUTTON_RIGHT: return mousePress_.z;
-        default: return 0.0f;
+    case GLFW_MOUSE_BUTTON_LEFT:
+        return mousePress_.x;
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+        return mousePress_.y;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        return mousePress_.z;
+    default:
+        return 0.0f;
     }
 }
 
 void WindowCtx::UpdateCursorEntered(bool entered) { mouseInsideWindow_ = entered; }
 
 void WindowCtx::OnFrameEnd() {
-    mousePress_ = glm::max(glm::vec3{0.0f}, mousePress_);
-    mousePosDelta_ = mousePos_ - isNonFirstFrame_ * mousePosPrev_;
-    mousePosPrev_ = mousePos_;
+    mousePress_      = glm::max(glm::vec3{0.0f}, mousePress_);
+    mousePosDelta_   = mousePos_ - isNonFirstFrame_ * mousePosPrev_;
+    mousePosPrev_    = mousePos_;
     isNonFirstFrame_ = 1.0f;
 }
 

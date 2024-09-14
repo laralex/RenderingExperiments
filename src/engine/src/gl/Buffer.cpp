@@ -10,8 +10,8 @@ void GpuBuffer::Dispose() {
     bufferId_.UnsafeReset();
 }
 
-auto GpuBuffer::Allocate(
-    GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name) -> GpuBuffer {
+auto GpuBuffer::Allocate(GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name)
+    -> GpuBuffer {
     {
         GLenum t = targetType;
         assert(

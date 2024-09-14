@@ -5,37 +5,58 @@ all: build_app
 .PHONY: init_repo
 init_repo:
 	sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
+	wget https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz \
+		-O ccache.tar.xz && mkdir -p ccache_prebuilt \
+		&& tar -xJf ccache.tar.xz --directory ccache_prebuilt \
+		&& cp ccache_prebuilt/*/ccache . \
+		&& rm -rf ccache_prebuilt ccache.tar.xz
 	git submodule update --init --remote
 	git submodule status
 
+DEBUG?=0
 USE_DEP_FILES?=1
 USE_PCH?=1
+DYNAMIC_LINKING?=1
 # COMPILER_DUMP?=1
 
-BUILD_TYPE=debug
-
-BUILD_DIR=build
+BUILD_DIR=build/$(if ${DEBUG},debug,release)
 INSTALL_DIR=${BUILD_DIR}/install
 MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 APP_EXE=${BUILD_DIR}/run_app
-PRECOMPILED_HEADER=${BUILD_DIR}/Precompiled.hpp.pch
+ENGINE_LIB=$(if ${DYNAMIC_LINKING},${BUILD_DIR}/engine/libengine.so,${BUILD_DIR}/engine/libengine.a)
+PRECOMPILED_HEADER=${BUILD_DIR}/engine/Precompiled.hpp.pch
 
 THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
-	${BUILD_DIR}/third_party/glfw/src/src/libglfw3.a \
+	${BUILD_DIR}/third_party/glfw/src/libglfw3.a \
 	${BUILD_DIR}/third_party/glad/gl.o \
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
 	${BUILD_DIR}/third_party/stb/stb_image.o
 
-CC=ccache clang++-17
+CC=./ccache clang++-17
 
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
-COMPILE_FLAGS=-std=c++20 $(if $(USE_DEP_FILES),-MMD,) $(if $(COMPILER_DUMP),-save-stats,) $(if $(findstring debug,${BUILD_TYPE}),-g -DXDEBUG,) -Wno-c99-designator
+COMPILE_FLAGS=-std=c++20 \
+	$(if ${DYNAMIC_LINKING},-fPIC,) \
+	$(if $(USE_DEP_FILES),-MMD,) \
+	$(if $(COMPILER_DUMP),-save-stats,) \
+	$(if ${DEBUG},-g -DXDEBUG,) \
+	-fno-exceptions -fno-rtti \
+	-Wno-switch-enum \
+	-Wno-c++98-compat-pedantic \
+	-Wno-c++98-compat \
+	-Wno-c++98-c++11-compat-pedantic \
+	-Wno-c99-designator \
+	-Wno-padded \
+	-Wno-newline-eof \
+#-Weverything \
+
 INCLUDE_DIR+=-I src/engine/include
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
 INCLUDE_DIR+=-I third_party/glm/
 INCLUDE_DIR+=-I third_party/stb/
+INCLUDE_DIR+=-I third_party/cr/
 INCLUDE_DIR+=-I data
 LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
@@ -90,19 +111,19 @@ run: ${INSTALL_DIR}/run_app
 prettify:
 	find src -regex '.*\.\(cpp\|hpp\|cu\|cuh\|c\|h\)' -exec ${CLANG_FORMAT} --verbose -style=file -i {} \;
 
-.PHONY: clean
-clean:
+.PHONY: rm_all
+rm_all:
 	rm -r ${BUILD_DIR}
 
-.PHONY: clean_own
-clean_own:
+.PHONY: rm
+rm:
 	rm -r ${APP_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
 
 .PHONY: build_app
-build_app: ${BUILD_DIR}/engine/libengine.a ${BUILD_DIR}/app ${APP_EXE}
+build_app: ${ENGINE_LIB} ${BUILD_DIR}/app ${APP_EXE}
 
 .PHONY: build_engine
-build_engine: ${BUILD_DIR}/engine/src/gl ${BUILD_DIR}/engine/libengine.a
+build_engine: ${BUILD_DIR}/engine/src/gl ${ENGINE_LIB}
 
 .PHONY: patch_d_files
 
@@ -112,14 +133,18 @@ ${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(jpg\|jpeg\|png\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	cp ${APP_EXE} $@
 
-${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${BUILD_DIR}/engine/libengine.a
+${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${ENGINE_LIB}
 	$(info > Linking $@)
 	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 # linking engine library
 ${BUILD_DIR}/engine/libengine.a: ${obj_engine}
-	$(info > Linking $@)
+	$(info > Linking static $@)
 	@ar r $@ ${obj_engine}
+
+${BUILD_DIR}/engine/libengine.so: ${obj_engine}
+	$(info > Linking dynamic $@)
+	${CC} -shared $^ -o $@
 
 # compiling main executable sources
 ${BUILD_DIR}/app/%.o: src/app/%.cpp
@@ -139,8 +164,8 @@ ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
 
-${BUILD_DIR}/third_party/glfw/src/src/libglfw3.a:
-	cmake -S third_party/glfw -B $(dir $@) && cmake --build $(dir $@)
+${BUILD_DIR}/third_party/glfw/libglfw3.a:
+	cmake -S third_party/glfw -B ${BUILD_DIR}/third_party/glfw && cmake --build $(dir $@)
 
 ${BUILD_DIR}/third_party/glad/gl.o:
 	mkdir -p $(dir $@)

@@ -53,7 +53,7 @@ private:
     constexpr static int32_t MAX_LOADED_IMAGES = 32;
     std::unordered_map<int32_t, CpuView<uint8_t>> loadedImages_{};
     std::vector<uint8_t> temporaryBuffer_{};
-    int32_t nextImageId_     = 0;
+    int32_t nextImageId_          = 0;
     std::string_view latestError_ = {};
 };
 
@@ -62,13 +62,15 @@ private:
 namespace engine::gl {
 
 namespace shader {
-    enum class ShaderType {
-        VERTEX,
-        FRAGMENT,
-        COMPUTE,
-    };
-    auto LoadShaderCode [[nodiscard]] (std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines) -> std::string;
-}
+enum class ShaderType {
+    VERTEX,
+    FRAGMENT,
+    COMPUTE,
+};
+auto LoadShaderCode
+    [[nodiscard]] (std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines)
+    -> std::string;
+} // namespace shader
 
 struct LoadTextureArgs final {
     ImageLoader& loader;

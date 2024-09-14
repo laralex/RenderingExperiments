@@ -15,8 +15,13 @@
 #include "engine/gl/Extensions.hpp"
 
 #ifdef XDEBUG
+
 #define SPDLOG_COMPILED_LIB 1
+#define SPDLOG_NO_EXCEPTIONS 1
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include "spdlog/spdlog.h"
+#pragma clang diagnostic pop
 // clang-format off
 #define XLOG_LVL(lvl, format, ...) { spdlog::log(lvl, format, __VA_ARGS__); }
 #define XLOG(format, ...) { spdlog::info(format, __VA_ARGS__); }
@@ -53,14 +58,17 @@ enum class ColorCode : int32_t {
     WHITE,
     GRAY,
     BLACK,
-    NUM_COLORS
+    MISSING_COLOR,
+    NUM_COLORS // keep last !
 };
 
-constexpr glm::vec3 COLOR_PALETTE[]{
-    {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},
-    {1.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 1.0f},
-    {1.0f, 0.0f, 1.0f}, {0.2f, 0.1f, 0.0f}, {0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 0.0f},
+constexpr glm::vec3 COLOR_PALETTE[static_cast<int32_t>(ColorCode::NUM_COLORS)]{
+    {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},          {0.0f, 0.0f, 1.0f}, {1.0f, 0.5f, 0.0f},
+    {1.0f, 1.0f, 0.0f}, {0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 1.0f},          {1.0f, 0.0f, 1.0f}, {0.2f, 0.1f, 0.0f},
+    {0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 0.0f}, {0.4242f, 0.0042f, 0.4242f},
 };
+
+constexpr glm::vec3 COLOR_DEFAULT = COLOR_PALETTE[static_cast<int32_t>(ColorCode::MISSING_COLOR)];
 
 constexpr glm::vec3 VEC_UP{0.0f, 0.0f, 1.0f};
 constexpr glm::vec3 VEC_RIGHT{1.0f, 0.0f, 0.0f};
@@ -71,8 +79,8 @@ constexpr glm::vec3 VEC_ONES{1.0f, 1.0f, 1.0f};
 // NOTE: currently only works with pointers to const (T = const Foo)
 template <typename T> struct CpuView {
     using CpuViewConst = CpuView<std::add_const_t<T>>;
-    using BytePtr = std::conditional_t<std::is_const_v<T>, uint8_t const*, uint8_t*>;
-    using VoidPtr = std::conditional_t<std::is_const_v<T>, void const*, void*>;
+    using BytePtr      = std::conditional_t<std::is_const_v<T>, uint8_t const*, uint8_t*>;
+    using VoidPtr      = std::conditional_t<std::is_const_v<T>, void const*, void*>;
 
     BytePtr data;
     BytePtr dataEnd;
@@ -83,7 +91,8 @@ template <typename T> struct CpuView {
         , dataEnd(nullptr)
         , byteStride(0) { }
 
-    explicit CpuView(T* data, size_t numElements, ptrdiff_t byteOffset = 0, size_t byteStride = sizeof(T)) requires (!std::is_same_v<T, void const> && !std::is_same_v<T, void>)
+    explicit CpuView(T* data, size_t numElements, ptrdiff_t byteOffset = 0, size_t byteStride = sizeof(T))
+        requires(!std::is_same_v<T, void const> && !std::is_same_v<T, void>)
         : CpuView(reinterpret_cast<VoidPtr>(data), numElements, byteOffset, byteStride) { }
 
     explicit CpuView(VoidPtr data, size_t numElements, ptrdiff_t byteOffset = 0, size_t byteStride = sizeof(T))
@@ -110,19 +119,22 @@ template <typename T> struct CpuView {
 template <typename T> struct CpuMemory : CpuView<T> {
     explicit CpuMemory(T* data, size_t numElements, ptrdiff_t byteOffset = 0)
         : CpuView<T>(data, numElements, byteOffset, sizeof(T)) { }
-    explicit CpuMemory() : CpuView<T>() { }
+    explicit CpuMemory()
+        : CpuView<T>() { }
 };
 
 template <> struct CpuMemory<void> : CpuView<void> {
     explicit CpuMemory(void* data, size_t numElements, ptrdiff_t byteOffset = 0)
         : CpuView<void>(data, numElements, byteOffset, 1) { }
-    explicit CpuMemory() : CpuView<void>() { }
+    explicit CpuMemory()
+        : CpuView<void>() { }
 };
 
 template <> struct CpuMemory<void const> : CpuView<void const> {
     explicit CpuMemory(void const* data, size_t numElements, ptrdiff_t byteOffset = 0)
         : CpuView<void const>(data, numElements, byteOffset, 1) { }
-    explicit CpuMemory() : CpuView<void const>() { }
+    explicit CpuMemory()
+        : CpuView<void const>() { }
 };
 
 struct StringEqual {
@@ -135,9 +147,9 @@ struct StringHash {
     using hash_type      = std::hash<std::string_view>;
     using is_transparent = void;
 
-    std::size_t operator()[[nodiscard]](char const* str) const { return hash_type{}(str); }
-    std::size_t operator()[[nodiscard]](std::string_view str) const { return hash_type{}(str); }
-    std::size_t operator()[[nodiscard]](std::string const& str) const { return hash_type{}(str); }
+    std::size_t operator() [[nodiscard]] (char const* str) const { return hash_type{}(str); }
+    std::size_t operator() [[nodiscard]] (std::string_view str) const { return hash_type{}(str); }
+    std::size_t operator() [[nodiscard]] (std::string const& str) const { return hash_type{}(str); }
 };
 
 template <typename IntT> void InvertTriangleWinding(std::vector<IntT>& triangleIndices) {
@@ -151,6 +163,6 @@ void InvertTriangleStripWinding(std::vector<uint16_t>& triangleIndices);
 
 void InvertTriangleNormals(CpuView<glm::vec3> vertexData);
 
-auto RotateByQuaternion[[nodiscard]](glm::vec3 v, glm::quat q) -> glm::vec3;
+auto RotateByQuaternion [[nodiscard]] (glm::vec3 v, glm::quat q) -> glm::vec3;
 
 } // namespace engine

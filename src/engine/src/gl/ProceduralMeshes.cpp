@@ -25,13 +25,13 @@ template <typename IndexT> struct AllocateMeshInfo {
 
 template <typename IndexT> auto AllocateMesh [[nodiscard]] (AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
     size_t numVertices = std::size(info.vertexPositions);
-    auto positions = GpuBuffer::Allocate(
+    auto positions     = GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        engine::CpuMemory<void const>{info.vertexPositions.data(), numVertices * sizeof(info.vertexPositions[0])}, info.vertexPositionsLabel);
+        engine::CpuMemory<void const>{info.vertexPositions.data(), numVertices * sizeof(info.vertexPositions[0])},
+        info.vertexPositionsLabel);
     auto attributes = GpuBuffer::Allocate(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        engine::CpuMemory<void const>{info.vertexData, numVertices * info.vertexDataStride},
-        info.vertexDataLabel);
+        engine::CpuMemory<void const>{info.vertexData, numVertices * info.vertexDataStride}, info.vertexDataLabel);
     auto indexBuffer = GpuBuffer::Allocate(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.indices.data(), std::size(info.indices) * sizeof(info.indices[0])},

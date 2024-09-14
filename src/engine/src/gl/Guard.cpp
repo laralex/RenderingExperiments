@@ -171,11 +171,11 @@ GlGuardStencil::GlGuardStencil() noexcept {
 GlGuardStencil::~GlGuardStencil() noexcept {
     RestoreFlag(GL_DEPTH_TEST, stencilTest_);
     GLCALL(glClearStencil(stencilClearValue_));
-    GLCALL(glStencilOpSeparate(GL_BACK, stencilBackFail_, stencilBackPassDepthFail_, stencilBackPassDepthPass_));
-    GLCALL(glStencilFuncSeparate(GL_BACK, stencilBackFunc_, stencilBackRef_, stencilBackValueMask_));
+    GLCALL(glStencilOpSeparate(GL_BACK, static_cast<GLenum>(stencilBackFail_), static_cast<GLenum>(stencilBackPassDepthFail_), static_cast<GLenum>(stencilBackPassDepthPass_)));
+    GLCALL(glStencilFuncSeparate(GL_BACK, static_cast<GLenum>(stencilBackFunc_), stencilBackRef_, stencilBackValueMask_));
     GLCALL(glStencilMaskSeparate(GL_BACK, stencilBackWriteMask_));
-    GLCALL(glStencilOpSeparate(GL_FRONT, stencilFrontFail_, stencilFrontPassDepthFail_, stencilFrontPassDepthPass_));
-    GLCALL(glStencilFuncSeparate(GL_FRONT, stencilFrontFunc_, stencilFrontRef_, stencilFrontValueMask_));
+    GLCALL(glStencilOpSeparate(GL_FRONT, static_cast<GLenum>(stencilFrontFail_), static_cast<GLenum>(stencilFrontPassDepthFail_), static_cast<GLenum>(stencilFrontPassDepthPass_)));
+    GLCALL(glStencilFuncSeparate(GL_FRONT, static_cast<GLenum>(stencilFrontFunc_), stencilFrontRef_, stencilFrontValueMask_));
     GLCALL(glStencilMaskSeparate(GL_FRONT, stencilFrontWriteMask_));
     // XLOG("~GlGuardStencil", 0);
 }

@@ -18,8 +18,6 @@ FramebufferDrawCtx::FramebufferDrawCtx(GLuint useFramebuffer, bool bindAsDraw) n
     hasInstances_ = true;
 }
 
-
-
 FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
     // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
     if (!hasInstances_) { return; }
@@ -32,7 +30,7 @@ FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
 void FramebufferDrawCtx::GuardAnother(GLuint useFramebuffer, bool bindAsDraw) noexcept {
     // safe, because FramebufferDrawCtx doesn't own any resources, no leaking
     contextFramebuffer_.UnsafeAssign(GlHandle{useFramebuffer});
-    framebufferTarget_  = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
+    framebufferTarget_ = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
     GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
 }
 
@@ -154,7 +152,7 @@ auto FramebufferEditCtx::AttachTexture(GLenum attachment, Texture const& tex, GL
 
     if (updated) {
         // can be nullptr for backbuffer
-        int32_t const drawBuffer      = attachment - GL_COLOR_ATTACHMENT0;
+        int32_t const drawBuffer     = attachment - GL_COLOR_ATTACHMENT0;
         fb_.drawBuffers_[drawBuffer] = attachment;
         assert(IsComplete());
     } else {
@@ -166,7 +164,7 @@ auto FramebufferEditCtx::AttachTexture(GLenum attachment, Texture const& tex, GL
 auto FramebufferEditCtx::AttachRenderbuffer(GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     GLCALL(glFramebufferRenderbuffer(ctx_.BoundTarget(), attachment, rb.RenderbufferSlotTarget(), rb.Id()));
-    int32_t const drawBuffer      = attachment - GL_COLOR_ATTACHMENT0;
+    int32_t const drawBuffer     = attachment - GL_COLOR_ATTACHMENT0;
     fb_.drawBuffers_[drawBuffer] = attachment;
     return *this;
 }

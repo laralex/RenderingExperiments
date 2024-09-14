@@ -67,7 +67,7 @@ private:
     FrustumRenderer frustumRenderer_{};
     BillboardRenderer billboardRenderer_{};
 
-    constexpr static size_t MAX_LINES  = 10'000;
+    constexpr static size_t MAX_LINES = 10'000;
     LineRenderer lineRenderer_{};
     LineRendererInput debugLines_{MAX_LINES};
 

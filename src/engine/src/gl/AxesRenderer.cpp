@@ -114,9 +114,11 @@ auto AxesRenderer::Allocate() -> AxesRenderer {
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)}, "AxesRenderer Vertices");
+        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)},
+        "AxesRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{indices, sizeof(indices)}, "AxesRenderer Indices");
+        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{indices, sizeof(indices)},
+        "AxesRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate("AxesRenderer");
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(

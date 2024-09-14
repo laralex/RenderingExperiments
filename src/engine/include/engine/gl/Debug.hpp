@@ -23,10 +23,8 @@
 #define GLCALL(stmt) stmt
 #endif
 
-namespace engine
-{
-    template<typename T>
-    struct CpuMemory;
+namespace engine {
+template <typename T> struct CpuMemory;
 } // namespace engine
 
 namespace engine::gl {
@@ -64,8 +62,7 @@ enum class GlObjectType {
 
 void DebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view label);
 void LogDebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view message);
-auto GetDebugLabelUnsafe [[nodiscard]] (GLuint object, GlObjectType objectType, CpuMemory<char> outBuffer)
--> size_t;
+auto GetDebugLabelUnsafe [[nodiscard]] (GLuint object, GlObjectType objectType, CpuMemory<char> outBuffer) -> size_t;
 
 class GpuBuffer;
 void DebugLabel(GpuBuffer const& buffer, std::string_view label);

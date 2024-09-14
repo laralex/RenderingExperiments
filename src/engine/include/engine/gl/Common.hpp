@@ -10,7 +10,7 @@ template <typename T> struct CpuView;
 
 namespace engine::gl::shader {
 struct Define;
-}  // namespace engine::gl::shader
+} // namespace engine::gl::shader
 
 namespace engine::gl {
 

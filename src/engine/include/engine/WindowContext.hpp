@@ -18,16 +18,16 @@ public:
 #undef Self
 
     enum class KeyModFlags : int32_t {
-        SHIFT = 1 << 0,
-        CONTROL = 1 << 1,
-        ALT = 1 << 2,
-        SUPER = 1 << 3,
+        SHIFT    = 1 << 0,
+        CONTROL  = 1 << 1,
+        ALT      = 1 << 2,
+        SUPER    = 1 << 3,
         CAPSLOCK = 1 << 4,
-        NUMLOCK = 1 << 5,
+        NUMLOCK  = 1 << 5,
     };
 
-    using ButtonCallback = std::function<void(bool, bool, KeyModFlags)>;
-    using AxisCallback   = std::function<void(float)>;
+    using ButtonCallback  = std::function<void(bool, bool, KeyModFlags)>;
+    using AxisCallback    = std::function<void(float)>;
     using GlfwKey         = int;
     using GlfwMouseButton = int;
 

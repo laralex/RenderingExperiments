@@ -16,8 +16,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate(
-        GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name = {})
+    static auto Allocate(GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name = {})
         -> GpuBuffer;
     auto Id [[nodiscard]] () const -> GLuint { return bufferId_; }
     void Fill(CpuMemory<GLvoid const> cpuData, GLintptr gpuByteOffset = 0) const;

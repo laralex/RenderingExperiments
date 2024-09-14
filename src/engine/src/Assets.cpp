@@ -89,7 +89,7 @@ auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredCh
         loadedImages_.erase(findRemoved);
     }
 
-    auto numDecodedBytes = result.width * result.height * result.numChannelsDecoded * sizeof(uint8_t);
+    auto numDecodedBytes        = result.width * result.height * result.numChannelsDecoded * sizeof(uint8_t);
     loadedImages_[nextImageId_] = CpuView{decodedImageData, numDecodedBytes};
     result.numChannelsDecoded   = numDesiredChannels;
     result.numDecodedBytes      = numDecodedBytes;
@@ -111,7 +111,7 @@ auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Te
     assert(cpuImageInfo);
     auto texture = gl::Texture::Allocate2D(
         GL_TEXTURE_2D, glm::ivec3(cpuImageInfo->width, cpuImageInfo->height, 0), args.format, args.name);
-    auto cpuImage = args.loader.ImageData(cpuImageInfo->loadedImageId);
+    auto cpuImage     = args.loader.ImageData(cpuImageInfo->loadedImageId);
     auto textureGuard = gl::TextureCtx{texture}.Fill2D(gl::TextureCtx::FillArgs{
         .dataFormat = GL_RGB,
         .dataType   = GL_UNSIGNED_BYTE,
@@ -127,8 +127,9 @@ auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Te
 } // namespace engine::gl
 
 namespace engine::gl::shader {
-auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines) -> std::string {
-    std::string code = LoadTextFile(filepath);
+auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines)
+    -> std::string {
+    std::string code          = LoadTextFile(filepath);
     static bool isInitialized = false;
     static IncludeRegistry includeCommon{};
     static IncludeRegistry includeVertex{};
@@ -142,7 +143,7 @@ auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<sh
         isInitialized = true;
     };
     auto const& includeRegistry = type == ShaderType::VERTEX ? includeVertex : includeFragment;
-    code = GenerateCode(code, includeRegistry, defines);
+    code                        = GenerateCode(code, includeRegistry, defines);
     return code;
 }
 
