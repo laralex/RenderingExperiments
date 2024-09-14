@@ -10,6 +10,7 @@ namespace engine {
 
 struct EngineCtx;
 using EngineHandle = EngineCtx*;
+constexpr EngineHandle ENGINE_HANDLE_NULL = nullptr;
 struct EnginePersistentData;
 
 enum class EngineError : int32_t {

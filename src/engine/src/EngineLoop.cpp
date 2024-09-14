@@ -92,7 +92,6 @@ void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mod
 namespace {
 
 constexpr size_t MAX_ENGINES = 16U;
-constexpr engine::EngineCtx* ENGINE_HANDLE_NULL = nullptr;
 
 std::array<std::optional<engine::EngineCtx>, MAX_ENGINES> g_engines{};
 

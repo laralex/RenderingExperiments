@@ -101,7 +101,7 @@ constexpr GLint UNIFORM_TEXTURE_BINDING    = 0;
 constexpr GLint UNIFORM_MVP_LOCATION       = 10;
 constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
 
-static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, Application* app) {
+static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, std::unique_ptr<Application>& app) {
     using namespace engine;
     glm::ivec2 maxScreenSize = windowCtx.WindowSize() * 4;
     gl::InitializeOpenGl();
@@ -171,18 +171,18 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
         });
 
     auto const& debugMesh = sphere;
-    // app->debugPoints.SetColor(ColorCode::RED);
+    // app.debugPoints.SetColor(ColorCode::RED);
     // for (int32_t i = 0; i < debugMesh.vertexPositions.size(); ++i) {
-    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[i], 0.03f);
+    //     app.debugPoints.PushPoint(debugMesh.vertexPositions[i], 0.03f);
     // }
     // for (int32_t i = 0; i < 12 /* debugMesh.indices.size() / 3 */; ++i) {
     //     auto vi0 = debugMesh.indices[3*i];
     //     auto vi1 = debugMesh.indices[3*i+1];
     //     auto vi2 = debugMesh.indices[3*i+2];
-    //     app->debugPoints.SetColor(static_cast<ColorCode>((i) % static_cast<int32_t>(ColorCode::NUM_COLORS)));
-    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[vi0], 0.03f);
-    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[vi1], 0.03f);
-    //     app->debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
+    //     app.debugPoints.SetColor(static_cast<ColorCode>((i) % static_cast<int32_t>(ColorCode::NUM_COLORS)));
+    //     app.debugPoints.PushPoint(debugMesh.vertexPositions[vi0], 0.03f);
+    //     app.debugPoints.PushPoint(debugMesh.vertexPositions[vi1], 0.03f);
+    //     app.debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
     // }
 
     auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
@@ -224,7 +224,11 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
-    auto* app = static_cast<Application*>(appData);
+    auto appPtr = static_cast<std::unique_ptr<Application>*>(appData);
+    if (!appPtr) [[unlikely]] {
+        return;
+    }
+    auto& app = *appPtr;
     if (!app->isInitialized) [[unlikely]] {
         ConfigureApplication(ctx, windowCtx, app);
         app->isInitialized = true;
@@ -479,25 +483,21 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     auto& windowCtx    = engine::GetWindowContext(engine);
     GLFWwindow* window = windowCtx.Window();
     using KeyModFlags  = engine::WindowCtx::KeyModFlags;
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [=](bool pressed, bool released, KeyModFlags mods) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+    auto& app = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_A, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_A, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.y += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_S, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_S, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.z += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app                      = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [&](bool pressed, bool released, KeyModFlags) {
         static bool controlDebugCamera = true;
         if (pressed) {
             app->controlDebugCameraSwitched = true;
@@ -506,22 +506,20 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         }
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardAltPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardShiftPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [=](bool pressed, bool released, KeyModFlags) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [&](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(
             engine, engine::UserActionType::WINDOW, [=](void*) { glfwSetWindowShouldClose(window, true); });
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_F, [=](bool pressed, bool released, KeyModFlags) {
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {
             static bool setToFullscreen = true;
             if (!pressed) { return; }
@@ -539,8 +537,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         });
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [=](bool pressed, bool released, KeyModFlags) {
-        auto* app                  = static_cast<Application*>(engine::GetApplicationData(engine));
+    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [&](bool pressed, bool released, KeyModFlags) {
         static bool setToWireframe = true;
         if (!pressed) { return; }
 
@@ -562,85 +559,108 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 }
 
-static engine::EngineHandle g_engineHandle;
-static std::unique_ptr<Application> g_app;
-auto ColdStartApplication[[nodiscard]]() -> bool {
-    XLOG("! Compiled in DEBUG mode", 0);
-
-    assert(!g_app);
-    g_engineHandle = engine::CreateEngine();
-    engine::ColdStartEngine(g_engineHandle);
-    g_app = std::make_unique<Application>();
-    engine::SetApplicationData(g_engineHandle, &*g_app);
-
-    ConfigureWindow(g_engineHandle);
-
-    engine::QueueForNextFrame(
-        g_engineHandle, engine::UserActionType::RENDER, [](void* applicationData) { GLCALL(glEnable(GL_FRAMEBUFFER_SRGB)); });
-
-
-    auto _ = engine::SetRenderCallback(g_engineHandle, Render);
-    return true;
-}
-
-auto DestroyApplication() -> bool {
-    if (g_externalDestroyCallback) {
-        g_externalDestroyCallback();
-    }
-    g_app.reset();
-    (void)engine::DestroyEngine(g_engineHandle);
-    return true;
-}
-
-auto main() -> int {
-    if (ColdStartApplication() == false) {
-        return 1;
-    }
-    while(true){
-        // if (g_externalUpdate) [[likely]] {
-        //     g_externalUpdate( windowCtx);
-        // }
-        auto tickResult = engine::TickEngine(g_engineHandle);
-        if (tickResult != engine::EngineError::SUCCESS) {
-            break;
-        }
-    }
-    if (DestroyApplication() == false) {
-        return 2;
-    }
-
-    return 0;
-}
-
-struct HotReloadState {
+struct ApplicationState {
     engine::EngineHandle engine;
     std::shared_ptr<engine::EnginePersistentData> engineData;
-};
+    std::unique_ptr<Application> app;
+} g_app;
+
+auto ColdStartApplication[[nodiscard]](ApplicationState& destination) -> engine::EngineError {
+    XLOG("! Compiled in DEBUG mode", 0);
+
+    assert(!destination.app);
+    destination.engine = engine::CreateEngine();
+    if (auto result = engine::ColdStartEngine(destination.engine); result != engine::EngineError::SUCCESS) {
+        return result;
+    }
+    destination.app = std::make_unique<Application>();
+    engine::SetApplicationData(destination.engine, &destination.app);
+
+    ConfigureWindow(destination.engine);
+
+    engine::QueueForNextFrame(
+        destination.engine, engine::UserActionType::RENDER, [](void* applicationData) { GLCALL(glEnable(GL_FRAMEBUFFER_SRGB)); });
+
+    auto _ = engine::SetRenderCallback(destination.engine, Render);
+    return engine::EngineError::SUCCESS;
+}
+
+auto DestroyApplication(ApplicationState& destination) -> bool {
+    // if (g_externalDestroyCallback) {
+    //     g_externalDestroyCallback();
+    // }
+    destination.app.reset();
+    destination.engineData.reset();
+    (void)engine::DestroyEngine(destination.engine);
+    return true;
+}
 
 // Hot reloading "guest" part
 CR_EXPORT auto cr_main(cr_plugin *ctx, cr_op operation) -> int {
     assert(ctx != nullptr);
-    static HotReloadState* state{nullptr};
+    static ApplicationState* state{nullptr};
     switch (operation) {
-        case CR_STEP:
-            return static_cast<int>(engine::TickEngine(state->engine));
         case CR_LOAD:
             XLOGW("HotReload::load v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
-            if (state != nullptr) {
+            if (state == nullptr) {
+                state = reinterpret_cast<ApplicationState*>(ctx->userdata);
+            }
+            assert(state->engine == engine::ENGINE_HANDLE_NULL);
+            state->engine = engine::CreateEngine();
+            if (state->engineData) {
                 return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData));
             }
-            state = reinterpret_cast<HotReloadState*>(ctx->userdata);
-            state->engine = engine::CreateEngine();
-            return static_cast<int>(engine::ColdStartEngine(state->engine));
+            return static_cast<int>(ColdStartApplication(*state));
+        case CR_STEP:
+            return static_cast<int>(engine::TickEngine(state->engine));
         case CR_UNLOAD:
             // preparing to a new reload
             XLOGW("HotReload::unload v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
             state->engineData = engine::DestroyEngine(state->engine);
+            state->engine = engine::ENGINE_HANDLE_NULL;
             return 0;
         case CR_CLOSE:
             // the plugin will close and not reload anymore
             XLOGW("HotReload::destroy v{}", ctx->version);
-            (void)engine::DestroyEngine(state->engine);
-            return 0;
+            return static_cast<int>(DestroyApplication(*state));
     }
+}
+
+auto main() -> int {
+    // emulate context of hot reloading library CR
+    cr_plugin crCtx {
+        .p = nullptr,
+        .userdata = &g_app,
+        .version = 0,
+        .failure = CR_NONE,
+        .next_version = 1,
+        .last_working_version = 0,
+    };
+
+    if (auto result = cr_main(&crCtx, CR_LOAD); result != 0) {
+        return result;
+    }
+    // if (auto result = ColdStartApplication(g_app); result != engine::EngineError::SUCCESS) {
+    //     return static_cast<int>(result);
+    // }
+    while(true){
+        // if (g_externalUpdate) [[likely]] {
+        //     g_externalUpdate( windowCtx);
+        // }
+        if (auto result = cr_main(&crCtx, CR_STEP); result != 0) {
+            return result;
+        }
+        // auto tickResult = engine::TickEngine(g_app.engine);
+        // if (tickResult != engine::EngineError::SUCCESS) {
+        //     break;
+        // }
+    }
+    if (auto result = cr_main(&crCtx, CR_UNLOAD); result != 0) {
+        return result;
+    }
+    // if (DestroyApplication(g_app) == false) {
+    //     return 2;
+    // }
+
+    return 0;
 }
