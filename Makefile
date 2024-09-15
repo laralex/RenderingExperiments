@@ -1,3 +1,10 @@
+DEBUG?=1
+USE_HOT_RELOADING?=1
+USE_DEP_FILES?=1
+USE_PCH?=1
+DYNAMIC_LINKING?=1
+# COMPILER_DUMP?=1
+
 .PHONY: all
 all: build_engine
 all: build_app
@@ -13,16 +20,13 @@ init_repo:
 	git submodule update --init --remote
 	git submodule status
 
-DEBUG?=0
-USE_DEP_FILES?=1
-USE_PCH?=1
-DYNAMIC_LINKING?=1
-# COMPILER_DUMP?=1
-
 BUILD_DIR=build/$(if ${DEBUG},debug,release)
 INSTALL_DIR=${BUILD_DIR}/install
 MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-APP_EXE=${BUILD_DIR}/run_app
+APP_MAIN_EXE=${BUILD_DIR}/run_app
+APP_HOTRELOAD_EXE=${BUILD_DIR}/run_app_hotreload
+APP_EXE=$(if ${USE_HOT_RELOADING},${APP_HOTRELOAD_EXE},${APP_MAIN_EXE})
+APP_LIB=${BUILD_DIR}/app/libapp.so
 ENGINE_LIB=$(if ${DYNAMIC_LINKING},${BUILD_DIR}/engine/libengine.so,${BUILD_DIR}/engine/libengine.a)
 PRECOMPILED_HEADER=${BUILD_DIR}/engine/Precompiled.hpp.pch
 
@@ -38,6 +42,7 @@ CC=./ccache clang++-17
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
 COMPILE_FLAGS=-std=c++20 \
 	$(if ${DYNAMIC_LINKING},-fPIC,) \
+	$(if ${USE_HOT_RELOADING},-fPIC,) \
 	$(if $(USE_DEP_FILES),-MMD,) \
 	$(if $(COMPILER_DUMP),-save-stats,) \
 	$(if ${DEBUG},-g -DXDEBUG,) \
@@ -61,7 +66,7 @@ INCLUDE_DIR+=-I data
 LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
 
-src_app_ = Main.cpp
+src_app_ = App.cpp Main.cpp
 src_app = $(addprefix ${BUILD_DIR}/app/, ${src_app_})
 obj_app = ${src_app:.cpp=.o}
 
@@ -103,9 +108,9 @@ wtf:
 	$(info > SRC files: ${src_engine} ${src_app})
 
 .PHONY: run
-run: ${INSTALL_DIR}/run_app
+run: ${INSTALL_DIR}/app
 	@echo "====== RUN ======"
-	@${INSTALL_DIR}/run_app
+	@cd ${INSTALL_DIR} && LD_LIBRARY_PATH=. ./app
 
 .PHONY: prettify
 prettify:
@@ -117,7 +122,7 @@ rm_all:
 
 .PHONY: rm
 rm:
-	rm -r ${APP_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
+	rm -r ${APP_MAIN_EXE} ${APP_HOTRELOAD_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
 
 .PHONY: build_app
 build_app: ${ENGINE_LIB} ${BUILD_DIR}/app ${APP_EXE}
@@ -125,16 +130,25 @@ build_app: ${ENGINE_LIB} ${BUILD_DIR}/app ${APP_EXE}
 .PHONY: build_engine
 build_engine: ${BUILD_DIR}/engine/src/gl ${ENGINE_LIB}
 
-.PHONY: patch_d_files
-
-.PHONY: ${INSTALL_DIR}/run_app
-${INSTALL_DIR}/run_app: ${INSTALL_DIR} ${APP_EXE}
+.PHONY: ${INSTALL_DIR}/app
+${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(vert\|frag\|comp\|inc\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	find data -regex '.*\.\(jpg\|jpeg\|png\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
+	cp ${ENGINE_LIB} ${INSTALL_DIR}
+	cp ${APP_LIB} ${INSTALL_DIR}
 	cp ${APP_EXE} $@
 
-${APP_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${ENGINE_LIB}
-	$(info > Linking $@)
+# linking app
+${APP_MAIN_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${ENGINE_LIB}
+	$(info > Linking executable $@)
+	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
+
+${APP_LIB}: ${obj_app} ${THIRD_PARTY_DEPS} ${ENGINE_LIB}
+	$(info > Linking dynamic $@)
+	${CC} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
+
+${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${THIRD_PARTY_DEPS} ${ENGINE_LIB} ${APP_LIB}
+	$(info > Linking executable $@)
 	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 # linking engine library
@@ -144,12 +158,12 @@ ${BUILD_DIR}/engine/libengine.a: ${obj_engine}
 
 ${BUILD_DIR}/engine/libengine.so: ${obj_engine}
 	$(info > Linking dynamic $@)
-	${CC} -shared $^ -o $@
+	${CC} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
 
 # compiling main executable sources
 ${BUILD_DIR}/app/%.o: src/app/%.cpp
 	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c $< -o $@
+	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
 
 # compiling engine sources
 ${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},) ${THIRD_PARTY_DEPS}
@@ -162,9 +176,9 @@ ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
 
 # compiling third party
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
-	cmake -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
+	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
 
-${BUILD_DIR}/third_party/glfw/libglfw3.a:
+${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
 	cmake -S third_party/glfw -B ${BUILD_DIR}/third_party/glfw && cmake --build $(dir $@)
 
 ${BUILD_DIR}/third_party/glad/gl.o:
