@@ -1,8 +1,8 @@
 DEBUG?=1
-USE_HOT_RELOADING?=1
+# USE_HOT_RELOADING?=1 # doesn't work
 USE_DEP_FILES?=1
 USE_PCH?=1
-DYNAMIC_LINKING?=1
+# DYNAMIC_LINKING?=1
 # COMPILER_DUMP?=1
 
 .PHONY: all
@@ -135,7 +135,7 @@ ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	find data -regex '.*\.\(vert\|frag\|comp\|inc\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	find data -regex '.*\.\(jpg\|jpeg\|png\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
 	cp ${ENGINE_LIB} ${INSTALL_DIR}
-	cp ${APP_LIB} ${INSTALL_DIR}
+	(cp ${APP_LIB} ${INSTALL_DIR} | true)
 	cp ${APP_EXE} $@
 
 # linking app

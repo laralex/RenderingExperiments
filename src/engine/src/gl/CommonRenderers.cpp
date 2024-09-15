@@ -12,6 +12,7 @@ namespace {
 constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION  = 0;
 constexpr GLint BLIT_UNIFORM_UV_SCALE_LOCATION = 1;
 constexpr GLint BLIT_TEXTURE_SLOT              = 0; // TODO: 1 and above slots don't work
+constexpr int32_t POINTS_FIRST_EXTERNAL = 64;
 
 auto AllocateBlitter() -> engine::gl::GpuProgram {
     using namespace engine;
@@ -145,26 +146,23 @@ void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const
 
 void CommonRenderers::RenderPoints(glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderPoints, CommonRenderers isn't initialized");
-    pointRenderer_.Render(glm::mat4{1.0f}, 0, pointsFirstExternalIdx_);
-    pointRenderer_.Render(camera, pointsFirstExternalIdx_, pointsLimit_);
+    pointRenderer_.Render(glm::mat4{1.0f}, 0, pointsLimitInternal_);
+    pointRenderer_.Render(camera, POINTS_FIRST_EXTERNAL, pointsLimitExternal_);
 }
 
 void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> const& points) {
     assert(IsInitialized() && "Bad call to FlushPointsToGpu, CommonRenderers isn't initialized");
-    auto pointsOffset = 0;
     {
-        pointsOffset += debugPoints_.DataSize();
         if (debugPoints_.IsDataDirty()) {
             pointRenderer_.Fill(debugPoints_.Data(), debugPoints_.DataSize(), 0);
             debugPoints_.Clear();
         }
+        pointsLimitInternal_ = debugPoints_.DataSize();
     }
-    pointsFirstExternalIdx_ = pointsOffset;
     {
-        pointRenderer_.Fill(points, std::size(points), pointsOffset);
-        pointsOffset += std::size(points);
+        pointRenderer_.Fill(points, std::size(points), POINTS_FIRST_EXTERNAL);
+        pointsLimitExternal_ = POINTS_FIRST_EXTERNAL + std::size(points);
     }
-    pointsLimit_ = pointsOffset;
 }
 
 void CommonRenderers::Blit2D(GLuint srcTexture, glm::vec2 uvScale) const {
@@ -192,19 +190,12 @@ auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuS
 
 void CommonRenderers::OnFrameEnd() {
     if (debugPoints_.IsDataDirty()) {
-        if (pointsFirstExternalIdx_ > 0) {
-            if (debugPoints_.DataSize() > pointsFirstExternalIdx_) {
-                XLOGW(
-                    "Too many internal points, some will be ignored (actual={}, limit={})", debugPoints_.DataSize(),
-                    pointsFirstExternalIdx_);
-            }
-            pointRenderer_.Fill(debugPoints_.Data(), pointsFirstExternalIdx_, 0);
-        } else {
-            pointsFirstExternalIdx_ = debugPoints_.DataSize();
-            pointRenderer_.Fill(debugPoints_.Data(), pointsFirstExternalIdx_, 0);
-            pointsLimit_ = pointsFirstExternalIdx_;
-            pointRenderer_.LimitInstances(pointsLimit_);
+        if (debugPoints_.DataSize() > POINTS_FIRST_EXTERNAL) {
+            XLOGW(
+                "Too many internal points, some will be ignored (actual={}, limit={})", debugPoints_.DataSize(),
+                POINTS_FIRST_EXTERNAL);
         }
+        pointRenderer_.Fill(debugPoints_.Data(), std::min(debugPoints_.DataSize(), POINTS_FIRST_EXTERNAL), 0);
         debugPoints_.Clear();
     }
     // if (debugLines_.IsDataDirty()) {

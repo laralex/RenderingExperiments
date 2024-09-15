@@ -74,7 +74,8 @@ private:
     constexpr static size_t MAX_POINTS = 10'000;
     PointRenderer pointRenderer_{};
     int32_t pointsFirstExternalIdx_{0};
-    int32_t pointsLimit_{0};
+    int32_t pointsLimitInternal_{0};
+    int32_t pointsLimitExternal_{0};
     PointRendererInput debugPoints_{MAX_POINTS};
 
     Vao datalessTriangleVao_{};
