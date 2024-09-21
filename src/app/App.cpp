@@ -1,4 +1,5 @@
 #include "app/App.hpp"
+#include "engine/platform/linux/FileChangeWatcher.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -18,11 +19,12 @@ constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
 static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, std::unique_ptr<Application>& app) {
     using namespace engine;
     glm::ivec2 maxScreenSize = windowCtx.WindowSize() * 4;
-    gl::InitializeOpenGl();
-    app->commonRenderers.Initialize();
+    app->gl.Initialize();
+    gl::InitializeDebug(app->gl);
+    app->commonRenderers.Initialize(app->gl);
     app->samplerNearestWrap = app->commonRenderers.CacheSampler(
         "repeat/nearest",
-        gl::GpuSampler::Allocate("Sampler/NearestRepeat")
+        gl::GpuSampler::Allocate(app->gl, "Sampler/NearestRepeat")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
             .WithWrap(GL_REPEAT));
@@ -36,13 +38,13 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
         {.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl::LinkProgramFromFiles(app->gl,
         "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", CpuView{defines, std::size(defines)},
         "Test program");
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
-    app->boxMesh = gl::AllocateBoxMesh(
+    app->boxMesh = gl::AllocateBoxMesh(app->gl,
         BoxMesh::Generate(VEC_ONES, true),
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
@@ -55,14 +57,14 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
             .numParallels       = 4,
             .clockwiseTriangles = false,
     });
-    app->sphereMesh = gl::AllocateUvSphereMesh(
+    app->sphereMesh = gl::AllocateUvSphereMesh(app->gl,
         sphere,
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
-    app->sphereMesh2 = gl::AllocateIcosphereMesh(
+    app->sphereMesh2 = gl::AllocateIcosphereMesh(app->gl,
         IcosphereMesh::Generate({
             .numSubdivisions    = 1,
             .duplicateSeam      = false,
@@ -76,7 +78,7 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
 
     glm::ivec2 planeSize{8, 15};
     auto planeMesh = PlaneMesh::Generate(planeSize, glm::vec2{0.5f, 0.5f});
-    app->planeMesh = gl::AllocatePlaneMesh(
+    app->planeMesh = gl::AllocatePlaneMesh(app->gl,
         planeMesh,
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
@@ -99,7 +101,7 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
     //     app.debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
     // }
 
-    auto maybeTexture = gl::LoadTexture(engine::gl::LoadTextureArgs{
+    auto maybeTexture = gl::LoadTexture(app->gl, engine::gl::LoadTextureArgs{
         .loader      = app->imageLoader,
         .filepath    = "data/engine/textures/utils/uv_checker_8x8_bright.png",
         .format      = GL_SRGB8,
@@ -108,7 +110,7 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
     assert(maybeTexture);
 
     app->texture          = std::move(*maybeTexture);
-    app->uboSamplerTiling = gl::GpuBuffer::Allocate(
+    app->uboSamplerTiling = gl::GpuBuffer::Allocate(app->gl,
         GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
         "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
@@ -117,23 +119,28 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
     app->uboSamplerTiling.Fill(CpuMemory<GLvoid const>{&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling)});
 
     // GL_RGB10_A2, GL_R11F_G11F_B10F, GL_RGBA16F, GL_RGBA8
-    app->outputColor = gl::Texture::Allocate2D(
+    app->outputColor = gl::Texture::Allocate2D(app->gl,
         GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output/Color");
-    app->outputDepth = gl::Texture::Allocate2D(
+    app->outputDepth = gl::Texture::Allocate2D(app->gl,
         GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output/Depth");
     // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test
     // renderbuffer");
-    app->outputFramebuffer = gl::Framebuffer::Allocate("Main Pass FBO");
+    app->outputFramebuffer = gl::Framebuffer::Allocate(app->gl, "Main Pass FBO");
     (void)gl::FramebufferEditCtx{app->outputFramebuffer}
-        .AttachTexture(GL_COLOR_ATTACHMENT0, app->outputColor)
-        .AttachTexture(GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth)
+        .AttachTexture(app->gl, GL_COLOR_ATTACHMENT0, app->outputColor)
+        .AttachTexture(app->gl, GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth)
         // .AttachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer)
         .CommitDrawbuffers();
 
-    app->flatRenderer = gl::FlatRenderer::Allocate();
+    app->flatRenderer = gl::FlatRenderer::Allocate(app->gl);
 
     app->cameraMovement.SetPosition({0.0f, 10.0f, 2.0f});
     app->cameraMovement.SetOrientation(VEC_FORWARD, VEC_UP);
+
+    // app->watchedShaderDir = *engine::platform::linux::WatchedDirectory::Allocate(
+    //     "data/engine/shaders", [](std::string_view file, bool isDirectory) {
+    //     XLOG("Changed file: {}", file);
+    // });
 }
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
@@ -219,7 +226,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         // model = glm::scale(model, glm::vec3(1.0f, 1.0f, 0.001f));
         model = glm::translate(model, glm::vec3(3.0f, 3.0f, 0.0f));
 
-        auto debugGroupGuard = gl::DebugGroupCtx("Main pass");
+        auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Main pass");
 
         glm::mat4 mvp = camera * model;
 
@@ -236,10 +243,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
-        gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->texture.Id());
+        app->gl.TextureUnits().Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
-        gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
-        gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
+        app->gl.TextureUnits().BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
+        app->gl.TextureUnits().BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
 
         gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
 
@@ -254,7 +261,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         //     gl::RenderVao(app->sphereMesh2.Vao());
         // }
 
-        gl::GlTextureUnits::BindSampler(TEXTURE_SLOT, 0);
+        app->gl.TextureUnits().BindSampler(TEXTURE_SLOT, 0);
     }
 
     {
@@ -318,7 +325,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     {
-        auto debugGroupGuard = gl::DebugGroupCtx("Debug pass");
+        auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Debug pass");
 
         glm::mat4 model{1.0};
         model = glm::rotate(model, rotationSpeed * 0.5f, VEC_UP);
@@ -366,7 +373,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         // GLenum invalidateAttachments[1] = {GL_COLOR_ATTACHMENT0};
         // .Invalidate(1, invalidateAttachments);
         glm::vec2 fractionOfMaxResolution = glm::vec2{renderSize} / glm::vec2{app->outputColor.Size()};
-        app->commonRenderers.Blit2D(app->outputColor.Id(), fractionOfMaxResolution);
+        app->commonRenderers.Blit2D(app->gl, app->outputColor.Id(), fractionOfMaxResolution);
     }
 
     {
@@ -375,7 +382,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
-        auto debugGroupGuard = gl::DebugGroupCtx("Debug lines/points pass");
+        auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Debug lines/points pass");
         if (app->debugLines.IsDataDirty()) {
             app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
             app->debugLines.Clear();
@@ -390,7 +397,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     }
 
     app->commonRenderers.OnFrameEnd();
-    gl::GlTextureUnits::RestoreState();
+    app->gl.TextureUnits().RestoreState();
+    if (ctx.frameIdx % 100 == 0) {
+        // app->fileWatcher.PollEvents(app->watchedShaderDir);
+    }
 }
 
 static auto ConfigureWindow(engine::EngineHandle engine) {

@@ -23,7 +23,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (size_t maxLines) -> LineRenderer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl, size_t maxLines) -> LineRenderer;
     void Fill(std::vector<LineRendererInput::Line> const& lines, size_t numLines, size_t numLinesOffset) const;
     void Render(glm::mat4 const& camera) const;
 

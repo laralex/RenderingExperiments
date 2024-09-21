@@ -13,7 +13,7 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
+auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION        = 0;
     constexpr GLint ATTRIB_UV_LOCATION              = 1;
     constexpr GLint ATTRIB_NORMAL_LOCATION          = 2;
@@ -27,22 +27,22 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
 
     PointRenderer renderer;
     size_t numPositionsBytes      = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
-    renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(
+    renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(gl,
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes},
         "PointRenderer/TemplatePositionsVBO");
     size_t numDataBytes            = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
-    renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(
+    renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(gl,
         GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexData.data(), numDataBytes},
         "PointRenderer/TemplateVBO");
-    renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(
+    renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(gl,
         GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxPoints * sizeof(T)},
         "PointRenderer/InstancesVBO");
-    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
+    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(gl,
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         CpuMemory<void const>{mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0])},
         "PointRenderer/TemplateEBO");
 
-    renderer.vao_ = gl::Vao::Allocate("PointRenderer/VAO");
+    renderer.vao_ = gl::Vao::Allocate(gl, "PointRenderer/VAO");
 
     GLenum indexType;
     if constexpr (sizeof(mesh.indices[0]) == 1) {
@@ -104,7 +104,7 @@ auto PointRenderer::Allocate(size_t maxPoints) -> PointRenderer {
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl::LinkProgramFromFiles(gl,
         "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag",
         CpuView{defines, std::size(defines)}, "PointRenderer");
     assert(maybeProgram);

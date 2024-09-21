@@ -20,7 +20,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] () -> BoxRenderer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl) -> BoxRenderer;
     void Render(glm::mat4 const& centerMvp, glm::vec4 color) const;
 
 private:

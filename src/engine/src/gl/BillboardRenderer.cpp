@@ -13,7 +13,7 @@ constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
 
 namespace engine::gl {
 
-auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
+auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragmentShader) -> BillboardRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
     constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
@@ -27,7 +27,7 @@ auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
          .type  = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl::LinkProgramFromFiles(gl,
         "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag", CpuView{defines, std::size(defines)},
         "BillboardRenderer - Quad");
     assert(maybeProgram);
@@ -36,7 +36,7 @@ auto BillboardRenderer::Allocate(GLuint fragmentShader) -> BillboardRenderer {
     // programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, 1.0f, 0.42f, 1.0f, 1.0f);
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
-    renderer.ubo_ = gl::GpuBuffer::Allocate(
+    renderer.ubo_ = gl::GpuBuffer::Allocate(gl,
         GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<const void>{nullptr, sizeof(BillboardRenderArgs::ShaderArgs)},
         "BillboardRenderer UBO");
     // TODO: customVaoProgram_

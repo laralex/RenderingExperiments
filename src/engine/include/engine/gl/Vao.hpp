@@ -31,7 +31,7 @@ public:
         GLuint instanceDivisor = 0U;
     };
 
-    static auto Allocate [[nodiscard]] (std::string_view name = {}) -> Vao;
+    static auto Allocate [[nodiscard]] (GlContext const& gl, std::string_view name = {}) -> Vao;
     auto Id [[nodiscard]] () const -> GLuint { return vaoId_; }
     auto IsInitialized [[nodiscard]] () const -> bool;
     auto IsIndexed [[nodiscard]] () const -> bool { return indexBufferDataType_ != GL_NONE; }

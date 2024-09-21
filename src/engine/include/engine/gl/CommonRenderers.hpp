@@ -27,7 +27,7 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
 
-    void Initialize();
+    void Initialize(GlContext& gl);
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
     void OnFrameEnd();
 
@@ -45,7 +45,7 @@ public:
     void FlushPointsToGpu(std::vector<PointRendererInput::Point> const&);
 
     void RenderFulscreenTriangle() const;
-    void Blit2D(GLuint srcTexture, glm::vec2 uvScale = glm::vec2{1.0f}) const;
+    void Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale = glm::vec2{1.0f}) const;
 
     auto VaoDatalessTriangle [[nodiscard]] () const -> Vao const& { return datalessTriangleVao_; }
     auto VaoDatalessQuad [[nodiscard]] () const -> Vao const& { return datalessQuadVao_; }

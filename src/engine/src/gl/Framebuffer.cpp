@@ -38,18 +38,19 @@ Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::e
 
 void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }
-    LogDebugLabel(*this, "Framebuffer object was disposed");
+    // LogDebugLabel(*this, "Framebuffer object was disposed");
+    XLOG("Framebuffer object was disposed", 0);
     GLCALL(glDeleteFramebuffers(1, &fbId_));
     fbId_.UnsafeReset();
 }
 
-auto Framebuffer::Allocate(std::string_view name) -> Framebuffer {
+auto Framebuffer::Allocate(GlContext const& gl, std::string_view name) -> Framebuffer {
     Framebuffer fb{};
     GLCALL(glGenFramebuffers(1, &fb.fbId_));
     fb.BindRead();
     if (!name.empty()) {
-        DebugLabel(fb, name);
-        LogDebugLabel(fb, "Framebuffer was allocated");
+        DebugLabel(gl, fb, name);
+        LogDebugLabel(gl, fb, "Framebuffer was allocated");
     }
     // assert(fb.IsComplete());
     return fb;
@@ -104,19 +105,18 @@ auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -
 // }
 
 // valid attachments: COLOR_ATTACHMENTi, DEPTH_ATTACHMENT, or STENCIL_ATTACHMENT
-auto FramebufferDrawCtx::Invalidate(CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const& {
-    assert(GlExtensions::IsInitialized());
-    if (GlExtensions::Supports(GlExtensions::ARB_invalidate_subdata)) {
+auto FramebufferDrawCtx::Invalidate(GlContext const& gl, CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const& {
+    if (gl.Extensions().Supports(GlExtensions::ARB_invalidate_subdata)) {
         GLCALL(glInvalidateFramebuffer(framebufferTarget_, attachments.NumElements(), attachments[0]));
     }
     return *this;
 }
 
-auto FramebufferDrawCtx::IsComplete() const -> bool {
+auto FramebufferDrawCtx::IsComplete(GlContext const& gl) const -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(framebufferTarget_) == GL_FRAMEBUFFER_COMPLETE);
     if (!isComplete) {
-        LogDebugLabelUnsafe(contextFramebuffer_, GlObjectType::FRAMEBUFFER, "Framebuffer is not complete");
+        LogDebugLabelUnsafe(gl, contextFramebuffer_, GlObjectType::FRAMEBUFFER, "Framebuffer is not complete");
     }
     return isComplete;
 }
@@ -125,7 +125,7 @@ FramebufferEditCtx::FramebufferEditCtx(Framebuffer& useFramebuffer, bool bindAsD
     : ctx_{useFramebuffer, bindAsDraw}
     , fb_{useFramebuffer} { }
 
-auto FramebufferEditCtx::AttachTexture(GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
+auto FramebufferEditCtx::AttachTexture(GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     assert(
         attachment >= GL_COLOR_ATTACHMENT0 && attachment <= GL_COLOR_ATTACHMENT31 || attachment == GL_DEPTH_ATTACHMENT
@@ -154,14 +154,14 @@ auto FramebufferEditCtx::AttachTexture(GLenum attachment, Texture const& tex, GL
         // can be nullptr for backbuffer
         int32_t const drawBuffer     = attachment - GL_COLOR_ATTACHMENT0;
         fb_.drawBuffers_[drawBuffer] = attachment;
-        assert(IsComplete());
+        assert(IsComplete(gl));
     } else {
         assert(false && "Failed to set framebuffer attachment");
     }
     return *this;
 }
 
-auto FramebufferEditCtx::AttachRenderbuffer(GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
+auto FramebufferEditCtx::AttachRenderbuffer(GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     GLCALL(glFramebufferRenderbuffer(ctx_.BoundTarget(), attachment, rb.RenderbufferSlotTarget(), rb.Id()));
     int32_t const drawBuffer     = attachment - GL_COLOR_ATTACHMENT0;

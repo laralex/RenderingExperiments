@@ -51,7 +51,7 @@ constexpr GLint UBO_BINDING = 5; // global for GL
 
 namespace engine::gl {
 
-auto FlatRenderer::Allocate() -> FlatRenderer {
+auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     FlatRenderer renderer;
 
     gl::shader::Define const defines[] = {
@@ -63,13 +63,13 @@ auto FlatRenderer::Allocate() -> FlatRenderer {
         {.name = "USE_PHONG", .value = false, .type = gl::shader::Define::BOOLEAN8},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl::LinkProgramFromFiles(gl,
         "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag", CpuView{defines, std::size(defines)},
         "Lambert diffuse", false);
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
-    renderer.ubo_ = gl::GpuBuffer::Allocate(
+    renderer.ubo_ = gl::GpuBuffer::Allocate(gl,
         GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 

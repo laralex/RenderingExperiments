@@ -11,15 +11,15 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
+auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) -> LineRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
 
     LineRenderer renderer;
-    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
+    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(gl,
         GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxLines * sizeof(LineRendererInput::Line)},
         "LineRenderer Vertices");
-    renderer.vao_ = gl::Vao::Allocate("LineRenderer VAO");
+    renderer.vao_ = gl::Vao::Allocate(gl, "LineRenderer VAO");
     (void)gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
@@ -43,7 +43,7 @@ auto LineRenderer::Allocate(size_t maxLines) -> LineRenderer {
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl::LinkProgramFromFiles(gl,
         "data/engine/shaders/lines.vert", "data/engine/shaders/color_palette.frag",
         CpuView{defines, std::size(defines)}, "LineRenderer");
     assert(maybeProgram);

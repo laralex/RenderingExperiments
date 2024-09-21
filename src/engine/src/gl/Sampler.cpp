@@ -6,26 +6,27 @@ namespace engine::gl {
 
 void GpuSampler::Dispose() {
     if (samplerId_ == GL_NONE) { return; }
-    LogDebugLabel(*this, "Sampler object was disposed");
+    // LogDebugLabel(*this, "Sampler object was disposed");
+    XLOG("Sampler object was disposed", 0);
     GLCALL(glDeleteSamplers(1, &samplerId_));
     samplerId_.UnsafeReset();
 }
 
-auto GpuSampler::Allocate(std::string_view name) -> GpuSampler {
+auto GpuSampler::Allocate(GlContext& gl, std::string_view name) -> GpuSampler {
     GpuSampler sampler{};
     GLCALL(glGenSamplers(1, &sampler.samplerId_));
     if (!name.empty()) {
         // assert(GlCapabilities::IsInitialized());
-        assert(GlTextureUnits::IsInitialized());
-        GlTextureUnits::BeginStateSnapshot();
-        GlTextureUnits::BindSampler(/*slot*/ 0U, sampler.samplerId_);
-        GlTextureUnits::EndStateSnapshot();
-        GlTextureUnits::RestoreState();
+        auto& textureUnits = gl.TextureUnits();
+        textureUnits.BeginStateSnapshot();
+        textureUnits.BindSampler(/*slot*/ 0U, sampler.samplerId_);
+        textureUnits.EndStateSnapshot();
+        textureUnits.RestoreState();
         // NOTE: crutch, sampler state is not created in the driver untill first bind
         // so we have to change some current sampler binding, it's NOT restored back
         // GLCALL(glBindSampler(GlCapabilities::maxTextureUnits - 1, sampler.samplerId_));
-        DebugLabel(sampler, name);
-        LogDebugLabel(sampler, "Sampler was allocated");
+        DebugLabel(gl, sampler, name);
+        LogDebugLabel(gl, sampler, "Sampler was allocated");
     }
 
     return sampler;
@@ -106,9 +107,8 @@ auto GpuSampler::WithWrap(GLenum wrapXYZ) && -> GpuSampler&& {
     return std::move(*this).WithWrap(wrapXYZ, wrapXYZ, wrapXYZ);
 }
 
-auto GpuSampler::WithAnisotropicFilter(GLfloat maxAnisotropy) && -> GpuSampler&& {
-    assert(GlExtensions::IsInitialized());
-    if (GlExtensions::Supports(GlExtensions::EXT_texture_filter_anisotropic)) {
+auto GpuSampler::WithAnisotropicFilter(GlContext const& gl, GLfloat maxAnisotropy) && -> GpuSampler&& {
+    if (gl.Extensions().Supports(GlExtensions::EXT_texture_filter_anisotropic)) {
         GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy));
     }
     return std::move(*this);

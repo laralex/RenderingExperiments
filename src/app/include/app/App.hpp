@@ -10,10 +10,10 @@
 #include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
+#include "engine/gl/Context.hpp"
 #include "engine/gl/FlatRenderer.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Guard.hpp"
-#include "engine/gl/Init.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Renderbuffer.hpp"
@@ -24,6 +24,7 @@
 #include "engine/gl/TextureUnits.hpp"
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
+#include "engine/platform/linux/FileChangeWatcher.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,8 +33,6 @@
 #pragma clang diagnostic ignored "-Weverything"
 #include <cr.h>
 #pragma clang diagnostic pop
-
-#include <memory>
 
 namespace app {
 
@@ -53,7 +52,6 @@ enum class AppDebugMode {
 struct Application final {
     ~Application() {
         XLOG("Disposing application", 0);
-        engine::gl::DisposeOpenGl();
     }
     engine::FirstPersonLocomotion cameraMovement{};
     engine::FirstPersonLocomotion debugCameraMovement{};
@@ -63,6 +61,7 @@ struct Application final {
     float keyboardAltPressed{0.0f};
     bool controlDebugCamera{false};
     bool controlDebugCameraSwitched{false};
+    engine::gl::GlContext gl{};
     engine::gl::GpuMesh boxMesh{};
     engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuMesh sphereMesh2{};
@@ -84,6 +83,9 @@ struct Application final {
     engine::PointRendererInput debugPoints{};
     engine::ImageLoader imageLoader{};
     AppDebugMode debugMode{AppDebugMode::NONE};
+
+    engine::platform::linux::FileChangeWatcher fileWatcher{};
+    engine::platform::linux::WatchedDirectory watchedShaderDir{};
 
     bool isInitialized = false;
 };

@@ -22,7 +22,7 @@ public:
 #undef Self
 
     static void BindBackbuffer();
-    static auto Allocate [[nodiscard]] (std::string_view name = {}) -> Framebuffer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl, std::string_view name = {}) -> Framebuffer;
 
     auto Id [[nodiscard]] () const -> GLuint { return fbId_; }
     void BindDraw() const;
@@ -60,9 +60,9 @@ public:
     auto ClearDepth(GLfloat value) const -> FramebufferDrawCtx const&;
     auto ClearStencil(GLint value) const -> FramebufferDrawCtx const&;
     auto ClearDepthStencil(GLfloat depth, GLint stencil) const -> FramebufferDrawCtx const&;
-    auto Invalidate(CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const&;
+    auto Invalidate(GlContext const& gl, CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const&;
 
-    auto IsComplete [[nodiscard]] () const -> bool;
+    auto IsComplete [[nodiscard]] (GlContext const& gl) const -> bool;
 
     auto BoundTarget() const -> GLenum { return framebufferTarget_; }
     static auto IsContextExisting() -> bool { return hasInstances_; }
@@ -85,16 +85,16 @@ public:
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = delete;
 #undef Self
-    auto AttachTexture(GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
+    auto AttachTexture(GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;
-    auto AttachRenderbuffer(GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1) const
+    auto AttachRenderbuffer(GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;
     auto CommitDrawbuffers() const -> FramebufferEditCtx const&;
     auto SetReadbuffer(GLenum attachment) const -> FramebufferEditCtx const&;
     // auto SetDrawBuffers(CpuView<GLenum> attachments) const -> FramebufferEditCtx const&;
     // auto SetDrawBuffers(CpuView<GLenum> attachments) const -> FramebufferEditCtx const&;
 
-    auto IsComplete [[nodiscard]] () const -> bool { return ctx_.IsComplete(); };
+    auto IsComplete [[nodiscard]] (GlContext const& gl) const -> bool { return ctx_.IsComplete(gl); };
 
 private:
     Framebuffer& fb_;

@@ -20,7 +20,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] () -> FrustumRenderer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl) -> FrustumRenderer;
     void Render(
         glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0),
         float thickness = 0.015f) const;

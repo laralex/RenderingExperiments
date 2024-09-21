@@ -14,7 +14,7 @@ constexpr GLint BLIT_UNIFORM_UV_SCALE_LOCATION = 1;
 constexpr GLint BLIT_TEXTURE_SLOT              = 0; // TODO: 1 and above slots don't work
 constexpr int32_t POINTS_FIRST_EXTERNAL = 64;
 
-auto AllocateBlitter() -> engine::gl::GpuProgram {
+auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgram {
     using namespace engine;
 
     gl::shader::Define const defines[] = {
@@ -22,7 +22,7 @@ auto AllocateBlitter() -> engine::gl::GpuProgram {
         {.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl::LinkProgramFromFiles(gl,
         "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag",
         CpuView{defines, std::size(defines)}, "Blit");
     assert(maybeProgram);
@@ -39,46 +39,46 @@ auto AllocateBlitter() -> engine::gl::GpuProgram {
 
 namespace engine::gl {
 
-void CommonRenderers::Initialize() {
+void CommonRenderers::Initialize(GlContext& gl) {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize", 0);
-    axesRenderer_      = AxesRenderer::Allocate();
-    boxRenderer_       = BoxRenderer::Allocate();
-    frustumRenderer_   = FrustumRenderer::Allocate();
-    billboardRenderer_ = BillboardRenderer::Allocate();
+    axesRenderer_      = AxesRenderer::Allocate(gl);
+    boxRenderer_       = BoxRenderer::Allocate(gl);
+    frustumRenderer_   = FrustumRenderer::Allocate(gl);
+    billboardRenderer_ = BillboardRenderer::Allocate(gl);
 
-    lineRenderer_  = LineRenderer::Allocate(MAX_LINES);
-    pointRenderer_ = PointRenderer::Allocate(MAX_POINTS);
+    lineRenderer_  = LineRenderer::Allocate(gl, MAX_LINES);
+    pointRenderer_ = PointRenderer::Allocate(gl, MAX_POINTS);
 
-    datalessTriangleVao_ = Vao::Allocate("Dataless Triangle VAO");
+    datalessTriangleVao_ = Vao::Allocate(gl, "Dataless Triangle VAO");
     (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
 
-    datalessQuadVao_ = Vao::Allocate("Dataless Quad VAO");
+    datalessQuadVao_ = Vao::Allocate(gl, "Dataless Quad VAO");
     (void)VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
 
     isInitialized_ = true;
-    blitProgram_   = AllocateBlitter();
+    blitProgram_   = AllocateBlitter(gl);
 
     samplerNearest_ = samplersCache_.Store(
         "clamp/nearest",
-        gl::GpuSampler::Allocate("Sampler/Nearset")
+        gl::GpuSampler::Allocate(gl, "Sampler/Nearset")
             .WithLinearMagnify(false)
             .WithLinearMinify(false)
             .WithWrap(GL_CLAMP_TO_EDGE));
     samplerLinear_ = samplersCache_.Store(
         "clamp/linear",
-        gl::GpuSampler::Allocate("Sampler/Linear")
+        gl::GpuSampler::Allocate(gl, "Sampler/Linear")
             .WithLinearMagnify(true)
             .WithLinearMinify(true)
             .WithWrap(GL_CLAMP_TO_EDGE));
     samplerLinearRepeat_ = samplersCache_.Store(
         "repeat/linear",
-        gl::GpuSampler::Allocate("Sampler/LinearRepeat")
+        gl::GpuSampler::Allocate(gl, "Sampler/LinearRepeat")
             .WithLinearMagnify(true)
             .WithLinearMinify(true)
             .WithWrap(GL_REPEAT));
 
-    stubColorTexture_ = gl::Texture::Allocate2D(GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
+    stubColorTexture_ = gl::Texture::Allocate2D(gl, GL_TEXTURE_2D, glm::ivec3(1, 1, 0), GL_RGB8, "Stub color");
     constexpr uint8_t TEXTURE_DATA_STUB_COLOR[] = {
         255,
         42,
@@ -165,11 +165,11 @@ void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> co
     }
 }
 
-void CommonRenderers::Blit2D(GLuint srcTexture, glm::vec2 uvScale) const {
+void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {
     assert(IsInitialized() && "Bad call to Blit2D, CommonRenderers isn't initialized");
     auto programGuard = gl::UniformCtx(blitProgram_);
     programGuard.SetUniformValue2(BLIT_UNIFORM_UV_SCALE_LOCATION, uvScale.x, uvScale.y);
-    gl::GlTextureUnits::Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
+    gl.TextureUnits().Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
     // auto depthGuard = gl::GlGuardDepth(false);
 
     GLCALL(glEnable(GL_CULL_FACE));

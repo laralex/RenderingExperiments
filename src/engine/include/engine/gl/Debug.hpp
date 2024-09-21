@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/gl/Context.hpp"
 #include <glad/gl.h>
 #include <string_view>
 
@@ -28,7 +29,7 @@ template <typename T> struct CpuMemory;
 } // namespace engine
 
 namespace engine::gl {
-void InitializeDebug();
+void InitializeDebug(GlContext const& gl);
 
 // NOTE: can't use std::string_view (fails to work with GLCALL macro)
 void CheckOpenGlError(char const* stmt, char const* fname, int line, bool fatal);
@@ -37,17 +38,23 @@ void CheckOpenGlError(char const* stmt, char const* fname, int line, bool fatal)
 class DebugGroupCtx final {
 public:
 #define Self DebugGroupCtx
-    explicit Self(std::string_view label, GLuint userData = 0U);
+    explicit Self(GlContext const& gl, std::string_view label, GLuint userData = 0U);
     ~Self() noexcept;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = default;
 #undef Self
+
+private:
+    bool useCoreCommand_{false};
+    bool useExtensionCommand_{false};
 };
 
-void PushDebugGroup(std::string_view label, GLuint userData = 0U);
-void PopDebugGroup();
+void PushDebugGroup(GlContext const& gl, std::string_view label, GLuint userData = 0U);
+void PushDebugGroup(bool coreCmd, bool extensionCmd, std::string_view label, GLuint userData = 0U);
+void PopDebugGroup(GlContext const& gl);
+void PopDebugGroup(bool coreCmd, bool extensionCmd);
 
 enum class GlObjectType {
     BUFFER = 0,
@@ -60,47 +67,47 @@ enum class GlObjectType {
     NUM_OBJECT_TYPES,
 };
 
-void DebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view label);
-void LogDebugLabelUnsafe(GLuint object, GlObjectType objectType, std::string_view message);
-auto GetDebugLabelUnsafe [[nodiscard]] (GLuint object, GlObjectType objectType, CpuMemory<char> outBuffer) -> size_t;
+void DebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view label);
+void LogDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view message);
+auto GetDebugLabelUnsafe [[nodiscard]] (GlContext const& gl, GLuint object, GlObjectType objectType, CpuMemory<char> outBuffer) -> size_t;
 
 class GpuBuffer;
-void DebugLabel(GpuBuffer const& buffer, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (GpuBuffer const& buffer, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(GpuBuffer const& buffer, std::string_view message);
+void DebugLabel(GlContext const& gl, GpuBuffer const& buffer, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, GpuBuffer const& buffer, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, GpuBuffer const& buffer, std::string_view message);
 
 class Vao;
-void DebugLabel(Vao const& vertexArrayObject, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (Vao const& vertexArrayObject, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(Vao const& vao, std::string_view message);
+void DebugLabel(GlContext const& gl, Vao const& vertexArrayObject, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Vao const& vertexArrayObject, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, Vao const& vao, std::string_view message);
 
 class GpuProgram;
-void DebugLabel(GpuProgram const& program, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (GpuProgram const& program, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(GpuProgram const& program, std::string_view message);
+void DebugLabel(GlContext const& gl, GpuProgram const& program, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, GpuProgram const& program, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, GpuProgram const& program, std::string_view message);
 
 class Texture;
-void DebugLabel(Texture const& texture, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (Texture const& texture, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(Texture const& texture, std::string_view message);
+void DebugLabel(GlContext const& gl, Texture const& texture, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Texture const& texture, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, Texture const& texture, std::string_view message);
 
 class Renderbuffer;
-void DebugLabel(Renderbuffer const& renderbuffer, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (Renderbuffer const& renderbuffer, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(Renderbuffer const& renderbuffer, std::string_view message);
+void DebugLabel(GlContext const& gl, Renderbuffer const& renderbuffer, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Renderbuffer const& renderbuffer, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, Renderbuffer const& renderbuffer, std::string_view message);
 
 class GpuSampler;
-void DebugLabel(GpuSampler const& sampler, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (GpuSampler const& sampler, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(GpuSampler const& sampler, std::string_view message);
+void DebugLabel(GlContext const& gl, GpuSampler const& sampler, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, GpuSampler const& sampler, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, GpuSampler const& sampler, std::string_view message);
 
 class Framebuffer;
-void DebugLabel(Framebuffer const& fb, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (Framebuffer const& fb, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(Framebuffer const& fb, std::string_view message);
+void DebugLabel(GlContext const& gl, Framebuffer const& fb, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Framebuffer const& fb, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, Framebuffer const& fb, std::string_view message);
 
-void DebugLabel(void const* glSyncObject, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (void* glSyncObject, CpuMemory<char> outBuffer) -> size_t;
-void LogDebugLabel(void const* glSyncObject, std::string_view message);
+void DebugLabel(GlContext const& gl, void const* glSyncObject, std::string_view label);
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, void* glSyncObject, CpuMemory<char> outBuffer) -> size_t;
+void LogDebugLabel(GlContext const& gl, void const* glSyncObject, std::string_view message);
 
 } // namespace engine::gl

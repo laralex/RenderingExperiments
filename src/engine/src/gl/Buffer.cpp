@@ -5,12 +5,13 @@ namespace engine::gl {
 
 void GpuBuffer::Dispose() {
     if (bufferId_ == GL_NONE) { return; }
-    LogDebugLabel(*this, "GpuBuffer was disposed");
+    // LogDebugLabel(*this, "GpuBuffer was disposed");
+    XLOG("GpuBuffer was disposed", 0);
     glDeleteBuffers(1, &bufferId_);
     bufferId_.UnsafeReset();
 }
 
-auto GpuBuffer::Allocate(GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name)
+auto GpuBuffer::Allocate(GlContext const& gl, GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name)
     -> GpuBuffer {
     {
         GLenum t = targetType;
@@ -32,8 +33,8 @@ auto GpuBuffer::Allocate(GLenum targetType, GLenum usage, CpuMemory<GLvoid const
     gpuBuffer.sizeBytes_  = data.NumElements();
 
     if (!name.empty()) {
-        DebugLabel(gpuBuffer, name);
-        LogDebugLabel(gpuBuffer, "GpuBuffer was allocated");
+        DebugLabel(gl, gpuBuffer, name);
+        LogDebugLabel(gl, gpuBuffer, "GpuBuffer was allocated");
     }
     return gpuBuffer;
 }

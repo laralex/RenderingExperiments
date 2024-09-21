@@ -23,21 +23,21 @@ template <typename IndexT> struct AllocateMeshInfo {
     GLsizei vertexDataNormalOffset;
 };
 
-template <typename IndexT> auto AllocateMesh [[nodiscard]] (AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
+template <typename IndexT> auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
     size_t numVertices = std::size(info.vertexPositions);
-    auto positions     = GpuBuffer::Allocate(
+    auto positions     = GpuBuffer::Allocate(gl,
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.vertexPositions.data(), numVertices * sizeof(info.vertexPositions[0])},
         info.vertexPositionsLabel);
-    auto attributes = GpuBuffer::Allocate(
+    auto attributes = GpuBuffer::Allocate(gl,
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.vertexData, numVertices * info.vertexDataStride}, info.vertexDataLabel);
-    auto indexBuffer = GpuBuffer::Allocate(
+    auto indexBuffer = GpuBuffer::Allocate(gl,
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.indices.data(), std::size(info.indices) * sizeof(info.indices[0])},
         info.indicesLabel);
 
-    auto vao = Vao::Allocate(info.vaoLabel);
+    auto vao = Vao::Allocate(gl, info.vaoLabel);
 
     GLenum indexType;
     if constexpr (sizeof(IndexT) == 1) {
@@ -86,8 +86,8 @@ template <typename IndexT> auto AllocateMesh [[nodiscard]] (AllocateMeshInfo<Ind
 
 namespace engine::gl {
 
-auto AllocateBoxMesh(BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(AllocateMeshInfo<uint8_t>{
+auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+    return AllocateMesh(gl, AllocateMeshInfo<uint8_t>{
         .layout                 = layout,
         .vertexPositions        = cpuMesh.vertexPositions,
         .vertexPositionsLabel   = "Box positions VBO",
@@ -103,8 +103,8 @@ auto AllocateBoxMesh(BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -
     });
 }
 
-auto AllocateIcosphereMesh(IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(AllocateMeshInfo<uint16_t>{
+auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+    return AllocateMesh(gl, AllocateMeshInfo<uint16_t>{
         .layout                 = layout,
         .vertexPositions        = cpuMesh.vertexPositions,
         .vertexPositionsLabel   = "Icosphere positions VBO",
@@ -120,8 +120,8 @@ auto AllocateIcosphereMesh(IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayo
     });
 }
 
-auto AllocateUvSphereMesh(UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(AllocateMeshInfo<uint16_t>{
+auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+    return AllocateMesh(gl, AllocateMeshInfo<uint16_t>{
         .layout                 = layout,
         .vertexPositions        = cpuMesh.vertexPositions,
         .vertexPositionsLabel   = "UvSphere positions VBO",
@@ -137,8 +137,8 @@ auto AllocateUvSphereMesh(UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout
     });
 }
 
-auto AllocatePlaneMesh(PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(AllocateMeshInfo<uint16_t>{
+auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+    return AllocateMesh(gl, AllocateMeshInfo<uint16_t>{
         .layout                 = layout,
         .vertexPositions        = cpuMesh.vertexPositions,
         .vertexPositionsLabel   = "Plane positions VBO",

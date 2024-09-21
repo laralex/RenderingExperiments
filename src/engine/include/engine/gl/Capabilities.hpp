@@ -8,29 +8,34 @@ class GlCapabilities final {
 
 public:
 #define Self GlCapabilities
-    explicit Self() noexcept     = delete;
-    ~Self() noexcept             = delete;
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
-    Self(Self&&)                 = delete;
-    Self& operator=(Self&&)      = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
 #undef Self
 
-    static void Initialize();
-    static auto IsInitialized [[nodiscard]] () -> bool { return isInitialized; };
-    static GLint maxTextureUnits;
-    static GLint numExtensions;
-    static GLint majorVersion;
-    static GLint minorVersion;
-    static GLint maxUboBindings;
-    static GLint maxUboBlocksVertex;
-    static GLint maxUboBlocksFragment;
-    static GLint maxUboBlocksGeometry;
-    static GLint uboOffsetAlignment;
-    static GLint maxDrawBuffers;
+    void Initialize();
+    auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; };
+    auto Vendor[[nodiscard]]() const -> std::string_view { return vendor_; }
+    auto VendorDevice[[nodiscard]]() const -> std::string_view { return renderer_; }
+
+    GLint maxTextureUnits;
+    GLint numExtensions;
+    GLint majorVersion;
+    GLint minorVersion;
+    GLint maxUboBindings;
+    GLint maxUboBlocksVertex;
+    GLint maxUboBlocksFragment;
+    GLint maxUboBlocksGeometry;
+    GLint uboOffsetAlignment;
+    GLint maxDrawBuffers;
 
 private:
-    static bool isInitialized;
+    bool isInitialized_;
+    std::string vendor_{"DEVICE_VENDOR_N/A"};
+    std::string renderer_{"DEVICE_N/A"};
 };
 
 } // namespace engine::gl

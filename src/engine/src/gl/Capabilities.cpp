@@ -2,20 +2,17 @@
 
 namespace engine::gl {
 
-bool GlCapabilities::isInitialized         = false;
-GLint GlCapabilities::maxTextureUnits      = 0xDEAD;
-GLint GlCapabilities::numExtensions        = 0xDEAD;
-GLint GlCapabilities::majorVersion         = 0xDEAD;
-GLint GlCapabilities::minorVersion         = 0xDEAD;
-GLint GlCapabilities::maxUboBindings       = 0xDEAD;
-GLint GlCapabilities::maxUboBlocksVertex   = 0xDEAD;
-GLint GlCapabilities::maxUboBlocksFragment = 0xDEAD;
-GLint GlCapabilities::maxUboBlocksGeometry = 0xDEAD;
-GLint GlCapabilities::uboOffsetAlignment   = 0xDEAD;
-GLint GlCapabilities::maxDrawBuffers       = 0xDEAD;
-
 void GlCapabilities::Initialize() {
-    if (isInitialized) { return; }
+    if (isInitialized_) { return; }
+
+    GLubyte const* vendor;
+    GLCALL(vendor = glGetString(GL_VENDOR));
+    vendor_ = std::string_view{reinterpret_cast<char const*>(vendor)};
+    XLOG("GlCapabilities::Vendor = {}", vendor_);
+    GLubyte const* renderer;
+    GLCALL(renderer = glGetString(GL_RENDERER));
+    renderer_ = std::string_view{reinterpret_cast<char const*>(renderer)};
+    XLOG("GlCapabilities::VendorDevice = {}", renderer_);
 
     auto getCapability = [](GLenum cap, std::string_view capStr, GLint& destination) {
         GLCALL(glGetIntegerv(cap, &destination));
@@ -33,7 +30,7 @@ void GlCapabilities::Initialize() {
     getCapability(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, "GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT", uboOffsetAlignment);
     getCapability(GL_MAX_DRAW_BUFFERS, "GL_MAX_DRAW_BUFFERS", maxDrawBuffers);
 
-    isInitialized = true;
+    isInitialized_ = true;
 }
 
 } // namespace engine::gl

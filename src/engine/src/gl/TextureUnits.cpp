@@ -1,6 +1,7 @@
 #include "engine/gl/TextureUnits.hpp"
 #include "engine/gl/Capabilities.hpp"
 
+#include "engine/gl/Context.hpp"
 #include "engine_private/Prelude.hpp"
 #include <utility>
 
@@ -44,56 +45,44 @@ constexpr auto TextureTypeToOffset [[nodiscard]] (GLenum textureType) -> size_t 
 
 namespace engine::gl {
 
-bool GlTextureUnits::isInitialized       = false;
-bool GlTextureUnits::isRecordingSnapshot = false;
-std::vector<GLuint> GlTextureUnits::currentBindings{};
-std::vector<GLuint> GlTextureUnits::currentSamplerBindings{};
-std::stack<GlTextureUnits::TextureUnitSnapshot> GlTextureUnits::stateSnapshot{};
+void GlTextureUnits::Initialize(GlContext const& gl) {
+    if (isInitialized_) { return; }
+    isRecordingSnapshot_ = false;
 
-void GlTextureUnits::Initialize() {
-    if (isInitialized) { return; }
-    isRecordingSnapshot = false;
-
-    assert(GlCapabilities::IsInitialized());
-    currentBindings.resize(GlCapabilities::maxTextureUnits * NUM_TEXTURE_TYPES);
-    std::fill(currentBindings.begin(), currentBindings.end(), GL_NONE);
-    currentSamplerBindings.resize(GlCapabilities::maxTextureUnits);
-    std::fill(currentSamplerBindings.begin(), currentSamplerBindings.end(), GL_NONE);
+    currentBindings_.resize(gl.Capabilities().maxTextureUnits * NUM_TEXTURE_TYPES);
+    std::fill(currentBindings_.begin(), currentBindings_.end(), GL_NONE);
+    currentSamplerBindings_.resize(gl.Capabilities().maxTextureUnits);
+    std::fill(currentSamplerBindings_.begin(), currentSamplerBindings_.end(), GL_NONE);
 
     DiscardSnapshot();
 
-    isInitialized = true;
-}
-
-auto GlTextureUnits::MaxSlot() -> size_t {
-    assert(GlCapabilities::IsInitialized());
-    return GlCapabilities::maxTextureUnits;
+    isInitialized_ = true;
 }
 
 void GlTextureUnits::BindTexture(size_t slotIdx, GLenum textureType, GLuint texture) {
     size_t bindingOffset = slotIdx * NUM_TEXTURE_TYPES + TextureTypeToOffset(textureType);
-    if (isRecordingSnapshot) {
-        stateSnapshot.push(TextureUnitSnapshot{
+    if (isRecordingSnapshot_) {
+        stateSnapshot_.push(TextureUnitSnapshot{
             .slotIdx     = slotIdx,
             .textureType = textureType,
             .objectType  = SnapshotObjectType::TEXTURE,
-            .oldObject   = currentBindings[bindingOffset]});
+            .oldObject   = currentBindings_[bindingOffset]});
     }
     GLCALL(glActiveTexture(GL_TEXTURE0 + slotIdx));
     GLCALL(glBindTexture(textureType, texture));
-    currentBindings[bindingOffset] = texture;
+    currentBindings_[bindingOffset] = texture;
 }
 
 void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
-    if (isRecordingSnapshot) {
-        stateSnapshot.push(TextureUnitSnapshot{
+    if (isRecordingSnapshot_) {
+        stateSnapshot_.push(TextureUnitSnapshot{
             .slotIdx     = slotIdx,
             .textureType = GL_NONE,
             .objectType  = SnapshotObjectType::SAMPLER,
-            .oldObject   = currentSamplerBindings[slotIdx]});
+            .oldObject   = currentSamplerBindings_[slotIdx]});
     }
     GLCALL(glBindSampler(slotIdx, sampler));
-    currentSamplerBindings[slotIdx] = sampler;
+    currentSamplerBindings_[slotIdx] = sampler;
 }
 
 void GlTextureUnits::Bind2D(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D, texture); }
@@ -107,22 +96,22 @@ void GlTextureUnits::BindCubemapArray(size_t slotIdx, GLuint texture) {
 }
 
 void GlTextureUnits::BeginStateSnapshot() {
-    assert(!isRecordingSnapshot);
+    assert(!isRecordingSnapshot_);
     DiscardSnapshot();
-    isRecordingSnapshot = true;
+    isRecordingSnapshot_ = true;
 }
 
 void GlTextureUnits::EndStateSnapshot() {
-    assert(isRecordingSnapshot);
-    isRecordingSnapshot = false;
+    assert(isRecordingSnapshot_);
+    isRecordingSnapshot_ = false;
 }
 
 void GlTextureUnits::RestoreState() {
-    assert(!isRecordingSnapshot);
-    isRecordingSnapshot = false;
+    assert(!isRecordingSnapshot_);
+    isRecordingSnapshot_ = false;
 
-    while (!stateSnapshot.empty()) {
-        auto const& unitState = stateSnapshot.top();
+    while (!stateSnapshot_.empty()) {
+        auto const& unitState = stateSnapshot_.top();
         switch (unitState.objectType) {
         case GlTextureUnits::SnapshotObjectType::SAMPLER:
             // XLOG("GlTextureUnits::RestoreState slot={} sampler={}", unitState.slotIdx, unitState.oldObject);
@@ -133,13 +122,13 @@ void GlTextureUnits::RestoreState() {
             BindTexture(unitState.slotIdx, unitState.textureType, unitState.oldObject);
             break;
         }
-        stateSnapshot.pop();
+        stateSnapshot_.pop();
     }
 }
 
 void GlTextureUnits::DiscardSnapshot() {
-    while (!stateSnapshot.empty()) {
-        stateSnapshot.pop();
+    while (!stateSnapshot_.empty()) {
+        stateSnapshot_.pop();
     }
 }
 

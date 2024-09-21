@@ -7,8 +7,8 @@
 
 namespace engine::gl {
 
-auto LinkProgram(
-    std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name, bool logCode)
+auto LinkProgram(GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
+    std::string_view name, bool logCode)
     -> std::optional<GpuProgram> {
     if (logCode) {
         XLOG("Compiling program [{}] type=vertex\n{}", name, vertexShaderCode);
@@ -17,7 +17,7 @@ auto LinkProgram(
     GLuint vertexShader   = CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
 
-    auto maybeProgram = GpuProgram::Allocate(vertexShader, fragmentShader, name);
+    auto maybeProgram = GpuProgram::Allocate(gl, vertexShader, fragmentShader, name);
     assert(maybeProgram);
 
     GLCALL(glDeleteShader(vertexShader));
@@ -26,12 +26,11 @@ auto LinkProgram(
     return maybeProgram;
 }
 
-auto LinkProgramFromFiles(
-    std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<shader::Define const> defines,
-    std::string_view name, bool logCode) -> std::optional<GpuProgram> {
+auto LinkProgramFromFiles(GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
+    CpuView<shader::Define const> defines, std::string_view name, bool logCode) -> std::optional<GpuProgram> {
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
     std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);
-    return LinkProgram(vertexShaderCode, fragmentShaderCode, name, logCode);
+    return LinkProgram(gl, vertexShaderCode, fragmentShaderCode, name, logCode);
 }
 
 void RenderVao(Vao const& vao, GLenum primitive) {

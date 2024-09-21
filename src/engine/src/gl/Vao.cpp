@@ -25,19 +25,20 @@ VaoMutableCtx::VaoMutableCtx(Vao& useVao) noexcept
 
 void Vao::Dispose() {
     if (vaoId_ == GL_NONE) { return; }
-    LogDebugLabel(*this, "VAO object was disposed");
+    // LogDebugLabel(*this, "VAO object was disposed");
+    XLOG("VAO object was disposed", 0);
     GLCALL(glDeleteVertexArrays(1, &vaoId_));
     vaoId_.UnsafeReset();
 }
 
-auto Vao::Allocate(std::string_view name) -> Vao {
+auto Vao::Allocate(GlContext const& gl, std::string_view name) -> Vao {
     Vao vao{};
     GLCALL(glGenVertexArrays(1, &vao.vaoId_));
     GLCALL(glBindVertexArray(vao.vaoId_));
     GLCALL(glBindVertexArray(0U));
     if (!name.empty()) {
-        DebugLabel(vao, name);
-        LogDebugLabel(vao, "VAO was allocated");
+        DebugLabel(gl, vao, name);
+        LogDebugLabel(gl, vao, "VAO was allocated");
     }
     return vao;
 }

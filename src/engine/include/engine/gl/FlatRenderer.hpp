@@ -22,7 +22,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] () -> FlatRenderer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl) -> FlatRenderer;
     void Render(FlatRenderArgs const&) const;
 
 private:

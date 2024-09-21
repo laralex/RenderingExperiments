@@ -17,13 +17,13 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (std::string_view name = {}) -> GpuSampler;
+    static auto Allocate [[nodiscard]] (GlContext& gl, std::string_view name = {}) -> GpuSampler;
     auto WithDepthCompare [[nodiscard]] (bool enable, GLenum compareFunc = GL_LEQUAL) && -> GpuSampler&&;
     auto WithBorderColor [[nodiscard]] (glm::vec4 color) && -> GpuSampler&&;
     auto WithLinearMagnify [[nodiscard]] (bool filterLinear) && -> GpuSampler&&;
     auto WithLinearMinify [[nodiscard]] (bool filterLinear) && -> GpuSampler&&;
     auto WithLinearMinifyOverMips [[nodiscard]] (bool filterUsingMips, bool filterLinear) && -> GpuSampler&&;
-    auto WithAnisotropicFilter [[nodiscard]] (GLfloat maxAnisotropy) && -> GpuSampler&&;
+    auto WithAnisotropicFilter [[nodiscard]] (GlContext const& gl, GLfloat maxAnisotropy) && -> GpuSampler&&;
     auto WithMipConfig
         [[nodiscard]] (GLfloat minMip = -1000.0f, GLfloat maxMip = 1000.0f, GLfloat bias = 0.0f) && -> GpuSampler&&;
     auto WithWrap [[nodiscard]] (GLenum wrapX, GLenum wrapY, GLenum wrapZ) && -> GpuSampler&&;

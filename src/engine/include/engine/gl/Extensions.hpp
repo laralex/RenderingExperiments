@@ -19,12 +19,12 @@ class GlExtensions final {
 
 public:
 #define Self GlExtensions
-    explicit Self() noexcept     = delete;
-    ~Self() noexcept             = delete;
+    explicit Self() noexcept     = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
-    Self(Self&&)                 = delete;
-    Self& operator=(Self&&)      = delete;
+    Self(Self&&)                 = default;
+    Self& operator=(Self&&)      = default;
 #undef Self
 
     // A bunch of hardcoded extensions for faster runtime checking if they are supported
@@ -48,17 +48,26 @@ public:
         NUM_HARDCODED_EXTENSIONS
     };
 
-    static void Initialize();
-    static auto IsInitialized [[nodiscard]] () -> bool { return isInitialized; }
-    static auto NumExtensions [[nodiscard]] () -> int32_t;
+    void Initialize();
+    auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
+    auto NumExtensions [[nodiscard]] () const -> int32_t  {
+        assert(isInitialized_);
+        return allExtensions_.size();
+    }
     // NOTE: std::string_view doesn't work even with transparent hashing (StringHash)
-    static auto Supports [[nodiscard]] (char const* extensionName) -> bool;
-    static auto Supports [[nodiscard]] (GlExtensions::Name extensionName) -> bool;
+    auto Supports [[nodiscard]] (char const* extensionName) const -> bool {
+        assert(isInitialized_);
+        return allExtensions_.find(extensionName) != allExtensions_.end();
+    }
+    auto Supports [[nodiscard]] (GlExtensions::Name extensionName) const -> bool {
+        assert(isInitialized_);
+        return hardcodedExtensions_[extensionName];
+    }
 
 private:
-    static bool isInitialized;
-    static std::unordered_set<std::string, engine::StringHash, std::equal_to<>> allExtensions;
-    static bool hardcodedExtensions[NUM_HARDCODED_EXTENSIONS];
+    bool isInitialized_{false};
+    std::unordered_set<std::string_view> allExtensions_{};
+    bool hardcodedExtensions_[NUM_HARDCODED_EXTENSIONS]{};
 };
 
 } // namespace engine::gl

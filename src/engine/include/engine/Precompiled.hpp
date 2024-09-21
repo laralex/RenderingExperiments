@@ -13,6 +13,7 @@
 #include "engine/gl/Common.hpp"
 #include "engine/gl/Debug.hpp"
 #include "engine/gl/Extensions.hpp"
+#include "engine/gl/Context.hpp"
 
 #ifdef XDEBUG
 

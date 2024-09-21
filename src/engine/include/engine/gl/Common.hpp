@@ -1,5 +1,7 @@
 #pragma once
 
+#include "engine/gl/Context.hpp"
+
 #include <cassert>
 #include <glad/gl.h>
 #include <glm/mat4x4.hpp>
@@ -17,10 +19,10 @@ namespace engine::gl {
 struct GpuProgram;
 struct Vao;
 
-auto LinkProgram [[nodiscard]] (
+auto LinkProgram [[nodiscard]] (GlContext const& gl,
     std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {},
     bool logCode = false) -> std::optional<GpuProgram>;
-auto LinkProgramFromFiles [[nodiscard]] (
+auto LinkProgramFromFiles [[nodiscard]] (GlContext const& gl,
     std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<shader::Define const> defines,
     std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
 

@@ -20,7 +20,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] () -> AxesRenderer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl) -> AxesRenderer;
     void Render(glm::mat4 const& mvp, float scale = 1.0f) const;
 
 private:

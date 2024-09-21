@@ -23,7 +23,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (size_t maxPoints) -> PointRenderer;
+    static auto Allocate [[nodiscard]] (GlContext const& gl, size_t maxPoints) -> PointRenderer;
     void Fill(std::vector<PointRendererInput::Point> const&, int32_t numPoints, int32_t numPointsOffset);
     void LimitInstances(int32_t numInstances);
     void Render(

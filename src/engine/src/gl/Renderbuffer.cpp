@@ -25,12 +25,13 @@ RenderbufferCtx::~RenderbufferCtx() noexcept {
 
 void Renderbuffer::Dispose() {
     if (renderbufferId_ == GL_NONE) { return; }
-    LogDebugLabel(*this, "Renderbuffer object was disposed");
+    // LogDebugLabel(*this, "Renderbuffer object was disposed");
+    XLOG("Renderbuffer object was disposed", 0);
     GLCALL(glDeleteRenderbuffers(1, &renderbufferId_));
     renderbufferId_.UnsafeReset();
 }
 
-auto Renderbuffer::Allocate2D(glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples, std::string_view name)
+auto Renderbuffer::Allocate2D(GlContext const& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples, std::string_view name)
     -> Renderbuffer {
 
     Renderbuffer renderbuffer{};
@@ -48,8 +49,8 @@ auto Renderbuffer::Allocate2D(glm::ivec2 size, GLenum internalFormat, int32_t ms
         renderbuffer.size_.y));
 
     if (!name.empty()) {
-        DebugLabel(renderbuffer, name);
-        LogDebugLabel(renderbuffer, "Renderbuffer was allocated");
+        DebugLabel(gl, renderbuffer, name);
+        LogDebugLabel(gl, renderbuffer, "Renderbuffer was allocated");
     }
     return renderbuffer;
 }

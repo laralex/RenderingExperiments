@@ -102,14 +102,14 @@ auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredCh
 
 namespace engine::gl {
 
-auto LoadTexture [[nodiscard]] (LoadTextureArgs const& args) -> std::optional<Texture> {
+auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args) -> std::optional<Texture> {
     auto cpuImageInfo = args.loader.Load(args.filepath, args.numChannels);
     if (!cpuImageInfo) {
         XLOGE("Failed to load texture: {}", args.loader.LatestError());
         return std::nullopt;
     }
     assert(cpuImageInfo);
-    auto texture = gl::Texture::Allocate2D(
+    auto texture = gl::Texture::Allocate2D(gl,
         GL_TEXTURE_2D, glm::ivec3(cpuImageInfo->width, cpuImageInfo->height, 0), args.format, args.name);
     auto cpuImage     = args.loader.ImageData(cpuImageInfo->loadedImageId);
     auto textureGuard = gl::TextureCtx{texture}.Fill2D(gl::TextureCtx::FillArgs{

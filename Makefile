@@ -5,6 +5,12 @@ USE_PCH?=1
 # DYNAMIC_LINKING?=1
 # COMPILER_DUMP?=1
 
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := windows
+else
+    DETECTED_OS := $(shell uname | tr "[:upper:]" "[:lower:]")
+endif
+
 .PHONY: all
 all: build_engine
 all: build_app
@@ -19,6 +25,11 @@ init_repo:
 		&& rm -rf ccache_prebuilt ccache.tar.xz
 	git submodule update --init --remote
 	git submodule status
+
+.PHONY: init_dev
+init_dev:
+	$(MAKE) rm
+	bear -a make -j16 DEBUG=y
 
 BUILD_DIR=build/$(if ${DEBUG},debug,release)
 INSTALL_DIR=${BUILD_DIR}/install
@@ -67,10 +78,12 @@ LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
 
 src_app_ = App.cpp Main.cpp
-src_app = $(addprefix ${BUILD_DIR}/app/, ${src_app_})
-obj_app = ${src_app:.cpp=.o}
+outpaths_app = $(addprefix ${BUILD_DIR}/app/, ${src_app_})
+outdirs_app = $(sort $(dir ${outpaths_app}))
+obj_app = ${outpaths_app:.cpp=.o}
 
 src_engine_ = \
+	platform/GpuConfiguration.cpp \
 	Assets.cpp BoxMesh.cpp \
 	EngineLoop.cpp IcosphereMesh.cpp \
 	LineRendererInput.cpp PointRendererInput.cpp \
@@ -81,11 +94,12 @@ src_engine_ = \
 	gl/BoxRenderer.cpp gl/ProceduralMeshes.cpp \
 	gl/BillboardRenderer.cpp \
 	gl/Buffer.cpp gl/Capabilities.cpp \
+	gl/Context.cpp \
 	gl/Common.cpp gl/CommonRenderers.cpp \
 	gl/PointRenderer.cpp \
 	gl/Debug.cpp gl/FlatRenderer.cpp \
 	gl/FrustumRenderer.cpp gl/Guard.cpp \
-	gl/Init.cpp gl/LineRenderer.cpp \
+	gl/LineRenderer.cpp \
 	gl/Extensions.cpp gl/Framebuffer.cpp \
 	gl/Program.cpp \
 	gl/Renderbuffer.cpp \
@@ -94,18 +108,27 @@ src_engine_ = \
 	gl/TextureUnits.cpp gl/Uniform.cpp \
 	gl/Vao.cpp
 
-src_engine = $(addprefix ${BUILD_DIR}/engine/src/, ${src_engine_})
-obj_engine = ${src_engine:.cpp=.o}
+ifeq (windows,${DETECTED_OS})
+	COMPILE_FLAGS += -DXPLATFORM_WINDOWS
+else ifeq (linux,${DETECTED_OS})
+	COMPILE_FLAGS += -DXPLATFORM_LINUX
+	src_engine_ += platform/linux/FileChangeWatcher.cpp
+	INCLUDE_DIR+=-I/usr/include
+endif
+
+outpaths_engine=$(addprefix ${BUILD_DIR}/engine/src/, ${src_engine_})
+outdirs_engine = $(sort $(dir ${outpaths_engine}))
+obj_engine=${outpaths_engine:.cpp=.o}
 
 ifeq (1,${USE_DEP_FILES})
--include $(src_engine:.cpp=.d)
--include $(src_app:.cpp=.d)
+-include $(src_engine:.o=.d)
+-include $(src_app:.o=.d)
 -include ${PRECOMPILED_HEADER:.pch=.d}
 endif
 
 .PHONY: wtf
 wtf:
-	$(info > SRC files: ${src_engine} ${src_app})
+	$(info > OBJ files: ${obj_engine} ${obj_app})
 
 .PHONY: run
 run: ${INSTALL_DIR}/app
@@ -122,18 +145,18 @@ rm_all:
 
 .PHONY: rm
 rm:
-	rm -r ${APP_MAIN_EXE} ${APP_HOTRELOAD_EXE} ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
+	-rm -r ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
+	-rm -f ${APP_MAIN_EXE} ${APP_HOTRELOAD_EXE}
 
 .PHONY: build_app
-build_app: ${ENGINE_LIB} ${BUILD_DIR}/app ${APP_EXE}
+build_app: ${ENGINE_LIB} ${outdirs_app} ${APP_EXE}
 
 .PHONY: build_engine
-build_engine: ${BUILD_DIR}/engine/src/gl ${ENGINE_LIB}
+build_engine: ${outdirs_engine} ${ENGINE_LIB}
 
 .PHONY: ${INSTALL_DIR}/app
 ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
-	find data -regex '.*\.\(vert\|frag\|comp\|inc\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
-	find data -regex '.*\.\(jpg\|jpeg\|png\)' -exec cp --parents \{\} ${INSTALL_DIR} \;
+	cp -asf $(realpath data) ${INSTALL_DIR}
 	cp ${ENGINE_LIB} ${INSTALL_DIR}
 	(cp ${APP_LIB} ${INSTALL_DIR} | true)
 	cp ${APP_EXE} $@
@@ -198,5 +221,5 @@ ${BUILD_DIR}/third_party/stb/stb_image.o:
 	mkdir -p $(dir $@)
 	$(CC) ${COMPILE_FLAGS} -I third_party/stb -c src/third_party/StbImage.cpp -o $@
 
-${BUILD_DIR}/app ${BUILD_DIR}/engine/src/gl ${INSTALL_DIR}:
+${outdirs_engine} ${outdirs_app} ${INSTALL_DIR}:
 	mkdir -p $@

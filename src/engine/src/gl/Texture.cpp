@@ -1,4 +1,5 @@
 #include "engine/gl/Texture.hpp"
+#include "engine/gl/Context.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
@@ -25,12 +26,13 @@ TextureCtx::~TextureCtx() noexcept {
 
 void Texture::Dispose() {
     if (textureId_ == GL_NONE) { return; }
-    LogDebugLabel(*this, "Texture object was disposed");
+    // LogDebugLabel(*this, "Texture object was disposed");
+    XLOG("Texture object was disposed", 0);
     GLCALL(glDeleteTextures(1, &textureId_));
     textureId_.UnsafeReset();
 }
 
-auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
+auto Texture::Allocate2D(GlContext const& gl, GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
     {
         GLenum t = textureType;
         assert(
@@ -49,8 +51,7 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
 
     GLCALL(glBindTexture(texture.target_, texture.textureId_));
 
-    assert(GlExtensions::IsInitialized());
-    if (!GlExtensions::Supports(GlExtensions::ARB_texture_storage)) {
+    if (!gl.Extensions().Supports(GlExtensions::ARB_texture_storage)) {
         constexpr GLint border = 0;
         GLenum clientFormat    = GL_RGBA;
         GLenum clientType      = GL_UNSIGNED_BYTE;
@@ -80,13 +81,13 @@ auto Texture::Allocate2D(GLenum textureType, glm::ivec2 size, GLenum internalFor
     GLCALL(glTexParameteri(texture.target_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 
     if (!name.empty()) {
-        DebugLabel(texture, name);
-        LogDebugLabel(texture, "Texture was allocated");
+        DebugLabel(gl, texture, name);
+        LogDebugLabel(gl, texture, "Texture was allocated");
     }
     return texture;
 }
 
-auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
+auto Texture::AllocateZS(GlContext const& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
     -> Texture {
     {
         GLenum f = internalFormat;
@@ -95,7 +96,7 @@ auto Texture::AllocateZS(glm::ivec2 size, GLenum internalFormat, bool sampleSten
             || f == GL_DEPTH_COMPONENT32F);
     }
 
-    Texture texture = Allocate2D(GL_TEXTURE_2D, size, internalFormat, name);
+    Texture texture = Allocate2D(gl, GL_TEXTURE_2D, size, internalFormat, name);
     glTexParameteri(
         texture.target_, GL_DEPTH_STENCIL_TEXTURE_MODE, sampleStencilOnly ? GL_STENCIL_INDEX : GL_DEPTH_COMPONENT);
     return texture;
