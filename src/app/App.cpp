@@ -346,7 +346,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::translate(model, VEC_RIGHT * 1.6f);
 
         glm::mat4 mvp = camera * model;
-        app->commonRenderers.RenderBox(camera * model, glm::vec4(1.2f, 1.0f, 0.2f, 1.0f));
+        app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
         if (app->controlDebugCamera) {
             Frustum frustum = ProjectionToFrustum(proj);

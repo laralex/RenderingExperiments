@@ -1,5 +1,5 @@
 DEBUG?=1
-# USE_HOT_RELOADING?=1 # doesn't work
+USE_HOT_RELOADING?=1 # doesn't work
 USE_DEP_FILES?=1
 USE_PCH?=1
 # USE_DYNLIB_ENGINE?=1
@@ -34,8 +34,8 @@ init_dev:
 BUILD_DIR=build/$(if ${DEBUG},debug,release)
 INSTALL_DIR=${BUILD_DIR}/install
 MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-APP_MAIN_EXE=${BUILD_DIR}/run_app
-APP_HOTRELOAD_EXE=${BUILD_DIR}/run_app_hotreload
+APP_MAIN_EXE=${BUILD_DIR}/app/run_app
+APP_HOTRELOAD_EXE=${BUILD_DIR}/app/run_app_hotreload
 APP_EXE=$(if ${USE_HOT_RELOADING},${APP_HOTRELOAD_EXE},${APP_MAIN_EXE})
 APP_LIB=${BUILD_DIR}/app/libapp.so
 ENGINE_LIB=$(if ${USE_DYNLIB_ENGINE},${BUILD_DIR}/engine/libengine.so,${BUILD_DIR}/engine/libengine.a)

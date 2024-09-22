@@ -78,7 +78,9 @@ struct EngineCtx {
         return persistent->Initialize();
     }
     void Dispose() {
-        XLOGW("EngineCtx dtor");
+        if (persistent) {
+            XLOGW("EngineCtx dtor");
+        }
         // persistent.reset();
     }
 

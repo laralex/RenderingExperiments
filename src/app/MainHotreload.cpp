@@ -12,7 +12,7 @@
 
 #include <cassert>
 
-constexpr int32_t HOT_RELOAD_AFTER_FRAME = 10000;
+constexpr int32_t HOT_RELOAD_AFTER_FRAME = 100;
 
 // must be full absolute path
 constexpr char const* HOT_RELOAD_LIBRARY_PATH =
