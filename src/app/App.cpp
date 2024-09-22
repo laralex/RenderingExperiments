@@ -486,12 +486,12 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 }
 
-auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineError {
+auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
     XLOG("! Compiled in DEBUG mode");
 
     assert(!destination.app);
     destination.engine = engine::CreateEngine();
-    if (auto result = engine::ColdStartEngine(destination.engine); result != engine::EngineError::SUCCESS) {
+    if (auto result = engine::ColdStartEngine(destination.engine); result != engine::EngineResult::SUCCESS) {
         return result;
     }
     destination.app = std::make_unique<Application>();
@@ -504,14 +504,14 @@ auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> 
     });
 
     auto _ = engine::SetRenderCallback(destination.engine, app::Render);
-    return engine::EngineError::SUCCESS;
+    return engine::EngineResult::SUCCESS;
 }
 
-auto DestroyApplication(app::ApplicationState& destination) -> bool {
+auto DestroyApplication(app::ApplicationState& destination) -> engine::EngineResult {
     destination.app.reset();
     destination.engineData.reset();
     (void)engine::DestroyEngine(destination.engine);
-    return true;
+    return engine::EngineResult::SUCCESS;
 }
 
 } // namespace app

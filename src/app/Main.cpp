@@ -1,4 +1,5 @@
 #include "app/App.hpp"
+#include "engine/EngineLoop.hpp"
 
 static app::ApplicationState g_app;
 
@@ -13,11 +14,12 @@ auto main() -> int {
         .last_working_version = 0,
     };
 
-    if (auto result = cr_main(&crCtx, CR_LOAD); result != 0) { return result; }
+    constexpr int SUCCESS = static_cast<int>(engine::EngineResult::SUCCESS);
+    if (auto result = cr_main(&crCtx, CR_LOAD); result != SUCCESS) { return result; }
     while (true) {
-        if (auto result = cr_main(&crCtx, CR_STEP); result != 0) { break; }
+        if (auto result = cr_main(&crCtx, CR_STEP); result != SUCCESS) { break; }
     }
-    if (auto result = cr_main(&crCtx, CR_UNLOAD); result != 0) { return result; }
-    if (auto result = cr_main(&crCtx, CR_CLOSE); result != 0) { return result; }
+    if (auto result = cr_main(&crCtx, CR_UNLOAD); result != SUCCESS) { return result; }
+    if (auto result = cr_main(&crCtx, CR_CLOSE); result != SUCCESS) { return result; }
     return 0;
 }

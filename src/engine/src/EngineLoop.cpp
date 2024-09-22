@@ -23,6 +23,7 @@ struct EnginePersistentData {
     ~Self() noexcept {
         if (!isInitialized) { return; }
         --numEngineInstances;
+        XLOGW("EnginePersistentData dtor");
         // TODO: resources leaked
         // if (numEngineInstances == 0) { DestroyCommonResources(); }
     }
@@ -32,12 +33,12 @@ struct EnginePersistentData {
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    auto Initialize() -> EngineError {
+    auto Initialize() -> EngineResult {
         if (EnginePersistentData::numEngineInstances == 0 && !InitializeCommonResources()) {
-            return EngineError::WINDOW_CREATION_ERROR;
+            return EngineResult::WINDOW_CREATION_ERROR;
         }
         GLFWwindow* window = CreateWindow(800, 600);
-        if (window == nullptr) { return EngineError::WINDOW_CREATION_ERROR; }
+        if (window == nullptr) { return EngineResult::WINDOW_CREATION_ERROR; }
 
         windowCtx = WindowCtx{window};
 
@@ -49,7 +50,7 @@ struct EnginePersistentData {
         frameHistory.resize(256U);
 
         ++numEngineInstances;
-        return EngineError::SUCCESS;
+        return EngineResult::SUCCESS;
     }
     WindowCtx windowCtx{nullptr};
     void* applicationData{nullptr}; // user-provided external data
@@ -72,11 +73,14 @@ struct EngineCtx {
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = default;
 #undef Self
-    auto Initialize() -> EngineError {
+    auto Initialize() -> EngineResult {
         persistent = std::make_shared<EnginePersistentData>();
         return persistent->Initialize();
     }
-    void Dispose() { persistent.reset(); }
+    void Dispose() {
+        XLOGW("EngineCtx dtor");
+        // persistent.reset();
+    }
 
     std::shared_ptr<EnginePersistentData> persistent;
 };
@@ -104,7 +108,10 @@ auto InitializeCommonResources() -> bool {
     return true;
 }
 
-void DestroyCommonResources() { glfwTerminate(); }
+void DestroyCommonResources() {
+    XLOGW("Terminate GLFW");
+    glfwTerminate();
+}
 
 void GlfwCursorEnterCallback(GLFWwindow* window, int entered) {
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
@@ -227,16 +234,16 @@ ENGINE_EXPORT auto CreateEngine() -> EngineHandle {
     return ENGINE_HANDLE_NULL;
 }
 
-ENGINE_EXPORT auto ColdStartEngine(EngineHandle engine) -> EngineError {
-    if (engine == ENGINE_HANDLE_NULL) { return EngineError::ERROR_ENGINE_NULL; }
+ENGINE_EXPORT auto ColdStartEngine(EngineHandle engine) -> EngineResult {
+    if (engine == ENGINE_HANDLE_NULL) { return EngineResult::ERROR_ENGINE_NULL; }
 
     return engine->Initialize();
 }
 
-ENGINE_EXPORT auto HotStartEngine(EngineHandle engine, std::shared_ptr<EnginePersistentData> data) -> EngineError {
-    if (engine == ENGINE_HANDLE_NULL) { return EngineError::ERROR_ENGINE_NULL; }
+ENGINE_EXPORT auto HotStartEngine(EngineHandle engine, std::shared_ptr<EnginePersistentData> data) -> EngineResult {
+    if (engine == ENGINE_HANDLE_NULL) { return EngineResult::ERROR_ENGINE_NULL; }
     engine->persistent = data;
-    return EngineError::SUCCESS;
+    return EngineResult::SUCCESS;
 }
 
 ENGINE_EXPORT auto DestroyEngine(EngineHandle engine) -> std::shared_ptr<EnginePersistentData> {
@@ -251,14 +258,14 @@ ENGINE_EXPORT auto DestroyEngine(EngineHandle engine) -> std::shared_ptr<EngineP
     return engineData;
 }
 
-ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineError {
-    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] { return EngineError::ERROR_ENGINE_NULL; }
-    if (!engine->persistent) [[unlikely]] { return EngineError::ERROR_ENGINE_NOT_INITIALIZED; }
+ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineResult {
+    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] { return EngineResult::ERROR_ENGINE_NULL; }
+    if (!engine->persistent) [[unlikely]] { return EngineResult::ERROR_ENGINE_NOT_INITIALIZED; }
 
     EnginePersistentData& engineData = *engine->persistent;
     WindowCtx& windowCtx             = engineData.windowCtx;
     GLFWwindow* window               = windowCtx.Window();
-    if (glfwWindowShouldClose(window)) { return EngineError::WINDOW_CLOSED_NORMALLY; }
+    if (glfwWindowShouldClose(window)) { return EngineResult::WINDOW_CLOSED_NORMALLY; }
     auto& windowQueue = GetEngineQueue(engine, UserActionType::WINDOW);
     auto& renderQueue = GetEngineQueue(engine, UserActionType::RENDER);
     ExecuteQueue(engine, windowQueue);
@@ -272,7 +279,7 @@ ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineError {
     windowCtx.OnFrameEnd();
 
     ++engineData.frameIdx;
-    return EngineError::SUCCESS;
+    return EngineResult::SUCCESS;
 }
 
 ENGINE_EXPORT auto GetWindowContext(EngineHandle engine) -> WindowCtx& {

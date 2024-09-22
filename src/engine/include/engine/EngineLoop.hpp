@@ -14,7 +14,7 @@ constexpr EngineHandle ENGINE_HANDLE_NULL = nullptr;
 
 struct EnginePersistentData;
 
-enum class EngineError : int32_t {
+enum class EngineResult : int32_t {
     SUCCESS                      = 0,
     WINDOW_CLOSED_NORMALLY       = 1,
     ERROR_ENGINE_NULL            = 100,
@@ -30,16 +30,16 @@ using RenderCallback = void (*)(RenderCtx const&, WindowCtx const&, void* userDa
 auto CreateEngine [[nodiscard]] () -> EngineHandle;
 
 // Initialize, allocate engine resources
-auto ColdStartEngine [[nodiscard]] (EngineHandle) -> EngineError;
+auto ColdStartEngine [[nodiscard]] (EngineHandle) -> EngineResult;
 
 // Initialize, reuse allocated engine resources
-auto HotStartEngine [[nodiscard]] (EngineHandle, std::shared_ptr<EnginePersistentData>) -> EngineError;
+auto HotStartEngine [[nodiscard]] (EngineHandle, std::shared_ptr<EnginePersistentData>) -> EngineResult;
 
 // Destroy engine handle (can't use anymore), returns engine resources, suitable for HotStartEngine
 auto DestroyEngine [[nodiscard]] (EngineHandle) -> std::shared_ptr<EnginePersistentData>;
 
 // Update inner state, provided render callback is also called
-auto TickEngine [[nodiscard]] (EngineHandle) -> EngineError;
+auto TickEngine [[nodiscard]] (EngineHandle) -> EngineResult;
 
 auto GetWindowContext [[nodiscard]] (EngineHandle) -> WindowCtx&;
 auto SetRenderCallback [[nodiscard]] (EngineHandle, RenderCallback newCallback) -> RenderCallback;
