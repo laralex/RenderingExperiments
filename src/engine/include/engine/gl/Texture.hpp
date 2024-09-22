@@ -18,14 +18,15 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate2D
-        [[nodiscard]] (GlContext const& gl, GLenum slotTarget, glm::ivec2 size, GLenum internalFormat, std::string_view name = {})
-        -> Texture;
+    static auto Allocate2D [[nodiscard]] (
+        GlContext const& gl, GLenum slotTarget, glm::ivec2 size, GLenum internalFormat, std::string_view name = {})
+    -> Texture;
     // NOTE: sampleStencilOnly controls GL_DEPTH_STENCIL_TEXTURE_MODE parameter.
     // when true: stencil value is read in shader (depth value can't be retrieved)
     // when false: depth value is read in shader (stencil value can't be retrieved)
-    static auto AllocateZS [[nodiscard]] (GlContext const& gl,
-        glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly = false, std::string_view name = {}) -> Texture;
+    static auto AllocateZS [[nodiscard]] (
+        GlContext const& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly = false,
+        std::string_view name = {}) -> Texture;
 
     auto Id [[nodiscard]] () const -> GLuint { return textureId_; }
     auto Size [[nodiscard]] () const -> glm::ivec3 { return size_; }

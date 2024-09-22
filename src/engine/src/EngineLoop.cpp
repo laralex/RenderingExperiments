@@ -3,9 +3,9 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <memory>
 #include <queue>
 #include <vector>
-#include <memory>
 
 namespace {
 
@@ -13,7 +13,7 @@ auto InitializeCommonResources() -> bool;
 void DestroyCommonResources();
 auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow*;
 
-} // namespace anonymous
+} // namespace
 
 namespace engine {
 
@@ -23,7 +23,8 @@ struct EnginePersistentData {
     ~Self() noexcept {
         if (!isInitialized) { return; }
         --numEngineInstances;
-        if (numEngineInstances == 0) { DestroyCommonResources(); }
+        // TODO: resources leaked
+        // if (numEngineInstances == 0) { DestroyCommonResources(); }
     }
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
@@ -36,9 +37,7 @@ struct EnginePersistentData {
             return EngineError::WINDOW_CREATION_ERROR;
         }
         GLFWwindow* window = CreateWindow(800, 600);
-        if (window == nullptr) {
-            return EngineError::WINDOW_CREATION_ERROR;
-        }
+        if (window == nullptr) { return EngineError::WINDOW_CREATION_ERROR; }
 
         windowCtx = WindowCtx{window};
 
@@ -46,7 +45,7 @@ struct EnginePersistentData {
         glfwSetWindowUserPointer(window, &windowCtx);
 
         isInitialized = true;
-        frameIdx = 1U;
+        frameIdx      = 1U;
         frameHistory.resize(256U);
 
         ++numEngineInstances;
@@ -77,9 +76,7 @@ struct EngineCtx {
         persistent = std::make_shared<EnginePersistentData>();
         return persistent->Initialize();
     }
-    void Dispose() {
-        persistent.reset();
-    }
+    void Dispose() { persistent.reset(); }
 
     std::shared_ptr<EnginePersistentData> persistent;
 };
@@ -101,7 +98,7 @@ void GlfwErrorCallback(int errCode, char const* message) { XLOGE("GLFW_ERROR({})
 auto InitializeCommonResources() -> bool {
     glfwSetErrorCallback(GlfwErrorCallback);
     if (!glfwInit()) {
-        XLOGE("Failed to initialize GLFW", 0);
+        XLOGE("Failed to initialize GLFW");
         return false;
     }
     return true;
@@ -136,7 +133,7 @@ auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
     int isDebugContext = GLFW_FALSE;
     if constexpr (engine::DEBUG_BUILD) {
         isDebugContext = GLFW_TRUE;
-        XLOG("! GLFW - making debug-context for OpenGL", 0);
+        XLOG("! GLFW - making debug-context for OpenGL");
     }
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, isDebugContext);
 
@@ -152,13 +149,13 @@ auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
 
     GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr);
     if (window == nullptr) {
-        XLOGE("Failed to create GLFW window", 0)
+        XLOGE("Failed to create GLFW window")
         return nullptr;
     }
 
     glfwMakeContextCurrent(window);
     if (!gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress))) {
-        XLOGE("Failed to initialize GLAD", 0);
+        XLOGE("Failed to initialize GLAD");
         return nullptr;
     }
 
@@ -173,7 +170,8 @@ auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
     return window;
 }
 
-auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistory, size_t frameIdx) -> engine::RenderCtx& {
+auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistory, size_t frameIdx)
+-> engine::RenderCtx& {
     using namespace engine;
     size_t const frameHistoryIdx     = frameIdx % frameHistory.size();
     size_t const prevFrameHistoryIdx = (frameIdx - 1) % frameHistory.size();
@@ -191,6 +189,9 @@ auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistor
 namespace engine {
 
 std::queue<UserAction>& GetEngineQueue(EngineHandle engine, UserActionType type) {
+    assert(engine != nullptr && engine->persistent.get() && "Invalid engine for GetEngineQueue");
+    assert(
+        static_cast<size_t>(type) < std::size(engine->persistent->actionQueues) && "Invalid queue for GetEngineQueue");
     return engine->persistent->actionQueues[static_cast<size_t>(type)];
 }
 
@@ -227,25 +228,19 @@ ENGINE_EXPORT auto CreateEngine() -> EngineHandle {
 }
 
 ENGINE_EXPORT auto ColdStartEngine(EngineHandle engine) -> EngineError {
-    if (engine == ENGINE_HANDLE_NULL) {
-        return EngineError::ERROR_ENGINE_NULL;
-    }
+    if (engine == ENGINE_HANDLE_NULL) { return EngineError::ERROR_ENGINE_NULL; }
 
     return engine->Initialize();
 }
 
 ENGINE_EXPORT auto HotStartEngine(EngineHandle engine, std::shared_ptr<EnginePersistentData> data) -> EngineError {
-    if (engine == ENGINE_HANDLE_NULL) {
-        return EngineError::ERROR_ENGINE_NULL;
-    }
+    if (engine == ENGINE_HANDLE_NULL) { return EngineError::ERROR_ENGINE_NULL; }
     engine->persistent = data;
     return EngineError::SUCCESS;
 }
 
 ENGINE_EXPORT auto DestroyEngine(EngineHandle engine) -> std::shared_ptr<EnginePersistentData> {
-    if (engine == ENGINE_HANDLE_NULL) {
-        return nullptr;
-    }
+    if (engine == ENGINE_HANDLE_NULL) { return nullptr; }
     std::shared_ptr<EnginePersistentData> engineData{engine->persistent};
 
     for (auto& engineSlot : g_engines) {
@@ -257,19 +252,13 @@ ENGINE_EXPORT auto DestroyEngine(EngineHandle engine) -> std::shared_ptr<EngineP
 }
 
 ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineError {
-    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] {
-        return EngineError::ERROR_ENGINE_NULL;
-    }
-    if (!engine->persistent) [[unlikely]] {
-        return EngineError::ERROR_ENGINE_NOT_INITIALIZED;
-    }
+    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] { return EngineError::ERROR_ENGINE_NULL; }
+    if (!engine->persistent) [[unlikely]] { return EngineError::ERROR_ENGINE_NOT_INITIALIZED; }
 
     EnginePersistentData& engineData = *engine->persistent;
-    WindowCtx& windowCtx = engineData.windowCtx;
-    GLFWwindow* window = windowCtx.Window();
-    if (glfwWindowShouldClose(window)) {
-        return EngineError::WINDOW_CLOSED_NORMALLY;
-    }
+    WindowCtx& windowCtx             = engineData.windowCtx;
+    GLFWwindow* window               = windowCtx.Window();
+    if (glfwWindowShouldClose(window)) { return EngineError::WINDOW_CLOSED_NORMALLY; }
     auto& windowQueue = GetEngineQueue(engine, UserActionType::WINDOW);
     auto& renderQueue = GetEngineQueue(engine, UserActionType::RENDER);
     ExecuteQueue(engine, windowQueue);
@@ -296,10 +285,8 @@ ENGINE_EXPORT auto SetRenderCallback(EngineHandle engine, RenderCallback newCall
         // TODO: error reporting
         return nullptr;
     }
-    if (!engine->persistent) [[unlikely]] {
-        return nullptr;
-    }
-    auto oldCallback       = engine->persistent->renderCallback;
+    if (!engine->persistent) [[unlikely]] { return nullptr; }
+    auto oldCallback                   = engine->persistent->renderCallback;
     engine->persistent->renderCallback = newCallback;
     return oldCallback;
 }
@@ -309,9 +296,7 @@ ENGINE_EXPORT void SetApplicationData(EngineHandle engine, void* applicationData
         // TODO: error reporting
         return;
     }
-    if (!engine->persistent) [[unlikely]] {
-        return;
-    }
+    if (!engine->persistent) [[unlikely]] { return; }
     engine->persistent->applicationData = applicationData;
 }
 
@@ -320,18 +305,17 @@ ENGINE_EXPORT auto GetApplicationData(EngineHandle engine) -> void* {
         // TODO: error reporting
         return nullptr;
     }
-    if (!engine->persistent) [[unlikely]] {
-        return nullptr;
-    }
+    if (!engine->persistent) [[unlikely]] { return nullptr; }
     return engine->persistent->applicationData;
 }
 
 ENGINE_EXPORT void QueueForNextFrame(EngineHandle engine, UserActionType type, UserAction action) {
     if (engine == ENGINE_HANDLE_NULL) [[unlikely]] {
-        // TODO: error reporting
+        XLOGE("Failed to run QueueForNextFrame, invalid engine given");
         return;
     }
-    if (!engine->persistent) [[unlikely]] {
+    if (!engine->persistent.get()) [[unlikely]] {
+        XLOGE("Failed to run QueueForNextFrame, engine data is uninitialized");
         return;
     }
     GetEngineQueue(engine, type).push(action);

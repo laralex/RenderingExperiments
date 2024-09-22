@@ -4,10 +4,10 @@
 
 namespace engine::math {
 
-auto RotateByQuat(glm::vec3 vertex, glm::vec4 quat) -> glm::vec3 {
-//   glm::vec3 uv = glm::cross(quat.xyz, vertex);
-//   glm::vec3 uuv = glm::cross(quat.xyz, uv);
-//   return vertex + ((uv * quat.w) + uuv) * 2.0;
+auto RotateByQuat(glm::vec3 vertex, glm::vec4 quat) -> glm::vec3{
+    //   glm::vec3 uv = glm::cross(quat.xyz, vertex);
+    //   glm::vec3 uuv = glm::cross(quat.xyz, uv);
+    //   return vertex + ((uv * quat.w) + uuv) * 2.0;
 };
 
 struct DualNumber final {

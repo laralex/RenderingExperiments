@@ -27,18 +27,18 @@ auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRend
 
     PointRenderer renderer;
     size_t numPositionsBytes      = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
-    renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes},
+    renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes},
         "PointRenderer/TemplatePositionsVBO");
     size_t numDataBytes            = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
-    renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexData.data(), numDataBytes},
+    renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexData.data(), numDataBytes},
         "PointRenderer/TemplateVBO");
-    renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxPoints * sizeof(T)},
+    renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxPoints * sizeof(T)},
         "PointRenderer/InstancesVBO");
-    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
+    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         CpuMemory<void const>{mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0])},
         "PointRenderer/TemplateEBO");
 
@@ -104,8 +104,8 @@ auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRend
         {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(gl,
-        "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag",
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        gl, "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag",
         CpuView{defines, std::size(defines)}, "PointRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
@@ -117,7 +117,7 @@ auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRend
 
 void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0 || firstInstance >= lastInstance_) {
-        // XLOGW("Limit of points is <= 0 in PointRenderer", 0);
+        // XLOGW("Limit of points is <= 0 in PointRenderer");
         return;
     }
     auto programGuard = UniformCtx{program_};

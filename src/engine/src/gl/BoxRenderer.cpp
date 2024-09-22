@@ -112,10 +112,11 @@ auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
 
     BoxRenderer renderer;
-    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{vertexData, sizeof(vertexData)}, "BoxRenderer Vertices");
-    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)},
+    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{vertexData, sizeof(vertexData)},
+        "BoxRenderer Vertices");
+    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)},
         "BoxRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "BoxRenderer");
     (void)gl::VaoMutableCtx{renderer.vao_}
@@ -145,8 +146,8 @@ auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
         {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(gl,
-        "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        gl, "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
         "BoxRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);

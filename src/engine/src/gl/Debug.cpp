@@ -71,7 +71,8 @@ void FillDebugLabelEnums(GlObjectType objectType, GLenum& objectTypeKhr, GLenum&
     }
 }
 
-void DebugLabel(GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std::string_view label) {
+void DebugLabel(
+    GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std::string_view label) {
     using engine::gl::GlExtensions;
     // Debug labels support
     // + GL_BUFFER
@@ -107,7 +108,8 @@ void DebugLabel(GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt,
     }
 }
 
-auto GetDebugLabel(GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, engine::CpuMemory<char> outBuffer)
+auto GetDebugLabel(
+    GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, engine::CpuMemory<char> outBuffer)
     -> GLsizei {
     using engine::gl::GlExtensions;
     GLsizei bytesWritten = 0U;
@@ -122,12 +124,13 @@ auto GetDebugLabel(GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeE
     return 0U;
 }
 
-void LogDebugLabel(GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std::string_view message) {
+void LogDebugLabel(
+    GlContext const& gl, GLenum objectTypeKhr, GLenum objectTypeExt, GLuint objectId, std::string_view message) {
     constexpr size_t maxDebugLabelSize = 256U;
     static char debugLabel[maxDebugLabelSize];
     auto bytesWritten =
         GetDebugLabel(gl, objectTypeKhr, objectTypeExt, objectId, engine::CpuMemory{debugLabel, maxDebugLabelSize});
-    XLOG("{} (name={})", message, debugLabel);
+    XLOG("{} (id=0x{:08X}, name={})", message, objectId, debugLabel);
 }
 
 } // namespace
@@ -197,8 +200,9 @@ DebugGroupCtx::DebugGroupCtx(GlContext const& gl, std::string_view label, GLuint
 DebugGroupCtx::~DebugGroupCtx() noexcept { PopDebugGroup(useCoreCommand_, useExtensionCommand_); }
 
 void PushDebugGroup(GlContext const& gl, std::string_view label, GLuint userData) {
-    PushDebugGroup(gl.Extensions().Supports(GlExtensions::KHR_debug),
-        gl.Extensions().Supports(GlExtensions::EXT_debug_marker), label, userData);
+    PushDebugGroup(
+        gl.Extensions().Supports(GlExtensions::KHR_debug), gl.Extensions().Supports(GlExtensions::EXT_debug_marker),
+        label, userData);
 }
 
 void PushDebugGroup(bool coreCmd, bool extensionCmd, std::string_view label, GLuint userData) {
@@ -213,8 +217,8 @@ void PushDebugGroup(bool coreCmd, bool extensionCmd, std::string_view label, GLu
 }
 
 void PopDebugGroup(GlContext const& gl) {
-    PopDebugGroup(gl.Extensions().Supports(GlExtensions::KHR_debug),
-        gl.Extensions().Supports(GlExtensions::EXT_debug_marker));
+    PopDebugGroup(
+        gl.Extensions().Supports(GlExtensions::KHR_debug), gl.Extensions().Supports(GlExtensions::EXT_debug_marker));
 }
 
 void PopDebugGroup(bool coreCmd, bool extensionCmd) {
@@ -242,7 +246,8 @@ void LogDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType object
     ::LogDebugLabel(gl, objectTypeKhr, objectTypeExt, object, message);
 }
 
-auto GetDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, engine::CpuMemory<char> outBuffer) -> size_t {
+auto GetDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     GLenum objectTypeKhr = GL_NONE;
     GLenum objectTypeExt = GL_NONE;
     FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);

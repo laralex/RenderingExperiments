@@ -6,9 +6,9 @@
 namespace engine::gl::shader {
 
 struct IncludeEntry final {
-    std::string text = "/*NO_INCLUDE_TEXT*/";
+    std::string text       = "/*NO_INCLUDE_TEXT*/";
     int64_t recursionLimit = 0;
-    bool isMultiline = true;
+    bool isMultiline       = true;
 };
 
 using IncludeRegistry = std::unordered_map<std::string, IncludeEntry, engine::StringHash, std::equal_to<>>;

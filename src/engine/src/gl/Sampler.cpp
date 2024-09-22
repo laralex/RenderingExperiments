@@ -7,14 +7,14 @@ namespace engine::gl {
 void GpuSampler::Dispose() {
     if (samplerId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "Sampler object was disposed");
-    XLOG("Sampler object was disposed", 0);
-    GLCALL(glDeleteSamplers(1, &samplerId_));
+    XLOG("Sampler object was disposed: 0x{:08X}", GLuint(samplerId_));
+    GLCALL(glDeleteSamplers(1, samplerId_.Ptr()));
     samplerId_.UnsafeReset();
 }
 
 auto GpuSampler::Allocate(GlContext& gl, std::string_view name) -> GpuSampler {
     GpuSampler sampler{};
-    GLCALL(glGenSamplers(1, &sampler.samplerId_));
+    GLCALL(glGenSamplers(1, sampler.samplerId_.Ptr()));
     if (!name.empty()) {
         // assert(GlCapabilities::IsInitialized());
         auto& textureUnits = gl.TextureUnits();

@@ -21,10 +21,10 @@ struct LightData final {
 };
 
 struct MaterialCoefficients final {
-    float specularity = 1.0f;
+    float specularity   = 1.0f;
     float specularPower = 32.0f;
-    float __pad0 = 0.0f;
-    float __pad1 = 0.0f;
+    float __pad0        = 0.0f;
+    float __pad1        = 0.0f;
 };
 
 struct Material final {
@@ -63,14 +63,14 @@ auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
         {.name = "USE_PHONG", .value = false, .type = gl::shader::Define::BOOLEAN8},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(gl,
-        "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag", CpuView{defines, std::size(defines)},
-        "Lambert diffuse", false);
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        gl, "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag",
+        CpuView{defines, std::size(defines)}, "Lambert diffuse", false);
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
-    renderer.ubo_ = gl::GpuBuffer::Allocate(gl,
-        GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
+    renderer.ubo_ = gl::GpuBuffer::Allocate(
+        gl, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     return renderer;
@@ -80,26 +80,26 @@ void FlatRenderer::Render(FlatRenderArgs const& args) const {
     glm::mat3x4 normalToWorld = glm::transpose(glm::inverse(args.modelToWorld));
 
     UboData data{
-        .mvp                 = args.mvp,
-        .modelToWorld        = args.modelToWorld,
-        .normalToWorld       = normalToWorld,
-        .eyeWorldDirection   = glm::vec4{glm::normalize(args.eyeWorldPosition), 0.0f},
-        .material      = {
-            .diffuseColor = glm::vec4{args.materialColor, 1.0f},
-            .coefficients = {
-                .specularity = args.materialSpecularIntensity,
-                .specularPower = args.materialSpecularPower,
+        .mvp               = args.mvp,
+        .modelToWorld      = args.modelToWorld,
+        .normalToWorld     = normalToWorld,
+        .eyeWorldDirection = glm::vec4{glm::normalize(args.eyeWorldPosition), 0.0f},
+        .material =
+            {
+                .diffuseColor = glm::vec4{args.materialColor, 1.0f},
+                .coefficients =
+                    {
+                        .specularity   = args.materialSpecularIntensity,
+                        .specularPower = args.materialSpecularPower,
+                    },
             },
-        },
-        .lights = { {
-            .worldPosition  = glm::vec4{args.lightWorldPosition, 1.0f},
-            .diffuseColor = glm::vec4{args.lightColor, 1.0f},
-            .ambientIntensity    = glm::vec4{0.01f, 0.01f, 0.01f, 1.0f},
-            .coefficients = {
-                .radius = 1.0f,
-            }
-        } }
-    };
+        .lights = {
+            {.worldPosition    = glm::vec4{args.lightWorldPosition, 1.0f},
+             .diffuseColor     = glm::vec4{args.lightColor, 1.0f},
+             .ambientIntensity = glm::vec4{0.01f, 0.01f, 0.01f, 1.0f},
+             .coefficients     = {
+                     .radius = 1.0f,
+             }}}};
 
     ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));

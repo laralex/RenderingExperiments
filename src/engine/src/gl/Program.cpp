@@ -12,12 +12,13 @@ namespace engine::gl {
 ENGINE_EXPORT void GpuProgram::Dispose() {
     if (programId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "GpuProgram was disposed");
-    XLOG("GpuProgram was disposed", 0);
+    XLOG("GpuProgram was disposed: 0x{:08X}", GLuint(programId_));
     GLCALL(glDeleteProgram(programId_));
     programId_.UnsafeReset();
 }
 
-ENGINE_EXPORT auto GpuProgram::Allocate(GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name)
+ENGINE_EXPORT auto GpuProgram::Allocate(
+    GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name)
     -> std::optional<GpuProgram> {
     GLuint programId;
     GLCALL(programId = glCreateProgram());

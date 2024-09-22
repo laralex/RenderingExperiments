@@ -18,8 +18,8 @@ public:
 
     void Initialize();
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; };
-    auto Vendor[[nodiscard]]() const -> std::string_view { return vendor_; }
-    auto VendorDevice[[nodiscard]]() const -> std::string_view { return renderer_; }
+    auto Vendor [[nodiscard]] () const -> std::string_view { return vendor_; }
+    auto VendorDevice [[nodiscard]] () const -> std::string_view { return renderer_; }
 
     GLint maxTextureUnits;
     GLint numExtensions;

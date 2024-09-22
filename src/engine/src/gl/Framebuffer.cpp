@@ -39,14 +39,14 @@ Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::e
 void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "Framebuffer object was disposed");
-    XLOG("Framebuffer object was disposed", 0);
-    GLCALL(glDeleteFramebuffers(1, &fbId_));
+    XLOG("Framebuffer object was disposed: 0x{:08X}", GLuint(fbId_));
+    GLCALL(glDeleteFramebuffers(1, fbId_.Ptr()));
     fbId_.UnsafeReset();
 }
 
 auto Framebuffer::Allocate(GlContext const& gl, std::string_view name) -> Framebuffer {
     Framebuffer fb{};
-    GLCALL(glGenFramebuffers(1, &fb.fbId_));
+    GLCALL(glGenFramebuffers(1, fb.fbId_.Ptr()));
     fb.BindRead();
     if (!name.empty()) {
         DebugLabel(gl, fb, name);
@@ -105,7 +105,8 @@ auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -
 // }
 
 // valid attachments: COLOR_ATTACHMENTi, DEPTH_ATTACHMENT, or STENCIL_ATTACHMENT
-auto FramebufferDrawCtx::Invalidate(GlContext const& gl, CpuMemory<GLenum const> attachments) const -> FramebufferDrawCtx const& {
+auto FramebufferDrawCtx::Invalidate(GlContext const& gl, CpuMemory<GLenum const> attachments) const
+    -> FramebufferDrawCtx const& {
     if (gl.Extensions().Supports(GlExtensions::ARB_invalidate_subdata)) {
         GLCALL(glInvalidateFramebuffer(framebufferTarget_, attachments.NumElements(), attachments[0]));
     }
@@ -125,7 +126,8 @@ FramebufferEditCtx::FramebufferEditCtx(Framebuffer& useFramebuffer, bool bindAsD
     : ctx_{useFramebuffer, bindAsDraw}
     , fb_{useFramebuffer} { }
 
-auto FramebufferEditCtx::AttachTexture(GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
+auto FramebufferEditCtx::AttachTexture(
+    GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     assert(
         attachment >= GL_COLOR_ATTACHMENT0 && attachment <= GL_COLOR_ATTACHMENT31 || attachment == GL_DEPTH_ATTACHMENT
@@ -161,7 +163,8 @@ auto FramebufferEditCtx::AttachTexture(GlContext const& gl, GLenum attachment, T
     return *this;
 }
 
-auto FramebufferEditCtx::AttachRenderbuffer(GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
+auto FramebufferEditCtx::AttachRenderbuffer(
+    GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     GLCALL(glFramebufferRenderbuffer(ctx_.BoundTarget(), attachment, rb.RenderbufferSlotTarget(), rb.Id()));
     int32_t const drawBuffer     = attachment - GL_COLOR_ATTACHMENT0;

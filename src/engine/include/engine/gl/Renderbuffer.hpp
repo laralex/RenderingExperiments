@@ -18,9 +18,9 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate2D
-        [[nodiscard]] (GlContext const& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples = 0, std::string_view name = {})
-        -> Renderbuffer;
+    static auto Allocate2D [[nodiscard]] (
+        GlContext const& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples = 0,
+        std::string_view name = {}) -> Renderbuffer;
 
     auto Id [[nodiscard]] () const -> GLuint { return renderbufferId_; }
     auto Size [[nodiscard]] () const -> glm::ivec3 { return size_; }

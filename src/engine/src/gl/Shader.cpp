@@ -17,7 +17,7 @@ void AddInclude(
     out[key] = IncludeEntry{
         .text           = std::move(text),
         .recursionLimit = recursionLimit,
-        .isMultiline       = isMultiline,
+        .isMultiline    = isMultiline,
     };
 }
 
@@ -27,7 +27,7 @@ auto WriteShaderParsing(
     int64_t firstOriginalLine) {
     int64_t originalLine = firstOriginalLine;
     int64_t includeCount = 0;
-    bool isFirstInclude = firstOriginalLine < INCLUDE_LINE_NUMBER_BASE;
+    bool isFirstInclude  = firstOriginalLine < INCLUDE_LINE_NUMBER_BASE;
     while (begin != end) {
         switch (begin->type) {
         case ShaderParsing::PartType::ORIGINAL_CODE:
@@ -54,14 +54,14 @@ auto WriteShaderParsing(
                 XLOGW("Empty shader include text of: {}", begin->text);
                 break;
             }
-            if (expandedInclude.isMultiline) {
-                destination << "// included: "<< begin->text << '\n';
-            }
+            if (expandedInclude.isMultiline) { destination << "// included: " << begin->text << '\n'; }
             if (expandedInclude.isMultiline && isFirstInclude) {
                 destination << "#line " << includeCount * INCLUDE_LINE_NUMBER_BASE << '\n';
             }
             destination << expandedInclude.text;
-            if (expandedInclude.isMultiline && isFirstInclude) { destination << '\n' << "#line " << originalLine << '\n'; }
+            if (expandedInclude.isMultiline && isFirstInclude) {
+                destination << '\n' << "#line " << originalLine << '\n';
+            }
             break;
         }
         ++begin;
@@ -74,14 +74,15 @@ auto GenerateCodeRecursively
     ss0 << code;
     auto* readStream  = &ss0;
     auto* writeStream = &ss1;
-    while(recursLimit-- > 0) {
+    while (recursLimit-- > 0) {
         // TODO: optimize string copy here
         // clang still doesn't support C++20 readStream.view() for fuck's sake
         std::string currentCode = readStream->str(); // must outlive parsing
         auto parsing            = ParseParts(currentCode);
         if (parsing.numIncludes <= 0) { break; }
         writeStream->seekp(0);
-        WriteShaderParsing(*writeStream, parsing.parts.begin(), parsing.parts.end(), includeRegistry, INCLUDE_LINE_NUMBER_BASE);
+        WriteShaderParsing(
+            *writeStream, parsing.parts.begin(), parsing.parts.end(), includeRegistry, INCLUDE_LINE_NUMBER_BASE);
         std::swap(readStream, writeStream);
     }
     // readStream was written last
@@ -195,9 +196,7 @@ auto GenerateCode
 }
 
 void InjectDefines(std::stringstream& destination, CpuView<shader::Define const> defines) {
-    if constexpr (engine::DEBUG_BUILD) {
-        destination << "#define DEBUG 1\n";
-    }
+    if constexpr (engine::DEBUG_BUILD) { destination << "#define DEBUG 1\n"; }
     size_t numDefines = defines.NumElements();
     for (size_t i = 0; i < numDefines; ++i) {
         shader::Define const& define = *defines[i];

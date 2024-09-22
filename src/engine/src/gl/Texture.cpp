@@ -27,12 +27,13 @@ TextureCtx::~TextureCtx() noexcept {
 void Texture::Dispose() {
     if (textureId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "Texture object was disposed");
-    XLOG("Texture object was disposed", 0);
-    GLCALL(glDeleteTextures(1, &textureId_));
+    XLOG("Texture object was disposed: 0x{:08X}", GLuint(textureId_));
+    GLCALL(glDeleteTextures(1, textureId_.Ptr()));
     textureId_.UnsafeReset();
 }
 
-auto Texture::Allocate2D(GlContext const& gl, GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
+auto Texture::Allocate2D(
+    GlContext const& gl, GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
     {
         GLenum t = textureType;
         assert(
@@ -44,7 +45,7 @@ auto Texture::Allocate2D(GlContext const& gl, GLenum textureType, glm::ivec2 siz
     }
 
     Texture texture{};
-    GLCALL(glGenTextures(1, &texture.textureId_));
+    GLCALL(glGenTextures(1, texture.textureId_.Ptr()));
     texture.target_         = textureType;
     texture.size_           = glm::ivec3(size.x, size.y, 0);
     texture.internalFormat_ = internalFormat;
@@ -87,7 +88,8 @@ auto Texture::Allocate2D(GlContext const& gl, GLenum textureType, glm::ivec2 siz
     return texture;
 }
 
-auto Texture::AllocateZS(GlContext const& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
+auto Texture::AllocateZS(
+    GlContext const& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
     -> Texture {
     {
         GLenum f = internalFormat;

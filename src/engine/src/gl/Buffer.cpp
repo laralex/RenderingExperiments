@@ -6,12 +6,13 @@ namespace engine::gl {
 void GpuBuffer::Dispose() {
     if (bufferId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "GpuBuffer was disposed");
-    XLOG("GpuBuffer was disposed", 0);
-    glDeleteBuffers(1, &bufferId_);
+    XLOG("GpuBuffer was disposed: 0x{:08X}", GLuint(bufferId_));
+    glDeleteBuffers(1, bufferId_.Ptr());
     bufferId_.UnsafeReset();
 }
 
-auto GpuBuffer::Allocate(GlContext const& gl, GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name)
+auto GpuBuffer::Allocate(
+    GlContext const& gl, GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name)
     -> GpuBuffer {
     {
         GLenum t = targetType;
@@ -23,7 +24,7 @@ auto GpuBuffer::Allocate(GlContext const& gl, GLenum targetType, GLenum usage, C
             || t == GL_UNIFORM_BUFFER);
     }
     GpuBuffer gpuBuffer{};
-    GLCALL(glGenBuffers(1, &gpuBuffer.bufferId_));
+    GLCALL(glGenBuffers(1, gpuBuffer.bufferId_.Ptr()));
     GLCALL(glBindBuffer(targetType, gpuBuffer.bufferId_));
     GLCALL(glBufferData(targetType, data.NumElements(), data[0], usage));
     GLCALL(glBindBuffer(targetType, 0));
@@ -44,11 +45,11 @@ void GpuBuffer::Fill(CpuMemory<GLvoid const> cpuData, GLintptr gpuByteOffset) co
         usage_ != GL_STATIC_DRAW & usage_ != GL_STATIC_READ & usage_ != GL_STATIC_COPY
         && "Error filling GpuBuffer which was declared STATIC");
     if (bufferId_ == GL_NONE) {
-        XLOGE("Error filling not yet initialized GpuBuffer", 0);
+        XLOGE("Error filling not yet initialized GpuBuffer");
         return;
     }
     if (cpuData.IsEmpty()) {
-        XLOGW("GpuBuffer::Fill was given empty data", 0);
+        XLOGW("GpuBuffer::Fill was given empty data");
         return;
     }
     assert(cpuData.NumElements() <= sizeBytes_ && "Error fitting too big data into GpuBuffer allocated storage");

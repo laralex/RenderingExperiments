@@ -109,8 +109,8 @@ auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args
         return std::nullopt;
     }
     assert(cpuImageInfo);
-    auto texture = gl::Texture::Allocate2D(gl,
-        GL_TEXTURE_2D, glm::ivec3(cpuImageInfo->width, cpuImageInfo->height, 0), args.format, args.name);
+    auto texture = gl::Texture::Allocate2D(
+        gl, GL_TEXTURE_2D, glm::ivec3(cpuImageInfo->width, cpuImageInfo->height, 0), args.format, args.name);
     auto cpuImage     = args.loader.ImageData(cpuImageInfo->loadedImageId);
     auto textureGuard = gl::TextureCtx{texture}.Fill2D(gl::TextureCtx::FillArgs{
         .dataFormat = GL_RGB,

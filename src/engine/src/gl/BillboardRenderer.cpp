@@ -27,17 +27,17 @@ auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragmentShader) -> 
          .type  = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(gl,
-        "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag", CpuView{defines, std::size(defines)},
-        "BillboardRenderer - Quad");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        gl, "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag",
+        CpuView{defines, std::size(defines)}, "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram_ = std::move(*maybeProgram);
     auto programGuard        = UniformCtx{renderer.quadVaoProgram_};
     // programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, 1.0f, 0.42f, 1.0f, 1.0f);
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
-    renderer.ubo_ = gl::GpuBuffer::Allocate(gl,
-        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<const void>{nullptr, sizeof(BillboardRenderArgs::ShaderArgs)},
+    renderer.ubo_ = gl::GpuBuffer::Allocate(
+        gl, GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<const void>{nullptr, sizeof(BillboardRenderArgs::ShaderArgs)},
         "BillboardRenderer UBO");
     // TODO: customVaoProgram_
     // TODO: provided fragment shader

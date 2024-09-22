@@ -12,7 +12,7 @@ namespace {
 constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION  = 0;
 constexpr GLint BLIT_UNIFORM_UV_SCALE_LOCATION = 1;
 constexpr GLint BLIT_TEXTURE_SLOT              = 0; // TODO: 1 and above slots don't work
-constexpr int32_t POINTS_FIRST_EXTERNAL = 64;
+constexpr int32_t POINTS_FIRST_EXTERNAL        = 64;
 
 auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgram {
     using namespace engine;
@@ -22,8 +22,8 @@ auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgram 
         {.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(gl,
-        "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag",
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        gl, "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag",
         CpuView{defines, std::size(defines)}, "Blit");
     assert(maybeProgram);
     gl::GpuProgram blitProgram = std::move(*maybeProgram);
@@ -41,7 +41,7 @@ namespace engine::gl {
 
 void CommonRenderers::Initialize(GlContext& gl) {
     if (isInitialized_) { return; }
-    XLOG("CommonRenderers::Initialize", 0);
+    XLOG("CommonRenderers::Initialize");
     axesRenderer_      = AxesRenderer::Allocate(gl);
     boxRenderer_       = BoxRenderer::Allocate(gl);
     frustumRenderer_   = FrustumRenderer::Allocate(gl);

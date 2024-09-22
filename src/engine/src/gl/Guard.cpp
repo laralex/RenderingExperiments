@@ -41,7 +41,7 @@ GlGuardAux::~GlGuardAux() noexcept {
     // GLCALL(glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer));
 
     // GLCALL(glDrawBuffers(std::size(drawBuffers), drawBuffers));
-    // XLOG("~GlGuardAux", 0);
+    // XLOG("~GlGuardAux");
 }
 
 GlGuardFramebuffer::GlGuardFramebuffer(bool restoreRare) noexcept
@@ -94,7 +94,7 @@ GlGuardVertex::~GlGuardVertex() noexcept {
         GLCALL(glCullFace(cullFaceMode_));
         GLCALL(glProvokingVertex(provokingVertex_));
     }
-    // XLOG("~GlGuardVertex", 0);
+    // XLOG("~GlGuardVertex");
 }
 
 GlGuardFlags::GlGuardFlags() noexcept {
@@ -109,7 +109,7 @@ GlGuardFlags::~GlGuardFlags() noexcept {
     RestoreFlag(GL_DEPTH_TEST, depthTest_);
     RestoreFlag(GL_MULTISAMPLE, multisample_);
     RestoreFlag(GL_STENCIL_TEST, stencilTest_);
-    // XLOG("~GlGuardFlags", 0);
+    // XLOG("~GlGuardFlags");
 }
 
 GlGuardDepth::GlGuardDepth(bool restoreRare) noexcept
@@ -144,7 +144,7 @@ GlGuardDepth::~GlGuardDepth() noexcept {
         RestoreFlag(GL_POLYGON_OFFSET_POINT, polygonOffsetPoint_);
         GLCALL(glPolygonOffset(polygonOffsetFactor_, polygonOffsetUnits_));
     }
-    // XLOG("~GlGuardDepth", 0);
+    // XLOG("~GlGuardDepth");
 }
 
 GlGuardStencil::GlGuardStencil() noexcept {
@@ -171,13 +171,19 @@ GlGuardStencil::GlGuardStencil() noexcept {
 GlGuardStencil::~GlGuardStencil() noexcept {
     RestoreFlag(GL_DEPTH_TEST, stencilTest_);
     GLCALL(glClearStencil(stencilClearValue_));
-    GLCALL(glStencilOpSeparate(GL_BACK, static_cast<GLenum>(stencilBackFail_), static_cast<GLenum>(stencilBackPassDepthFail_), static_cast<GLenum>(stencilBackPassDepthPass_)));
-    GLCALL(glStencilFuncSeparate(GL_BACK, static_cast<GLenum>(stencilBackFunc_), stencilBackRef_, stencilBackValueMask_));
+    GLCALL(glStencilOpSeparate(
+        GL_BACK, static_cast<GLenum>(stencilBackFail_), static_cast<GLenum>(stencilBackPassDepthFail_),
+        static_cast<GLenum>(stencilBackPassDepthPass_)));
+    GLCALL(
+        glStencilFuncSeparate(GL_BACK, static_cast<GLenum>(stencilBackFunc_), stencilBackRef_, stencilBackValueMask_));
     GLCALL(glStencilMaskSeparate(GL_BACK, stencilBackWriteMask_));
-    GLCALL(glStencilOpSeparate(GL_FRONT, static_cast<GLenum>(stencilFrontFail_), static_cast<GLenum>(stencilFrontPassDepthFail_), static_cast<GLenum>(stencilFrontPassDepthPass_)));
-    GLCALL(glStencilFuncSeparate(GL_FRONT, static_cast<GLenum>(stencilFrontFunc_), stencilFrontRef_, stencilFrontValueMask_));
+    GLCALL(glStencilOpSeparate(
+        GL_FRONT, static_cast<GLenum>(stencilFrontFail_), static_cast<GLenum>(stencilFrontPassDepthFail_),
+        static_cast<GLenum>(stencilFrontPassDepthPass_)));
+    GLCALL(glStencilFuncSeparate(
+        GL_FRONT, static_cast<GLenum>(stencilFrontFunc_), stencilFrontRef_, stencilFrontValueMask_));
     GLCALL(glStencilMaskSeparate(GL_FRONT, stencilFrontWriteMask_));
-    // XLOG("~GlGuardStencil", 0);
+    // XLOG("~GlGuardStencil");
 }
 
 GlGuardBlend::GlGuardBlend(bool restoreRare) noexcept
@@ -203,7 +209,7 @@ GlGuardBlend::~GlGuardBlend() noexcept {
         RestoreFlag(GL_COLOR_LOGIC_OP, colorLogicOp_);
         GLCALL(glLogicOp(colorLogicOpMode_));
     }
-    // XLOG("~GlGuardBlend", 0);
+    // XLOG("~GlGuardBlend");
 }
 
 GlGuardViewport::GlGuardViewport(bool restoreRare) noexcept
@@ -221,7 +227,7 @@ GlGuardViewport::~GlGuardViewport() noexcept {
         RestoreFlag(GL_SCISSOR_TEST, scissorTest_);
         GLCALL(glScissor(scissor_[0], scissor_[1], scissor_[2], scissor_[3]));
     }
-    // XLOG("~GlGuardViewport", 0);
+    // XLOG("~GlGuardViewport");
 }
 
 GlGuardColor::GlGuardColor() noexcept {
@@ -233,7 +239,7 @@ GlGuardColor::~GlGuardColor() noexcept {
     GLCALL(glClearColor(colorClearValue_[0], colorClearValue_[1], colorClearValue_[2], colorClearValue_[3]));
     GLCALL(glColorMask(colorWriteMask_[0], colorWriteMask_[1], colorWriteMask_[2], colorWriteMask_[3]));
 
-    // XLOG("~GlGuardColor", 0);
+    // XLOG("~GlGuardColor");
 }
 
 } // namespace engine::gl

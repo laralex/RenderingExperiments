@@ -50,7 +50,7 @@ public:
 
     void Initialize();
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
-    auto NumExtensions [[nodiscard]] () const -> int32_t  {
+    auto NumExtensions [[nodiscard]] () const -> int32_t {
         assert(isInitialized_);
         return allExtensions_.size();
     }
@@ -66,7 +66,7 @@ public:
 
 private:
     bool isInitialized_{false};
-    std::unordered_set<std::string_view> allExtensions_{};
+    std::unordered_set<std::string> allExtensions_{};
     bool hardcodedExtensions_[NUM_HARDCODED_EXTENSIONS]{};
 };
 

@@ -50,9 +50,7 @@ enum class AppDebugMode {
 };
 
 struct Application final {
-    ~Application() {
-        XLOG("Disposing application", 0);
-    }
+    ~Application() { XLOG("Disposing application"); }
     engine::FirstPersonLocomotion cameraMovement{};
     engine::FirstPersonLocomotion debugCameraMovement{};
     // glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
@@ -98,4 +96,4 @@ struct ApplicationState {
 
 } // namespace app
 
-CR_EXPORT auto cr_main(cr_plugin *ctx, cr_op operation) -> int;
+CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int;

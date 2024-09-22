@@ -7,9 +7,9 @@
 
 namespace engine::gl {
 
-auto LinkProgram(GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
-    std::string_view name, bool logCode)
-    -> std::optional<GpuProgram> {
+auto LinkProgram(
+    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name,
+    bool logCode) -> std::optional<GpuProgram> {
     if (logCode) {
         XLOG("Compiling program [{}] type=vertex\n{}", name, vertexShaderCode);
         XLOG("Compiling name [{}] type=fragment\n{}", name, fragmentShaderCode);
@@ -26,7 +26,8 @@ auto LinkProgram(GlContext const& gl, std::string_view vertexShaderCode, std::st
     return maybeProgram;
 }
 
-auto LinkProgramFromFiles(GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
+auto LinkProgramFromFiles(
+    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     CpuView<shader::Define const> defines, std::string_view name, bool logCode) -> std::optional<GpuProgram> {
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
     std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);

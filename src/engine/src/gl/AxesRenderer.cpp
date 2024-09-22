@@ -113,11 +113,11 @@ auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
-    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)},
+    renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)},
         "AxesRenderer Vertices");
-    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(gl,
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{indices, sizeof(indices)},
+    renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
+        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{indices, sizeof(indices)},
         "AxesRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "AxesRenderer");
     (void)gl::VaoMutableCtx{renderer.vao_}
@@ -145,8 +145,8 @@ auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     };
 
     auto makeProgram = [&](GpuProgram& out, std::string_view name) {
-        auto maybeProgram = gl::LinkProgramFromFiles(gl,
-            "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
+        auto maybeProgram = gl::LinkProgramFromFiles(
+            gl, "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
             CpuView{defines, std::size(defines)}, name);
         assert(maybeProgram);
         out = std::move(*maybeProgram);

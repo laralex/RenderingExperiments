@@ -85,7 +85,8 @@ public:
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = delete;
 #undef Self
-    auto AttachTexture(GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
+    auto AttachTexture(
+        GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;
     auto AttachRenderbuffer(GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;

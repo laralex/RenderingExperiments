@@ -19,12 +19,13 @@ namespace engine::gl {
 struct GpuProgram;
 struct Vao;
 
-auto LinkProgram [[nodiscard]] (GlContext const& gl,
-    std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name = {},
-    bool logCode = false) -> std::optional<GpuProgram>;
-auto LinkProgramFromFiles [[nodiscard]] (GlContext const& gl,
-    std::string_view vertexFilepath, std::string_view fragmentFilepath, CpuView<shader::Define const> defines,
+auto LinkProgram [[nodiscard]] (
+    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
     std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
+auto LinkProgramFromFiles [[nodiscard]] (
+    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
+    CpuView<shader::Define const> defines, std::string_view name = {}, bool logCode = false)
+-> std::optional<GpuProgram>;
 
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
 void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);
@@ -56,7 +57,8 @@ public:
     // NOTE: don't implement as operator=, because it opens holes
     // with overwriting of GL object handles and leaking resources
     void UnsafeAssign(GlHandle const& other) { id_ = other.id_; }
-    GLuint* operator&() { return &id_; }
+    GLuint const* Ptr() const { return &id_; }
+    GLuint* Ptr() { return &id_; }
     operator GLuint() const { return id_; }
     operator GLuint&() { return id_; }
 

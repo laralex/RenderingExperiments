@@ -16,8 +16,9 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name = {})
-    -> std::optional<GpuProgram>;
+    static auto Allocate
+        [[nodiscard]] (GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name = {})
+        -> std::optional<GpuProgram>;
     auto Id [[nodiscard]] () const -> GLuint { return programId_; }
 
 private:

@@ -23,17 +23,18 @@ template <typename IndexT> struct AllocateMeshInfo {
     GLsizei vertexDataNormalOffset;
 };
 
-template <typename IndexT> auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
+template <typename IndexT>
+auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
     size_t numVertices = std::size(info.vertexPositions);
-    auto positions     = GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+    auto positions     = GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.vertexPositions.data(), numVertices * sizeof(info.vertexPositions[0])},
         info.vertexPositionsLabel);
-    auto attributes = GpuBuffer::Allocate(gl,
-        GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+    auto attributes = GpuBuffer::Allocate(
+        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.vertexData, numVertices * info.vertexDataStride}, info.vertexDataLabel);
-    auto indexBuffer = GpuBuffer::Allocate(gl,
-        GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
+    auto indexBuffer = GpuBuffer::Allocate(
+        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         engine::CpuMemory<void const>{info.indices.data(), std::size(info.indices) * sizeof(info.indices[0])},
         info.indicesLabel);
 
@@ -87,71 +88,81 @@ template <typename IndexT> auto AllocateMesh [[nodiscard]] (GlContext const& gl,
 namespace engine::gl {
 
 auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(gl, AllocateMeshInfo<uint8_t>{
-        .layout                 = layout,
-        .vertexPositions        = cpuMesh.vertexPositions,
-        .vertexPositionsLabel   = "Box positions VBO",
-        .vertexData             = cpuMesh.vertexData.data(),
-        .vertexDataLabel        = "Box VBO",
-        .indices                = cpuMesh.indices,
-        .indicesLabel           = "Box EBO",
-        .vaoLabel               = "Box VAO",
-        .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
-        .vertexDataStride       = sizeof(BoxMesh::Vertex),
-        .vertexDataUvOffset     = offsetof(BoxMesh::Vertex, uv),
-        .vertexDataNormalOffset = offsetof(BoxMesh::Vertex, normal),
-    });
+    return AllocateMesh(
+        gl,
+        AllocateMeshInfo<uint8_t>{
+            .layout                 = layout,
+            .vertexPositions        = cpuMesh.vertexPositions,
+            .vertexPositionsLabel   = "Box positions VBO",
+            .vertexData             = cpuMesh.vertexData.data(),
+            .vertexDataLabel        = "Box VBO",
+            .indices                = cpuMesh.indices,
+            .indicesLabel           = "Box EBO",
+            .vaoLabel               = "Box VAO",
+            .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
+            .vertexDataStride       = sizeof(BoxMesh::Vertex),
+            .vertexDataUvOffset     = offsetof(BoxMesh::Vertex, uv),
+            .vertexDataNormalOffset = offsetof(BoxMesh::Vertex, normal),
+        });
 }
 
-auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(gl, AllocateMeshInfo<uint16_t>{
-        .layout                 = layout,
-        .vertexPositions        = cpuMesh.vertexPositions,
-        .vertexPositionsLabel   = "Icosphere positions VBO",
-        .vertexData             = cpuMesh.vertexData.data(),
-        .vertexDataLabel        = "Icosphere VBO",
-        .indices                = cpuMesh.indices,
-        .indicesLabel           = "Icosphere EBO",
-        .vaoLabel               = "Icosphere VAO",
-        .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
-        .vertexDataStride       = sizeof(IcosphereMesh::Vertex),
-        .vertexDataUvOffset     = offsetof(IcosphereMesh::Vertex, uv),
-        .vertexDataNormalOffset = offsetof(IcosphereMesh::Vertex, normal),
-    });
+auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+    -> GpuMesh {
+    return AllocateMesh(
+        gl,
+        AllocateMeshInfo<uint16_t>{
+            .layout                 = layout,
+            .vertexPositions        = cpuMesh.vertexPositions,
+            .vertexPositionsLabel   = "Icosphere positions VBO",
+            .vertexData             = cpuMesh.vertexData.data(),
+            .vertexDataLabel        = "Icosphere VBO",
+            .indices                = cpuMesh.indices,
+            .indicesLabel           = "Icosphere EBO",
+            .vaoLabel               = "Icosphere VAO",
+            .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
+            .vertexDataStride       = sizeof(IcosphereMesh::Vertex),
+            .vertexDataUvOffset     = offsetof(IcosphereMesh::Vertex, uv),
+            .vertexDataNormalOffset = offsetof(IcosphereMesh::Vertex, normal),
+        });
 }
 
-auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(gl, AllocateMeshInfo<uint16_t>{
-        .layout                 = layout,
-        .vertexPositions        = cpuMesh.vertexPositions,
-        .vertexPositionsLabel   = "UvSphere positions VBO",
-        .vertexData             = cpuMesh.vertexData.data(),
-        .vertexDataLabel        = "UvSphere VBO",
-        .indices                = cpuMesh.indices,
-        .indicesLabel           = "UvSphere EBO",
-        .vaoLabel               = "UvSphere VAO",
-        .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
-        .vertexDataStride       = sizeof(UvSphereMesh::Vertex),
-        .vertexDataUvOffset     = offsetof(UvSphereMesh::Vertex, uv),
-        .vertexDataNormalOffset = offsetof(UvSphereMesh::Vertex, normal),
-    });
+auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+    -> GpuMesh {
+    return AllocateMesh(
+        gl,
+        AllocateMeshInfo<uint16_t>{
+            .layout                 = layout,
+            .vertexPositions        = cpuMesh.vertexPositions,
+            .vertexPositionsLabel   = "UvSphere positions VBO",
+            .vertexData             = cpuMesh.vertexData.data(),
+            .vertexDataLabel        = "UvSphere VBO",
+            .indices                = cpuMesh.indices,
+            .indicesLabel           = "UvSphere EBO",
+            .vaoLabel               = "UvSphere VAO",
+            .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
+            .vertexDataStride       = sizeof(UvSphereMesh::Vertex),
+            .vertexDataUvOffset     = offsetof(UvSphereMesh::Vertex, uv),
+            .vertexDataNormalOffset = offsetof(UvSphereMesh::Vertex, normal),
+        });
 }
 
 auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
-    return AllocateMesh(gl, AllocateMeshInfo<uint16_t>{
-        .layout                 = layout,
-        .vertexPositions        = cpuMesh.vertexPositions,
-        .vertexPositionsLabel   = "Plane positions VBO",
-        .vertexData             = cpuMesh.vertexData.data(),
-        .vertexDataLabel        = "Plane VBO",
-        .indices                = cpuMesh.indices,
-        .indicesLabel           = "Plane EBO",
-        .vaoLabel               = "Plane VAO",
-        .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
-        .vertexDataStride       = sizeof(PlaneMesh::Vertex),
-        .vertexDataUvOffset     = offsetof(PlaneMesh::Vertex, uv),
-        .vertexDataNormalOffset = -1,
-    });
+    return AllocateMesh(
+        gl,
+        AllocateMeshInfo<uint16_t>{
+            .layout                 = layout,
+            .vertexPositions        = cpuMesh.vertexPositions,
+            .vertexPositionsLabel   = "Plane positions VBO",
+            .vertexData             = cpuMesh.vertexData.data(),
+            .vertexDataLabel        = "Plane VBO",
+            .indices                = cpuMesh.indices,
+            .indicesLabel           = "Plane EBO",
+            .vaoLabel               = "Plane VAO",
+            .isClockwiseWinding     = cpuMesh.isClockwiseWinding,
+            .vertexDataStride       = sizeof(PlaneMesh::Vertex),
+            .vertexDataUvOffset     = offsetof(PlaneMesh::Vertex, uv),
+            .vertexDataNormalOffset = -1,
+        });
 }
 
 } // namespace engine::gl

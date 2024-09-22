@@ -20,9 +20,9 @@ public:
 
     void Initialize();
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
-    auto Extensions[[nodiscard]]() const -> GlExtensions const& { return extensions_; }
-    auto Capabilities[[nodiscard]]() const -> GlCapabilities const& { return capabilities_; }
-    auto TextureUnits[[nodiscard]]() -> GlTextureUnits& { return textureUnits_; }
+    auto Extensions [[nodiscard]] () const -> GlExtensions const& { return extensions_; }
+    auto Capabilities [[nodiscard]] () const -> GlCapabilities const& { return capabilities_; }
+    auto TextureUnits [[nodiscard]] () -> GlTextureUnits& { return textureUnits_; }
 
 private:
     bool isInitialized_{false};

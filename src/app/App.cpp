@@ -16,7 +16,8 @@ constexpr GLint UNIFORM_TEXTURE_BINDING    = 0;
 constexpr GLint UNIFORM_MVP_LOCATION       = 10;
 constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
 
-static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, std::unique_ptr<Application>& app) {
+static void ConfigureApplication(
+    engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, std::unique_ptr<Application>& app) {
     using namespace engine;
     glm::ivec2 maxScreenSize = windowCtx.WindowSize() * 4;
     app->gl.Initialize();
@@ -38,14 +39,14 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
         {.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = gl::shader::Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(app->gl,
-        "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", CpuView{defines, std::size(defines)},
-        "Test program");
+    auto maybeProgram = gl::LinkProgramFromFiles(
+        app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag",
+        CpuView{defines, std::size(defines)}, "Test program");
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
-    app->boxMesh = gl::AllocateBoxMesh(app->gl,
-        BoxMesh::Generate(VEC_ONES, true),
+    app->boxMesh = gl::AllocateBoxMesh(
+        app->gl, BoxMesh::Generate(VEC_ONES, true),
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
@@ -57,14 +58,15 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
             .numParallels       = 4,
             .clockwiseTriangles = false,
     });
-    app->sphereMesh = gl::AllocateUvSphereMesh(app->gl,
-        sphere,
+    app->sphereMesh = gl::AllocateUvSphereMesh(
+        app->gl, sphere,
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
             .normalLocation   = ATTRIB_NORMAL_LOCATION,
         });
-    app->sphereMesh2 = gl::AllocateIcosphereMesh(app->gl,
+    app->sphereMesh2 = gl::AllocateIcosphereMesh(
+        app->gl,
         IcosphereMesh::Generate({
             .numSubdivisions    = 1,
             .duplicateSeam      = false,
@@ -78,8 +80,8 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
 
     glm::ivec2 planeSize{8, 15};
     auto planeMesh = PlaneMesh::Generate(planeSize, glm::vec2{0.5f, 0.5f});
-    app->planeMesh = gl::AllocatePlaneMesh(app->gl,
-        planeMesh,
+    app->planeMesh = gl::AllocatePlaneMesh(
+        app->gl, planeMesh,
         gl::GpuMesh::AttributesLayout{
             .positionLocation = ATTRIB_POSITION_LOCATION,
             .uvLocation       = ATTRIB_UV_LOCATION,
@@ -101,17 +103,19 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
     //     app.debugPoints.PushPoint(debugMesh.vertexPositions[vi2], 0.03f);
     // }
 
-    auto maybeTexture = gl::LoadTexture(app->gl, engine::gl::LoadTextureArgs{
-        .loader      = app->imageLoader,
-        .filepath    = "data/engine/textures/utils/uv_checker_8x8_bright.png",
-        .format      = GL_SRGB8,
-        .numChannels = 3,
-    });
+    auto maybeTexture = gl::LoadTexture(
+        app->gl,
+        engine::gl::LoadTextureArgs{
+            .loader      = app->imageLoader,
+            .filepath    = "data/engine/textures/utils/uv_checker_8x8_bright.png",
+            .format      = GL_SRGB8,
+            .numChannels = 3,
+        });
     assert(maybeTexture);
 
     app->texture          = std::move(*maybeTexture);
-    app->uboSamplerTiling = gl::GpuBuffer::Allocate(app->gl,
-        GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
+    app->uboSamplerTiling = gl::GpuBuffer::Allocate(
+        app->gl, GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
         "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
     gl::SamplerTiling albedoTiling{glm::vec2{0.25f}, glm::vec2{0.0f}};
@@ -119,10 +123,10 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
     app->uboSamplerTiling.Fill(CpuMemory<GLvoid const>{&app->uboDataSamplerTiling, sizeof(app->uboDataSamplerTiling)});
 
     // GL_RGB10_A2, GL_R11F_G11F_B10F, GL_RGBA16F, GL_RGBA8
-    app->outputColor = gl::Texture::Allocate2D(app->gl,
-        GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output/Color");
-    app->outputDepth = gl::Texture::Allocate2D(app->gl,
-        GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output/Depth");
+    app->outputColor = gl::Texture::Allocate2D(
+        app->gl, GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_RGBA8, "Output/Color");
+    app->outputDepth = gl::Texture::Allocate2D(
+        app->gl, GL_TEXTURE_2D, glm::ivec3(maxScreenSize.x, maxScreenSize.y, 0), GL_DEPTH24_STENCIL8, "Output/Depth");
     // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test
     // renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate(app->gl, "Main Pass FBO");
@@ -146,9 +150,7 @@ static void ConfigureApplication(engine::RenderCtx const& ctx, engine::WindowCtx
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto appPtr = static_cast<std::unique_ptr<Application>*>(appData);
-    if (!appPtr) [[unlikely]] {
-        return;
-    }
+    if (!appPtr) [[unlikely]] { return; }
     auto& app = *appPtr;
     if (!app->isInitialized) [[unlikely]] {
         ConfigureApplication(ctx, windowCtx, app);
@@ -245,7 +247,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
         app->gl.TextureUnits().Bind2D(TEXTURE_SLOT, app->texture.Id());
         // gl::GlTextureUnits::Bind2D(TEXTURE_SLOT, app->commonRenderers.TextureStubColor().Id());
-        app->gl.TextureUnits().BindSampler(TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
+        app->gl.TextureUnits().BindSampler(
+            TEXTURE_SLOT, app->commonRenderers.FindSampler(app->samplerNearestWrap).Id());
         app->gl.TextureUnits().BindSampler(TEXTURE_SLOT, app->commonRenderers.SamplerLinearRepeat().Id());
 
         gl::RenderVao(app->planeMesh.Vao(), GL_TRIANGLE_STRIP);
@@ -271,8 +274,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         float lightRadius    = 2.0f;
         glm::mat4 lightModel = glm::mat4{1.0f};
         lightModel           = glm::rotate(lightModel, rotationSpeed * 5.5f, VEC_UP);
-        lightModel =
-            glm::translate(lightModel, glm::vec3(lightRadius, lightRadius, lightRadius /* * glm::sin(ctx.timeSec) */ + 1.0f));
+        lightModel           = glm::translate(
+            lightModel, glm::vec3(lightRadius, lightRadius, lightRadius /* * glm::sin(ctx.timeSec) */ + 1.0f));
         glm::vec3 lightPosition{gl::TransformOrigin(lightModel)};
 
         glm::mat4 model = glm::mat4(1.0f);
@@ -310,9 +313,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::scale(glm::mat4{1.0f}, glm::vec3{15.0f});
         mvp   = camera * model;
         app->flatRenderer.Render(gl::FlatRenderArgs{
-            .lightWorldPosition        = lightPosition,
-            .lightColor                = lightColor,
-            .eyeWorldPosition          = cameraMovement.Position(),
+            .lightWorldPosition = lightPosition,
+            .lightColor         = lightColor,
+            .eyeWorldPosition   = cameraMovement.Position(),
             // .materialColor             = glm::vec3{1.0f, 1.0f, 1.0f},
             .materialSpecularIntensity = 1.0f,
             .primitive                 = GL_TRIANGLES,
@@ -407,7 +410,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     auto& windowCtx    = engine::GetWindowContext(engine);
     GLFWwindow* window = windowCtx.Window();
     using KeyModFlags  = engine::WindowCtx::KeyModFlags;
-    auto& app = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
+    auto& app          = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
     (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
     });
@@ -483,8 +486,8 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 }
 
-auto ColdStartApplication[[nodiscard]](app::ApplicationState& destination) -> engine::EngineError {
-    XLOG("! Compiled in DEBUG mode", 0);
+auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineError {
+    XLOG("! Compiled in DEBUG mode");
 
     assert(!destination.app);
     destination.engine = engine::CreateEngine();
@@ -496,8 +499,9 @@ auto ColdStartApplication[[nodiscard]](app::ApplicationState& destination) -> en
 
     ConfigureWindow(destination.engine);
 
-    engine::QueueForNextFrame(
-        destination.engine, engine::UserActionType::RENDER, [](void* applicationData) { GLCALL(glEnable(GL_FRAMEBUFFER_SRGB)); });
+    engine::QueueForNextFrame(destination.engine, engine::UserActionType::RENDER, [](void* applicationData) {
+        GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
+    });
 
     auto _ = engine::SetRenderCallback(destination.engine, app::Render);
     return engine::EngineError::SUCCESS;
@@ -513,33 +517,29 @@ auto DestroyApplication(app::ApplicationState& destination) -> bool {
 } // namespace app
 
 // Hot reloading "guest" part
-CR_EXPORT auto cr_main(cr_plugin *ctx, cr_op operation) -> int {
+CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
     using namespace app;
     assert(ctx != nullptr);
     static ApplicationState* state{nullptr};
     switch (operation) {
-        case CR_LOAD:
-            XLOGW("HotReload::load v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
-            if (state == nullptr) {
-                state = reinterpret_cast<ApplicationState*>(ctx->userdata);
-            }
-            // assert(state->engine == engine::ENGINE_HANDLE_NULL);
-            state->engine = engine::CreateEngine();
-            if (state->engineData) {
-                return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData));
-            }
-            return static_cast<int>(ColdStartApplication(*state));
-        case CR_STEP:
-            return static_cast<int>(engine::TickEngine(state->engine));
-        case CR_UNLOAD:
-            // preparing to a new reload
-            XLOGW("HotReload::unload v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
-            state->engineData = engine::DestroyEngine(state->engine);
-            state->engine = engine::ENGINE_HANDLE_NULL;
-            return 0;
-        case CR_CLOSE:
-            // the plugin will close and not reload anymore
-            XLOGW("HotReload::destroy v{}", ctx->version);
-            return static_cast<int>(DestroyApplication(*state));
+    case CR_LOAD:
+        XLOGW("HotReload::load v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
+        if (state == nullptr) { state = reinterpret_cast<ApplicationState*>(ctx->userdata); }
+        // assert(state->engine == engine::ENGINE_HANDLE_NULL);
+        state->engine = engine::CreateEngine();
+        if (state->engineData) { return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData)); }
+        return static_cast<int>(ColdStartApplication(*state));
+    case CR_STEP:
+        return static_cast<int>(engine::TickEngine(state->engine));
+    case CR_UNLOAD:
+        // preparing to a new reload
+        XLOGW("HotReload::unload v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
+        state->engineData = engine::DestroyEngine(state->engine);
+        state->engine     = engine::ENGINE_HANDLE_NULL;
+        return 0;
+    case CR_CLOSE:
+        // the plugin will close and not reload anymore
+        XLOGW("HotReload::destroy v{}", ctx->version);
+        return static_cast<int>(DestroyApplication(*state));
     }
 }

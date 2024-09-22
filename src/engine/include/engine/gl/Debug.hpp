@@ -69,7 +69,8 @@ enum class GlObjectType {
 
 void DebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view label);
 void LogDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view message);
-auto GetDebugLabelUnsafe [[nodiscard]] (GlContext const& gl, GLuint object, GlObjectType objectType, CpuMemory<char> outBuffer) -> size_t;
+auto GetDebugLabelUnsafe
+    [[nodiscard]] (GlContext const& gl, GLuint object, GlObjectType objectType, CpuMemory<char> outBuffer) -> size_t;
 
 class GpuBuffer;
 void DebugLabel(GlContext const& gl, GpuBuffer const& buffer, std::string_view label);
@@ -78,7 +79,8 @@ void LogDebugLabel(GlContext const& gl, GpuBuffer const& buffer, std::string_vie
 
 class Vao;
 void DebugLabel(GlContext const& gl, Vao const& vertexArrayObject, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Vao const& vertexArrayObject, CpuMemory<char> outBuffer) -> size_t;
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Vao const& vertexArrayObject, CpuMemory<char> outBuffer)
+-> size_t;
 void LogDebugLabel(GlContext const& gl, Vao const& vao, std::string_view message);
 
 class GpuProgram;
@@ -93,7 +95,8 @@ void LogDebugLabel(GlContext const& gl, Texture const& texture, std::string_view
 
 class Renderbuffer;
 void DebugLabel(GlContext const& gl, Renderbuffer const& renderbuffer, std::string_view label);
-auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Renderbuffer const& renderbuffer, CpuMemory<char> outBuffer) -> size_t;
+auto GetDebugLabel [[nodiscard]] (GlContext const& gl, Renderbuffer const& renderbuffer, CpuMemory<char> outBuffer)
+-> size_t;
 void LogDebugLabel(GlContext const& gl, Renderbuffer const& renderbuffer, std::string_view message);
 
 class GpuSampler;
