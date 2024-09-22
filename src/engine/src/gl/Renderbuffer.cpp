@@ -3,9 +3,9 @@
 
 namespace engine::gl {
 
-bool RenderbufferCtx::hasInstances_{false};
-GlHandle RenderbufferCtx::contextRenderbuffer_{GL_NONE};
-GLenum RenderbufferCtx::contextTarget_{GL_NONE};
+ENGINE_STATIC bool RenderbufferCtx::hasInstances_{false};
+ENGINE_STATIC GlHandle RenderbufferCtx::contextRenderbuffer_{GL_NONE};
+ENGINE_STATIC GLenum RenderbufferCtx::contextTarget_{GL_NONE};
 
 RenderbufferCtx::RenderbufferCtx(Renderbuffer const& useRenderbuffer) noexcept {
     assert(!hasInstances_);

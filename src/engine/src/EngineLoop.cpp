@@ -59,10 +59,10 @@ struct EnginePersistentData {
     RenderCallback renderCallback{[](RenderCtx const&, WindowCtx const&, void*) {}};
     std::queue<UserAction> actionQueues[static_cast<size_t>(UserActionType::NUM_TYPES)]{};
     bool isInitialized = false;
-    static int64_t numEngineInstances;
+    ENGINE_STATIC static int64_t numEngineInstances;
 };
 
-int64_t EnginePersistentData::numEngineInstances = 0;
+ENGINE_STATIC int64_t EnginePersistentData::numEngineInstances = 0;
 
 struct EngineCtx {
 #define Self EngineCtx

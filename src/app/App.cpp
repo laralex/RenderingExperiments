@@ -1,5 +1,16 @@
 #include "app/App.hpp"
-#include "engine/platform/linux/FileChangeWatcher.hpp"
+
+#include "engine/BoxMesh.hpp"
+#include "engine/EngineLoop.hpp"
+#include "engine/IcosphereMesh.hpp"
+#include "engine/PlaneMesh.hpp"
+#include "engine/Unprojection.hpp"
+#include "engine/UvSphereMesh.hpp"
+#include "engine/gl/ProceduralMeshes.hpp"
+#include "engine/gl/Sampler.hpp"
+#include "engine/gl/Shader.hpp"
+#include "engine/gl/Uniform.hpp"
+#include "engine/gl/Vao.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -335,7 +346,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::translate(model, VEC_RIGHT * 1.6f);
 
         glm::mat4 mvp = camera * model;
-        app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
+        app->commonRenderers.RenderBox(camera * model, glm::vec4(1.2f, 1.0f, 0.2f, 1.0f));
 
         if (app->controlDebugCamera) {
             Frustum frustum = ProjectionToFrustum(proj);
@@ -524,10 +535,17 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
     switch (operation) {
     case CR_LOAD:
         XLOGW("HotReload::load v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
-        if (state == nullptr) { state = reinterpret_cast<ApplicationState*>(ctx->userdata); }
-        // assert(state->engine == engine::ENGINE_HANDLE_NULL);
+        if (ctx->userdata == nullptr) {
+            XLOGW("HotReload::load allocating ApplicationState");
+            ctx->userdata = new ApplicationState{};
+        }
+        state = reinterpret_cast<ApplicationState*>(ctx->userdata);
         state->engine = engine::CreateEngine();
-        if (state->engineData) { return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData)); }
+        if (state->engineData) {
+            XLOGW("HotReload::load hot-restarting the engine");
+            return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData));
+        }
+        XLOGW("HotReload::load cold-starting the engine");
         return static_cast<int>(ColdStartApplication(*state));
     case CR_STEP:
         return static_cast<int>(engine::TickEngine(state->engine));
@@ -536,7 +554,7 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
         XLOGW("HotReload::unload v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
         state->engineData = engine::DestroyEngine(state->engine);
         state->engine     = engine::ENGINE_HANDLE_NULL;
-        return 0;
+        return static_cast<int>(engine::EngineResult::SUCCESS);
     case CR_CLOSE:
         // the plugin will close and not reload anymore
         XLOGW("HotReload::destroy v{}", ctx->version);

@@ -9,6 +9,7 @@
 * text rendering
 * libktx
 * fastgltf
+* press ESC crashes
 
 world pos, world orient:
 offset world position = simple

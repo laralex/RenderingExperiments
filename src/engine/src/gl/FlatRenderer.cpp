@@ -41,9 +41,9 @@ struct UboData final {
     alignas(16) LightData lights[1]{};
 };
 
-constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
-constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
-constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
+ENGINE_STATIC constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
+ENGINE_STATIC constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
+ENGINE_STATIC constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
 
 constexpr GLint UBO_BINDING = 5; // global for GL
 

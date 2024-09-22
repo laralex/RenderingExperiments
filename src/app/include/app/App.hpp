@@ -1,38 +1,23 @@
 #pragma once
 
 #include "engine/Assets.hpp"
-#include "engine/BoxMesh.hpp"
-#include "engine/EngineLoop.hpp"
 #include "engine/FirstPersonLocomotion.hpp"
-#include "engine/IcosphereMesh.hpp"
-#include "engine/PlaneMesh.hpp"
-#include "engine/Unprojection.hpp"
-#include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Context.hpp"
+#include "engine/gl/GpuMesh.hpp"
 #include "engine/gl/FlatRenderer.hpp"
 #include "engine/gl/Framebuffer.hpp"
-#include "engine/gl/Guard.hpp"
-#include "engine/gl/ProceduralMeshes.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Renderbuffer.hpp"
-#include "engine/gl/Sampler.hpp"
 #include "engine/gl/SamplersCache.hpp"
-#include "engine/gl/Shader.hpp"
 #include "engine/gl/Texture.hpp"
 #include "engine/gl/TextureUnits.hpp"
-#include "engine/gl/Uniform.hpp"
-#include "engine/gl/Vao.hpp"
 #include "engine/platform/linux/FileChangeWatcher.hpp"
+#include "engine/EngineLoop.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
-#include <cr.h>
-#pragma clang diagnostic pop
 
 namespace app {
 

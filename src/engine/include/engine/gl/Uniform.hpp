@@ -159,8 +159,8 @@ public:
     }
 
 private:
-    static GlHandle contextProgram_;
-    static bool hasInstances_;
+    ENGINE_STATIC static GlHandle contextProgram_;
+    ENGINE_STATIC static bool hasInstances_;
 };
 
 } // namespace engine::gl

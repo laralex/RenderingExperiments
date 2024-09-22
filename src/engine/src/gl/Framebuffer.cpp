@@ -4,9 +4,9 @@
 
 namespace engine::gl {
 
-bool FramebufferDrawCtx::hasInstances_{false};
-GlHandle FramebufferDrawCtx::contextFramebuffer_{GL_NONE};
-GLenum FramebufferDrawCtx::framebufferTarget_{GL_DRAW_FRAMEBUFFER};
+ENGINE_STATIC bool FramebufferDrawCtx::hasInstances_{false};
+ENGINE_STATIC GlHandle FramebufferDrawCtx::contextFramebuffer_{GL_NONE};
+ENGINE_STATIC GLenum FramebufferDrawCtx::framebufferTarget_{GL_DRAW_FRAMEBUFFER};
 
 FramebufferDrawCtx::FramebufferDrawCtx(Framebuffer const& useFramebuffer, bool bindAsDraw) noexcept
     : FramebufferDrawCtx(useFramebuffer.Id(), bindAsDraw) { }

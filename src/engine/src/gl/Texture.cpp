@@ -4,9 +4,9 @@
 
 namespace engine::gl {
 
-bool TextureCtx::hasInstances_{false};
-GlHandle TextureCtx::contextTexture_{GL_NONE};
-GLenum TextureCtx::contextTarget_{GL_NONE};
+ENGINE_STATIC bool TextureCtx::hasInstances_{false};
+ENGINE_STATIC GlHandle TextureCtx::contextTexture_{GL_NONE};
+ENGINE_STATIC GLenum TextureCtx::contextTarget_{GL_NONE};
 
 TextureCtx::TextureCtx(Texture const& useTexture) noexcept {
     assert(!hasInstances_);

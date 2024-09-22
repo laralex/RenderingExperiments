@@ -34,7 +34,7 @@ private:
     std::map<std::string, CacheKey, std::less<>> nameToId_;
     std::vector<GpuSampler> idToSampler_;
 
-    static const GpuSampler nullSampler_;
+    ENGINE_STATIC static const GpuSampler nullSampler_;
 };
 
 } // namespace engine::gl

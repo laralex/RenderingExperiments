@@ -2,7 +2,7 @@ DEBUG?=1
 # USE_HOT_RELOADING?=1 # doesn't work
 USE_DEP_FILES?=1
 USE_PCH?=1
-# DYNAMIC_LINKING?=1
+# USE_DYNLIB_ENGINE?=1
 # COMPILER_DUMP?=1
 
 ifeq ($(OS),Windows_NT)
@@ -38,7 +38,7 @@ APP_MAIN_EXE=${BUILD_DIR}/run_app
 APP_HOTRELOAD_EXE=${BUILD_DIR}/run_app_hotreload
 APP_EXE=$(if ${USE_HOT_RELOADING},${APP_HOTRELOAD_EXE},${APP_MAIN_EXE})
 APP_LIB=${BUILD_DIR}/app/libapp.so
-ENGINE_LIB=$(if ${DYNAMIC_LINKING},${BUILD_DIR}/engine/libengine.so,${BUILD_DIR}/engine/libengine.a)
+ENGINE_LIB=$(if ${USE_DYNLIB_ENGINE},${BUILD_DIR}/engine/libengine.so,${BUILD_DIR}/engine/libengine.a)
 PRECOMPILED_HEADER=${BUILD_DIR}/engine/Precompiled.hpp.pch
 
 THIRD_PARTY_DEPS=\
@@ -52,7 +52,7 @@ CC=./ccache clang++-17
 
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
 COMPILE_FLAGS=-std=c++20 \
-	$(if ${DYNAMIC_LINKING},-fPIC,) \
+	$(if ${USE_DYNLIB_ENGINE},-fPIC,) \
 	$(if ${USE_HOT_RELOADING},-fPIC,) \
 	$(if $(USE_DEP_FILES),-MMD,) \
 	$(if $(COMPILER_DUMP),-save-stats,) \
@@ -126,9 +126,19 @@ ifeq (1,${USE_DEP_FILES})
 -include ${PRECOMPILED_HEADER:.pch=.d}
 endif
 
+ifneq ($(f),) # force rebulid
+.PHONY: ${APP_LIB} $(obj_app) $(obj_engine)
+endif
+
+# hot reload
+.PHONY: hot
+hot: ${APP_LIB}
+	-cp ${ENGINE_LIB} ${INSTALL_DIR}
+	-cp ${APP_LIB} ${INSTALL_DIR}
+
 .PHONY: wtf
 wtf:
-	$(info > OBJ files: ${obj_engine} ${obj_app})
+	$(info > ${outdirs_app})
 
 .PHONY: run
 run: ${INSTALL_DIR}/app
@@ -157,8 +167,8 @@ build_engine: ${outdirs_engine} ${ENGINE_LIB}
 .PHONY: ${INSTALL_DIR}/app
 ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	cp -asf $(realpath data) ${INSTALL_DIR}
-	cp ${ENGINE_LIB} ${INSTALL_DIR}
-	(cp ${APP_LIB} ${INSTALL_DIR} | true)
+	-cp ${ENGINE_LIB} ${INSTALL_DIR}
+	-cp ${APP_LIB} ${INSTALL_DIR}
 	cp ${APP_EXE} $@
 
 # linking app
@@ -200,6 +210,9 @@ ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
 # compiling third party
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
+
+${BUILD_DIR}/third_party/glfw/src/libglfw3.so:
+	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -DBUILD_SHARED_LIBS=ON -S third_party/glfw -B ${BUILD_DIR}/third_party/glfw && cmake --build $(dir $@)
 
 ${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
 	cmake -S third_party/glfw -B ${BUILD_DIR}/third_party/glfw && cmake --build $(dir $@)

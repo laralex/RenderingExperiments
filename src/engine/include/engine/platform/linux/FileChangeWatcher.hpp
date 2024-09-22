@@ -1,7 +1,10 @@
 #pragma once
 
+#include "engine/Precompiled.hpp"
+
 #include <optional>
 #include <sys/inotify.h>
+
 
 namespace engine::platform::linux {
 
@@ -47,8 +50,8 @@ public:
     void PollEvents(WatchedDirectory const& directory) noexcept;
 
 private:
-    constexpr static size_t EVENT_SIZE        = sizeof(inotify_event);
-    constexpr static size_t EVENT_BUFFER_SIZE = 1024U * EVENT_SIZE;
+    ENGINE_STATIC constexpr static size_t EVENT_SIZE        = sizeof(inotify_event);
+    ENGINE_STATIC constexpr static size_t EVENT_BUFFER_SIZE = 1024U * EVENT_SIZE;
     char eventBuffer_[EVENT_BUFFER_SIZE]{};
 };
 

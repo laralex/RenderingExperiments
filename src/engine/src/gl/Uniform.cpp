@@ -3,8 +3,8 @@
 
 namespace engine::gl {
 
-bool UniformCtx::hasInstances_{false};
-GlHandle UniformCtx::contextProgram_{GL_NONE};
+ENGINE_STATIC bool UniformCtx::hasInstances_{false};
+ENGINE_STATIC GlHandle UniformCtx::contextProgram_{GL_NONE};
 
 UniformCtx::UniformCtx(GpuProgram const& useProgram) noexcept {
     assert(!hasInstances_ && "Attempt to start a new UniformCtx, while another is alive in the scope");

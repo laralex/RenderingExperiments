@@ -8,34 +8,19 @@
 #include <optional>
 #include <string_view>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+#include <cr.h>
+#pragma clang diagnostic pop
+#define ENGINE_STATIC CR_STATE
+
 // #include "engine/CommonInterfaces.hpp"
 #include "engine/gl/Capabilities.hpp"
 #include "engine/gl/Common.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/Debug.hpp"
 #include "engine/gl/Extensions.hpp"
-
-#ifdef XDEBUG
-
-#define SPDLOG_COMPILED_LIB 1
-#define SPDLOG_NO_EXCEPTIONS 1
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
-#include "spdlog/spdlog.h"
-#pragma clang diagnostic pop
-// clang-format off
-#define X_VA_ARGS(...) , ##__VA_ARGS__
-#define XLOG_LVL(lvl, format, ...) { spdlog::log(lvl, format X_VA_ARGS(__VA_ARGS__)); }
-#define XLOG(format, ...) { spdlog::info(format X_VA_ARGS(__VA_ARGS__)); }
-#define XLOGW(format, ...) { spdlog::warn(format X_VA_ARGS(__VA_ARGS__)); }
-#define XLOGE(format, ...) { spdlog::error(format X_VA_ARGS(__VA_ARGS__)); }
-// clang-format on
-#else
-#define XLOG_LVL(lvl, format, ...)
-#define XLOG(format, ...)
-#define XLOGW(format, ...)
-#define XLOGE(format, ...)
-#endif // XDEBUG
+#include "engine/Log.hpp"
 
 struct GLFWwindow;
 

@@ -68,9 +68,9 @@ public:
     static auto IsContextExisting() -> bool { return hasInstances_; }
 
 private:
-    static GlHandle contextFramebuffer_;
-    static GLenum framebufferTarget_;
-    static bool hasInstances_;
+    ENGINE_STATIC static GlHandle contextFramebuffer_;
+    ENGINE_STATIC static GLenum framebufferTarget_;
+    ENGINE_STATIC static bool hasInstances_;
 };
 
 // Helper object, binds GL FBO in ctor, unbinds it in dtor

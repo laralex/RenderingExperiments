@@ -74,7 +74,7 @@ public:
 
 private:
     Vao const& contextVao_;
-    static bool hasInstances_;
+    ENGINE_STATIC static bool hasInstances_;
 };
 
 class VaoMutableCtx final {

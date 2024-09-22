@@ -82,9 +82,9 @@ public:
     auto Fill2D [[nodiscard]] (FillArgs const& args) && -> TextureCtx&&;
 
 private:
-    static GlHandle contextTexture_;
-    static GLenum contextTarget_;
-    static bool hasInstances_;
+    ENGINE_STATIC static GlHandle contextTexture_;
+    ENGINE_STATIC static GLenum contextTarget_;
+    ENGINE_STATIC static bool hasInstances_;
 };
 
 } // namespace engine::gl

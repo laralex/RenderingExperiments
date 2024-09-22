@@ -2,7 +2,7 @@
 
 namespace engine::gl {
 
-GpuSampler const SamplersCache::nullSampler_{};
+ENGINE_STATIC GpuSampler const SamplersCache::nullSampler_{};
 
 auto SamplersCache::FindSampler(std::string_view name) const -> GpuSampler const& {
     auto findId = nameToId_.find(name);

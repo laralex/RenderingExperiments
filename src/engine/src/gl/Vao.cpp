@@ -3,7 +3,7 @@
 
 namespace engine::gl {
 
-bool VaoCtx::hasInstances_{false};
+ENGINE_STATIC bool VaoCtx::hasInstances_{false};
 
 VaoCtx::VaoCtx(Vao const& useVao) noexcept
     : contextVao_(useVao) {

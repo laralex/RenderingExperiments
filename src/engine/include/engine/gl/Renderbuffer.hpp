@@ -54,9 +54,9 @@ public:
 #undef Self
 
 private:
-    static GlHandle contextRenderbuffer_;
-    static GLenum contextTarget_;
-    static bool hasInstances_;
+    ENGINE_STATIC static GlHandle contextRenderbuffer_;
+    ENGINE_STATIC static GLenum contextTarget_;
+    ENGINE_STATIC static bool hasInstances_;
 };
 
 } // namespace engine::gl
