@@ -49,6 +49,7 @@ public:
     void UpdateCursorPosition(double xpos, double ypos);
     void UpdateCursorEntered(bool entered);
     void UpdateMouseButton(GlfwMouseButton button, int action, int mods);
+    void UpdateKeyboardKey(GlfwKey keyboardKey, int action, int mods);
     void OnFrameEnd();
 
 private:
@@ -64,9 +65,6 @@ private:
 
     std::unordered_map<GlfwKey, ButtonCallback> keys_{};
     std::unordered_map<GlfwKey, ButtonCallback> mouseButtons_{};
-
-    friend void GlfwKeyCallback(GLFWwindow* window, GlfwKey key, int scancode, int action, int mods);
-    // friend void GlfwMouseButtonCallback(GLFWwindow* window, GlfwMouseButton button, int action, int mods);
 };
 
 auto operator&(WindowCtx::KeyModFlags a, WindowCtx::KeyModFlags b) -> bool;

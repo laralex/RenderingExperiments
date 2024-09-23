@@ -497,25 +497,25 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 }
 
-auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
-    XLOG("! Compiled in DEBUG mode");
+auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
+    ConfigureWindow(destination.engine);
 
+    auto _ = engine::SetRenderCallback(destination.engine, app::Render);
+    return engine::EngineResult::SUCCESS;
+}
+
+auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
+    assert(destination.engine);
     assert(!destination.app);
-    destination.engine = engine::CreateEngine();
-    if (auto result = engine::ColdStartEngine(destination.engine); result != engine::EngineResult::SUCCESS) {
-        return result;
-    }
+
     destination.app = std::make_unique<Application>();
     engine::SetApplicationData(destination.engine, &destination.app);
-
-    ConfigureWindow(destination.engine);
 
     engine::QueueForNextFrame(destination.engine, engine::UserActionType::RENDER, [](void* applicationData) {
         GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
     });
 
-    auto _ = engine::SetRenderCallback(destination.engine, app::Render);
-    return engine::EngineResult::SUCCESS;
+    return HotStartApplication(destination);
 }
 
 auto DestroyApplication(app::ApplicationState& destination) -> engine::EngineResult {
@@ -532,6 +532,7 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
     using namespace app;
     assert(ctx != nullptr);
     static ApplicationState* state{nullptr};
+    engine::EngineResult result = engine::EngineResult::SUCCESS;
     switch (operation) {
     case CR_LOAD:
         XLOGW("HotReload::load v{} e{}", ctx->version, static_cast<int32_t>(ctx->failure));
@@ -541,12 +542,21 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
         }
         state = reinterpret_cast<ApplicationState*>(ctx->userdata);
         state->engine = engine::CreateEngine();
+
         if (state->engineData) {
             XLOGW("HotReload::load hot-restarting the engine");
-            return static_cast<int>(engine::HotStartEngine(state->engine, state->engineData));
+            result = engine::HotStartEngine(state->engine, state->engineData);
+        } else {
+            XLOGW("HotReload::load cold-starting the engine");
+            result = engine::ColdStartEngine(state->engine);
         }
-        XLOGW("HotReload::load cold-starting the engine");
-        return static_cast<int>(ColdStartApplication(*state));
+
+        if (result != engine::EngineResult::SUCCESS) {
+            return static_cast<int>(result);
+        }
+
+        result = state->engineData ? HotStartApplication(*state) : ColdStartApplication(*state);
+        return static_cast<int>(result);
     case CR_STEP:
         return static_cast<int>(engine::TickEngine(state->engine));
     case CR_UNLOAD:

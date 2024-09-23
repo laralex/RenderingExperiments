@@ -55,7 +55,13 @@ void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int m
     default:
         break;
     }
-    if (auto const found = mouseButtons_.find(mouseButton); found != mouseButtons_.end()) {
+    if (auto const found = mouseButtons_.find(mouseButton); found != mouseButtons_.cend()) {
+        found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
+    }
+}
+
+void WindowCtx::UpdateKeyboardKey(GlfwKey keyboardKey, int action, int mods) {
+    if (auto const found = keys_.find(keyboardKey); found != keys_.cend()) {
         found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
     }
 }

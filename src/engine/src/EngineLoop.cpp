@@ -7,88 +7,41 @@
 #include <queue>
 #include <vector>
 
-namespace {
-
-auto InitializeCommonResources() -> bool;
-void DestroyCommonResources();
-auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow*;
-
-} // namespace
-
 namespace engine {
 
 struct EnginePersistentData {
 #define Self EnginePersistentData
-    explicit Self() = default;
-    ~Self() noexcept {
-        if (!isInitialized) { return; }
-        --numEngineInstances;
-        XLOGW("EnginePersistentData dtor");
-        // TODO: resources leaked
-        // if (numEngineInstances == 0) { DestroyCommonResources(); }
-    }
+    explicit Self()              = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    auto Initialize() -> EngineResult {
-        if (EnginePersistentData::numEngineInstances == 0 && !InitializeCommonResources()) {
-            return EngineResult::WINDOW_CREATION_ERROR;
-        }
-        GLFWwindow* window = CreateWindow(800, 600);
-        if (window == nullptr) { return EngineResult::WINDOW_CREATION_ERROR; }
-
-        windowCtx = WindowCtx{window};
-
-        spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v");
-        glfwSetWindowUserPointer(window, &windowCtx);
-
-        isInitialized = true;
-        frameIdx      = 1U;
-        frameHistory.resize(256U);
-
-        ++numEngineInstances;
-        return EngineResult::SUCCESS;
-    }
     WindowCtx windowCtx{nullptr};
     void* applicationData{nullptr}; // user-provided external data
     std::vector<RenderCtx> frameHistory{};
     int64_t frameIdx{1U};
     RenderCallback renderCallback{[](RenderCtx const&, WindowCtx const&, void*) {}};
+
     std::queue<UserAction> actionQueues[static_cast<size_t>(UserActionType::NUM_TYPES)]{};
     bool isInitialized = false;
-    ENGINE_STATIC static int64_t numEngineInstances;
-};
 
-ENGINE_STATIC int64_t EnginePersistentData::numEngineInstances = 0;
+};
 
 struct EngineCtx {
 #define Self EngineCtx
-    explicit Self() = default;
-    ~Self() noexcept { Dispose(); }
+    explicit Self()              = default;
+    ~Self() noexcept             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
     Self& operator=(Self&&)      = default;
 #undef Self
-    auto Initialize() -> EngineResult {
-        persistent = std::make_shared<EnginePersistentData>();
-        return persistent->Initialize();
-    }
-    void Dispose() {
-        if (persistent) {
-            XLOGW("EngineCtx dtor");
-        }
-        // persistent.reset();
-    }
 
     std::shared_ptr<EnginePersistentData> persistent;
 };
-
-void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 } // namespace engine
 
@@ -96,24 +49,11 @@ namespace {
 
 constexpr size_t MAX_ENGINES = 16U;
 
-std::array<std::optional<engine::EngineCtx>, MAX_ENGINES> g_engines{};
+ENGINE_STATIC int64_t g_numEngineInstances = 0;
+ENGINE_STATIC std::array<std::optional<engine::EngineCtx>, MAX_ENGINES> g_engines{};
 
 // NOTE: can't use std::string_view (third party callback)
 void GlfwErrorCallback(int errCode, char const* message) { XLOGE("GLFW_ERROR({}): {}", errCode, message); }
-
-auto InitializeCommonResources() -> bool {
-    glfwSetErrorCallback(GlfwErrorCallback);
-    if (!glfwInit()) {
-        XLOGE("Failed to initialize GLFW");
-        return false;
-    }
-    return true;
-}
-
-void DestroyCommonResources() {
-    XLOGW("Terminate GLFW");
-    glfwTerminate();
-}
 
 void GlfwCursorEnterCallback(GLFWwindow* window, int entered) {
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
@@ -133,7 +73,29 @@ void GlfwResizeCallback(GLFWwindow* window, int width, int height) {
     ctx->UpdateResolution(width, height);
 }
 
-auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
+void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
+    if (ctx == nullptr) { return; }
+    ctx->UpdateMouseButton(button, action, mods);
+}
+
+void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
+    if (ctx == nullptr) { return; }
+    ctx->UpdateKeyboardKey(key, action, mods);
+}
+
+void InitializeWindow(GLFWwindow* window) {
+    glfwSetFramebufferSizeCallback(window, GlfwResizeCallback);
+    glfwSetKeyCallback(window, GlfwKeyCallback);
+    glfwSetMouseButtonCallback(window, GlfwMouseButtonCallback);
+    glfwSetCursorEnterCallback(window, GlfwCursorEnterCallback);
+    glfwSetCursorPosCallback(window, GlfwCursorPositionCallback);
+    glfwSwapInterval(1);
+    glfwSetTime(0.0);
+}
+
+auto CreateWindow [[nodiscard]] (int width, int height, std::string_view name, GLFWwindow* oldWindow = nullptr) -> GLFWwindow* {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -156,7 +118,7 @@ auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
     }
 
-    GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(width, height, name.data(), nullptr, oldWindow);
     if (window == nullptr) {
         XLOGE("Failed to create GLFW window")
         return nullptr;
@@ -168,15 +130,28 @@ auto CreateWindow [[nodiscard]] (int width, int height) -> GLFWwindow* {
         return nullptr;
     }
 
-    glfwSetFramebufferSizeCallback(window, GlfwResizeCallback);
-    glfwSetKeyCallback(window, engine::GlfwKeyCallback);
-    glfwSetMouseButtonCallback(window, engine::GlfwMouseButtonCallback);
-    glfwSetCursorEnterCallback(window, GlfwCursorEnterCallback);
-    glfwSetCursorPosCallback(window, GlfwCursorPositionCallback);
-    glfwSwapInterval(1);
-    glfwSetTime(0.0);
-
     return window;
+}
+
+auto InitializeEngineData [[nodiscard]](engine::EnginePersistentData& out) -> engine::EngineResult {
+    XLOGW("InitializeEngineData");
+    glfwSetErrorCallback(GlfwErrorCallback);
+
+    if (!out.windowCtx.IsInitialized()) {
+        GLFWwindow* window = CreateWindow(800, 600, "LearnOpenGL", nullptr);
+        if (window == nullptr) { return engine::EngineResult::ERROR_WINDOW_INIT; }
+        out.windowCtx = engine::WindowCtx{window};
+        glfwSetWindowUserPointer(window, &out.windowCtx);
+    }
+
+    InitializeWindow(out.windowCtx.Window());
+
+    out.isInitialized = true;
+    out.frameIdx      = 1U;
+    out.frameHistory.clear();
+    out.frameHistory.resize(256U);
+
+    return engine::EngineResult::SUCCESS;
 }
 
 auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistory, size_t frameIdx)
@@ -193,18 +168,14 @@ auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistor
     return renderCtx;
 }
 
-} // namespace
-
-namespace engine {
-
-std::queue<UserAction>& GetEngineQueue(EngineHandle engine, UserActionType type) {
+std::queue<engine::UserAction>& GetEngineQueue(engine::EngineHandle engine, engine::UserActionType type) {
     assert(engine != nullptr && engine->persistent.get() && "Invalid engine for GetEngineQueue");
     assert(
         static_cast<size_t>(type) < std::size(engine->persistent->actionQueues) && "Invalid queue for GetEngineQueue");
     return engine->persistent->actionQueues[static_cast<size_t>(type)];
 }
 
-void ExecuteQueue(EngineHandle engine, std::queue<UserAction>& queue) {
+void ExecuteQueue(engine::EngineHandle engine, std::queue<engine::UserAction>& queue) {
     auto* appData = engine->persistent->applicationData;
     while (!queue.empty()) {
         auto& action = queue.front();
@@ -213,54 +184,74 @@ void ExecuteQueue(EngineHandle engine, std::queue<UserAction>& queue) {
     }
 }
 
-void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
-    if (ctx == nullptr) { return; }
-    if (auto const found = ctx->keys_.find(key); found != ctx->keys_.end()) {
-        found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
+auto InitializeCommonResources [[nodiscard]]() -> bool {
+    spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v");
+    XLOGW("glfwInit()");
+    if (!glfwInit()) {
+        XLOGE("Failed to initialize GLFW");
+        return false;
     }
+    return true;
 }
 
-void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    auto ctx = static_cast<WindowCtx*>(glfwGetWindowUserPointer(window));
-    if (ctx == nullptr) { return; }
-    ctx->UpdateMouseButton(button, action, mods);
+auto DestroyCommonResources [[nodiscard]]() -> bool {
+    XLOGW("glfwTerminate()");
+    glfwTerminate();
+    return true;
 }
 
-ENGINE_EXPORT auto CreateEngine() -> EngineHandle {
+} // namespace
+
+namespace engine {
+
+ENGINE_EXPORT auto CreateEngine() -> engine::EngineHandle {
     for (auto& engineSlot : g_engines) {
         if (engineSlot != std::nullopt) { continue; }
-        engineSlot = std::optional{EngineCtx{}};
+        engineSlot = std::optional{engine::EngineCtx{}};
+        ++g_numEngineInstances;
         return &*engineSlot;
     }
-    return ENGINE_HANDLE_NULL;
+    return engine::ENGINE_HANDLE_NULL;
 }
 
-ENGINE_EXPORT auto ColdStartEngine(EngineHandle engine) -> EngineResult {
-    if (engine == ENGINE_HANDLE_NULL) { return EngineResult::ERROR_ENGINE_NULL; }
+ENGINE_EXPORT auto ColdStartEngine(engine::EngineHandle engine) -> engine::EngineResult {
+    if (engine == engine::ENGINE_HANDLE_NULL) { return engine::EngineResult::ERROR_ENGINE_NULL; }
 
-    return engine->Initialize();
+    if (g_numEngineInstances == 1) {
+        // first engine ever
+        assert(InitializeCommonResources());
+    }
+    engine->persistent = std::make_shared<engine::EnginePersistentData>();
+    return HotStartEngine(engine, engine->persistent);
 }
 
-ENGINE_EXPORT auto HotStartEngine(EngineHandle engine, std::shared_ptr<EnginePersistentData> data) -> EngineResult {
-    if (engine == ENGINE_HANDLE_NULL) { return EngineResult::ERROR_ENGINE_NULL; }
+ENGINE_EXPORT auto HotStartEngine(engine::EngineHandle engine, std::shared_ptr<engine::EnginePersistentData> data) -> engine::EngineResult {
+    if (engine == engine::ENGINE_HANDLE_NULL) { return engine::EngineResult::ERROR_ENGINE_NULL; }
     engine->persistent = data;
-    return EngineResult::SUCCESS;
+    return InitializeEngineData(*engine->persistent);
 }
 
-ENGINE_EXPORT auto DestroyEngine(EngineHandle engine) -> std::shared_ptr<EnginePersistentData> {
-    if (engine == ENGINE_HANDLE_NULL) { return nullptr; }
-    std::shared_ptr<EnginePersistentData> engineData{engine->persistent};
+ENGINE_EXPORT auto DestroyEngine(engine::EngineHandle engine) -> std::shared_ptr<engine::EnginePersistentData> {
+    if (engine == engine::ENGINE_HANDLE_NULL) { return nullptr; }
+    std::shared_ptr<engine::EnginePersistentData> engineData{engine->persistent};
 
     for (auto& engineSlot : g_engines) {
         if (engineSlot == std::nullopt || &*engineSlot != engine) { continue; }
+        --g_numEngineInstances;
         engineSlot = std::nullopt;
     }
+
+    // TODO: possible leaking resources
+    // if (g_numEngineInstances == 0) {
+    //     assert(DestroyCommonResources());
+    // }
 
     return engineData;
 }
 
-ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineResult {
+ENGINE_EXPORT auto TickEngine(engine::EngineHandle engine) -> engine::EngineResult {
+    using namespace engine;
+
     if (engine == ENGINE_HANDLE_NULL) [[unlikely]] { return EngineResult::ERROR_ENGINE_NULL; }
     if (!engine->persistent) [[unlikely]] { return EngineResult::ERROR_ENGINE_NOT_INITIALIZED; }
 
@@ -274,6 +265,9 @@ ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineResult {
     ExecuteQueue(engine, renderQueue);
 
     RenderCtx& renderCtx = UpdateEngineLoop(engineData.frameHistory, engineData.frameIdx);
+    if (engineData.frameIdx % 100 == 0) {
+        XLOG("fi {} cb {}", engineData.frameIdx, (void*)engineData.renderCallback);
+    }
     engineData.renderCallback(renderCtx, windowCtx, engineData.applicationData);
 
     glfwSwapBuffers(window);
@@ -284,13 +278,13 @@ ENGINE_EXPORT auto TickEngine(EngineHandle engine) -> EngineResult {
     return EngineResult::SUCCESS;
 }
 
-ENGINE_EXPORT auto GetWindowContext(EngineHandle engine) -> WindowCtx& {
-    assert(engine != ENGINE_HANDLE_NULL && engine->persistent);
+ENGINE_EXPORT auto GetWindowContext(engine::EngineHandle engine) -> engine::WindowCtx& {
+    assert(engine != engine::ENGINE_HANDLE_NULL && engine->persistent && "GetWindowContext");
     return engine->persistent->windowCtx;
 }
 
-ENGINE_EXPORT auto SetRenderCallback(EngineHandle engine, RenderCallback newCallback) -> RenderCallback {
-    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] {
+ENGINE_EXPORT auto SetRenderCallback(engine::EngineHandle engine, engine::RenderCallback newCallback) -> engine::RenderCallback {
+    if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
         // TODO: error reporting
         return nullptr;
     }
@@ -300,8 +294,8 @@ ENGINE_EXPORT auto SetRenderCallback(EngineHandle engine, RenderCallback newCall
     return oldCallback;
 }
 
-ENGINE_EXPORT void SetApplicationData(EngineHandle engine, void* applicationData) {
-    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] {
+ENGINE_EXPORT void SetApplicationData(engine::EngineHandle engine, void* applicationData) {
+    if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
         // TODO: error reporting
         return;
     }
@@ -309,8 +303,8 @@ ENGINE_EXPORT void SetApplicationData(EngineHandle engine, void* applicationData
     engine->persistent->applicationData = applicationData;
 }
 
-ENGINE_EXPORT auto GetApplicationData(EngineHandle engine) -> void* {
-    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] {
+ENGINE_EXPORT auto GetApplicationData(engine::EngineHandle engine) -> void* {
+    if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
         // TODO: error reporting
         return nullptr;
     }
@@ -318,8 +312,8 @@ ENGINE_EXPORT auto GetApplicationData(EngineHandle engine) -> void* {
     return engine->persistent->applicationData;
 }
 
-ENGINE_EXPORT void QueueForNextFrame(EngineHandle engine, UserActionType type, UserAction action) {
-    if (engine == ENGINE_HANDLE_NULL) [[unlikely]] {
+ENGINE_EXPORT void QueueForNextFrame(engine::EngineHandle engine, engine::UserActionType type, engine::UserAction action) {
+    if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
         XLOGE("Failed to run QueueForNextFrame, invalid engine given");
         return;
     }
@@ -327,6 +321,7 @@ ENGINE_EXPORT void QueueForNextFrame(EngineHandle engine, UserActionType type, U
         XLOGE("Failed to run QueueForNextFrame, engine data is uninitialized");
         return;
     }
+    // NOTE: storing callbacks is dangerous for hot-reloading
     GetEngineQueue(engine, type).push(action);
 }
 

@@ -18,13 +18,36 @@ enum class EngineResult : int32_t {
     SUCCESS                      = 0,
     WINDOW_CLOSED_NORMALLY       = 1,
     ERROR_ENGINE_NULL            = 100,
-    ERROR_ENGINE_NOT_INITIALIZED = 100,
-    WINDOW_CREATION_ERROR        = 200,
-    WINDOW_USAGE_ERROR           = 300,
+    ERROR_ENGINE_INIT            = 150,
+    ERROR_ENGINE_NOT_INITIALIZED = 200,
+    ERROR_WINDOW_INIT            = 1000,
+    ERROR_WINDOW_USAGE           = 1100,
 };
 
-// NOTE: no CpuView is used here, because this wrapper is not suitable for void data
+enum class KeyModFlags : int32_t {
+    SHIFT    = 1 << 0,
+    CONTROL  = 1 << 1,
+    ALT      = 1 << 2,
+    SUPER    = 1 << 3,
+    CAPSLOCK = 1 << 4,
+    NUMLOCK  = 1 << 5,
+};
+
+auto operator&(KeyModFlags a, KeyModFlags b) -> bool;
+
+using ButtonCallback  = std::function<void(bool, bool, KeyModFlags)>;
+using AxisCallback    = std::function<void(float)>;
+using GlfwKey         = int;
+using GlfwMouseButton = int;
+
 using RenderCallback = void (*)(RenderCtx const&, WindowCtx const&, void* userData);
+
+enum class UserActionType : size_t {
+    RENDER = 0,
+    WINDOW,
+    NUM_TYPES,
+};
+using UserAction = std::function<void(void* applicationData)>;
 
 // Just create engine handle
 auto CreateEngine [[nodiscard]] () -> EngineHandle;
@@ -41,17 +64,16 @@ auto DestroyEngine [[nodiscard]] (EngineHandle) -> std::shared_ptr<EnginePersist
 // Update inner state, provided render callback is also called
 auto TickEngine [[nodiscard]] (EngineHandle) -> EngineResult;
 
-auto GetWindowContext [[nodiscard]] (EngineHandle) -> WindowCtx&;
+// auto GetWindowContext [[nodiscard]] (EngineHandle) -> WindowCtx&;
 auto SetRenderCallback [[nodiscard]] (EngineHandle, RenderCallback newCallback) -> RenderCallback;
+auto SetKeyboardCallback [[nodiscard]] (GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback;
+auto SetMouseButtonCallback [[nodiscard]] (GlfwMouseButton mouseButton, ButtonCallback callback) -> ButtonCallback;
+
 void SetApplicationData(EngineHandle, void* applicationData);
 auto GetApplicationData [[nodiscard]] (EngineHandle engine) -> void*;
 
-enum class UserActionType : size_t {
-    RENDER = 0,
-    WINDOW,
-    NUM_TYPES,
-};
-using UserAction = std::function<void(void* applicationData)>;
+auto GetWindowContext [[nodiscard]] (EngineHandle engine) -> WindowCtx&;
+
 void QueueForNextFrame(EngineHandle, UserActionType type, UserAction action);
 
 } // namespace engine
