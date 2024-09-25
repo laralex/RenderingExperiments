@@ -1,9 +1,10 @@
 #include "engine/gl/Extensions.hpp"
+
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
 
-void GlExtensions::Initialize() {
+ENGINE_EXPORT void GlExtensions::Initialize() {
     if (isInitialized_) { return; }
     GLint numExtensions;
     GLCALL(glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions));

@@ -1,5 +1,7 @@
 #include "engine/BoxMesh.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr glm::vec3 VERTEX_POSITIONS[] = {
@@ -78,7 +80,7 @@ constexpr uint8_t MESH_INDICES[] = {
 
 namespace engine {
 
-auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockwiseTriangles) -> BoxMesh {
+ENGINE_EXPORT auto BoxMesh::Generate(glm::vec3 bakedScale, bool clockwiseTriangles) -> BoxMesh {
     BoxMesh mesh;
     int32_t numVerts = std::size(VERTEX_POSITIONS);
     mesh.vertexPositions.resize(numVerts);

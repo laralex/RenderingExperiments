@@ -1,29 +1,30 @@
 #include "engine/gl/Vao.hpp"
+
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
 
 ENGINE_STATIC bool VaoCtx::hasInstances_{false};
 
-VaoCtx::VaoCtx(Vao const& useVao) noexcept
+ENGINE_EXPORT VaoCtx::VaoCtx(Vao const& useVao) noexcept
     : contextVao_(useVao) {
     assert(!hasInstances_);
     GLCALL(glBindVertexArray(contextVao_.vaoId_));
     hasInstances_ = true;
 }
 
-VaoCtx::~VaoCtx() noexcept {
+ENGINE_EXPORT VaoCtx::~VaoCtx() noexcept {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     GLCALL(glBindVertexArray(0U));
     hasInstances_ = false;
 }
 
-VaoMutableCtx::VaoMutableCtx(Vao& useVao) noexcept
+ENGINE_EXPORT VaoMutableCtx::VaoMutableCtx(Vao& useVao) noexcept
     : contextVao_(useVao)
     , context_(useVao) { }
 
-void Vao::Dispose() {
+ENGINE_EXPORT void Vao::Dispose() {
     if (vaoId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "VAO object was disposed");
     XLOG("VAO object was disposed: 0x{:08X}", GLuint(vaoId_));
@@ -31,7 +32,7 @@ void Vao::Dispose() {
     vaoId_.UnsafeReset();
 }
 
-auto Vao::Allocate(GlContext const& gl, std::string_view name) -> Vao {
+ENGINE_EXPORT auto Vao::Allocate(GlContext const& gl, std::string_view name) -> Vao {
     Vao vao{};
     GLCALL(glGenVertexArrays(1, vao.vaoId_.Ptr()));
     GLCALL(glBindVertexArray(vao.vaoId_));
@@ -43,7 +44,7 @@ auto Vao::Allocate(GlContext const& gl, std::string_view name) -> Vao {
     return vao;
 }
 
-auto VaoMutableCtx::MakeVertexAttribute(
+ENGINE_EXPORT auto VaoMutableCtx::MakeVertexAttribute(
     GpuBuffer const& attributeBuffer, Vao::AttributeInfo const& info, bool normalized) const -> VaoMutableCtx const& {
 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, attributeBuffer.Id()));
@@ -68,7 +69,7 @@ auto VaoMutableCtx::MakeVertexAttribute(
     return *this;
 }
 
-auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset) const
+ENGINE_EXPORT auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset) const
     -> VaoMutableCtx const& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
     GLsizei bytesPerIndex = 1;
@@ -98,7 +99,7 @@ auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, G
     return *this;
 }
 
-auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) const -> VaoMutableCtx const& {
+ENGINE_EXPORT auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) const -> VaoMutableCtx const& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0U));
     contextVao_.indexBuffer_         = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
     contextVao_.indexBufferDataType_ = GL_NONE;
@@ -107,7 +108,7 @@ auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) con
     return *this;
 }
 
-auto Vao::IsInitialized() const -> bool {
+ENGINE_EXPORT auto Vao::IsInitialized() const -> bool {
     assert(vaoId_ != GL_NONE && "Bad call to engine::gl::Vao methods, object isn't yet initialized");
     return true;
 }

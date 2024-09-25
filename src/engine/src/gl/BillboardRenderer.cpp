@@ -5,6 +5,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
@@ -13,7 +15,7 @@ constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
 
 namespace engine::gl {
 
-auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragmentShader) -> BillboardRenderer {
+ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragmentShader) -> BillboardRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
     constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
@@ -44,7 +46,7 @@ auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragmentShader) -> 
     return renderer;
 }
 
-void BillboardRenderer::Render(BillboardRenderArgs const& args) const {
+ENGINE_EXPORT void BillboardRenderer::Render(BillboardRenderArgs const& args) const {
     GpuProgram const& program = quadVaoProgram_;
     auto programGuard         = gl::UniformCtx(program);
 

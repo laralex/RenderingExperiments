@@ -4,6 +4,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 struct LightCoefficients final {
@@ -41,9 +43,9 @@ struct UboData final {
     alignas(16) LightData lights[1]{};
 };
 
-ENGINE_STATIC constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
-ENGINE_STATIC constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
-ENGINE_STATIC constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
+constexpr static int32_t ATTRIB_POSITION_LOCATION = 0;
+constexpr static int32_t ATTRIB_UV_LOCATION       = 1;
+constexpr static int32_t ATTRIB_NORMAL_LOCATION   = 2;
 
 constexpr GLint UBO_BINDING = 5; // global for GL
 
@@ -51,7 +53,7 @@ constexpr GLint UBO_BINDING = 5; // global for GL
 
 namespace engine::gl {
 
-auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
+ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     FlatRenderer renderer;
 
     gl::shader::Define const defines[] = {
@@ -76,7 +78,7 @@ auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     return renderer;
 }
 
-void FlatRenderer::Render(FlatRenderArgs const& args) const {
+ENGINE_EXPORT void FlatRenderer::Render(FlatRenderArgs const& args) const {
     glm::mat3x4 normalToWorld = glm::transpose(glm::inverse(args.modelToWorld));
 
     UboData data{

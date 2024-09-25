@@ -158,7 +158,7 @@ static void ConfigureApplication(
     // });
 }
 
-static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
+void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto appPtr = static_cast<std::unique_ptr<Application>*>(appData);
     if (!appPtr) [[unlikely]] { return; }
@@ -308,7 +308,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
-        glm::vec3 lightColor{0.2f, 0.2f, 0.2f};
+        glm::vec3 lightColor{1.0f};
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition        = lightPosition,
             .lightColor                = lightColor,
@@ -351,7 +351,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         if (app->controlDebugCamera) {
             Frustum frustum = ProjectionToFrustum(proj);
             auto frustumMvp = camera * app->cameraMovement.ComputeModelMatrix();
-            app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
+            app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.14f);
             app->commonRenderers.RenderAxes(frustumMvp, 0.5f, ColorCode::BLACK);
         }
 
@@ -498,6 +498,8 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
 }
 
 auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
+    XLOGW("HotStartApplication {}", (void*)app::Render);
+
     ConfigureWindow(destination.engine);
 
     auto _ = engine::SetRenderCallback(destination.engine, app::Render);
@@ -507,6 +509,8 @@ auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> e
 auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
     assert(destination.engine);
     assert(!destination.app);
+
+    XLOGW("ColdStartApplication");
 
     destination.app = std::make_unique<Application>();
     engine::SetApplicationData(destination.engine, &destination.app);
@@ -567,7 +571,7 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
         return static_cast<int>(engine::EngineResult::SUCCESS);
     case CR_CLOSE:
         // the plugin will close and not reload anymore
-        XLOGW("HotReload::destroy v{}", ctx->version);
+        // XLOGW("HotReload::destroy v{}", ctx->version);
         return static_cast<int>(DestroyApplication(*state));
     }
 }

@@ -5,6 +5,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr float THICKNESS = 0.03f;
@@ -107,7 +109,7 @@ constexpr GLint UNIFORM_COLOR_LOCATION     = 2;
 
 namespace engine::gl {
 
-auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
+ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
 
@@ -158,7 +160,7 @@ auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
     return renderer;
 }
 
-void BoxRenderer::Render(glm::mat4 const& centerMvp, glm::vec4 color) const {
+ENGINE_EXPORT void BoxRenderer::Render(glm::mat4 const& centerMvp, glm::vec4 color) const {
     auto programGuard = gl::UniformCtx(program_);
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
     programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));

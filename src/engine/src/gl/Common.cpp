@@ -3,11 +3,12 @@
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Vao.hpp"
+
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
 
-auto LinkProgram(
+ENGINE_EXPORT auto LinkProgram(
     GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name,
     bool logCode) -> std::optional<GpuProgram> {
     if (logCode) {
@@ -26,7 +27,7 @@ auto LinkProgram(
     return maybeProgram;
 }
 
-auto LinkProgramFromFiles(
+ENGINE_EXPORT auto LinkProgramFromFiles(
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     CpuView<shader::Define const> defines, std::string_view name, bool logCode) -> std::optional<GpuProgram> {
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
@@ -34,7 +35,7 @@ auto LinkProgramFromFiles(
     return LinkProgram(gl, vertexShaderCode, fragmentShaderCode, name, logCode);
 }
 
-void RenderVao(Vao const& vao, GLenum primitive) {
+ENGINE_EXPORT void RenderVao(Vao const& vao, GLenum primitive) {
     auto vaoGuard      = VaoCtx{vao};
     GLint firstIndex   = vao.FirstIndex();
     GLsizei numIndices = vao.IndexCount();
@@ -46,7 +47,7 @@ void RenderVao(Vao const& vao, GLenum primitive) {
     }
 }
 
-void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive) {
+ENGINE_EXPORT void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive) {
     auto vaoGuard      = VaoCtx{vao};
     GLint firstIndex   = vao.FirstIndex();
     GLsizei numIndices = vao.IndexCount();
@@ -59,18 +60,18 @@ void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstanc
     }
 }
 
-auto TransformOrigin(glm::mat4 const& transform, bool isRowMajor) -> glm::vec3 {
+ENGINE_EXPORT auto TransformOrigin(glm::mat4 const& transform, bool isRowMajor) -> glm::vec3 {
     if (isRowMajor) { return glm::vec3{transform[0][3], transform[1][3], transform[2][3]}; }
     return glm::vec3{transform[3][0], transform[3][1], transform[3][2]};
 }
 
-void UndoAffineScale(glm::mat4& transform) {
+ENGINE_EXPORT void UndoAffineScale(glm::mat4& transform) {
     auto invThenTransposed = glm::inverse(transform);
     invThenTransposed      = glm::transpose(invThenTransposed);
     transform              = invThenTransposed * transform;
 }
 
-auto UndoAffineScale(glm::mat4 const& transform) -> glm::mat4 {
+ENGINE_EXPORT auto UndoAffineScale(glm::mat4 const& transform) -> glm::mat4 {
     auto invThenTransposed = glm::inverse(transform);
     invThenTransposed      = glm::transpose(invThenTransposed);
     return invThenTransposed * transform;

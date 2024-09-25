@@ -1,10 +1,11 @@
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/TextureUnits.hpp"
+
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
 
-void GpuSampler::Dispose() {
+ENGINE_EXPORT void GpuSampler::Dispose() {
     if (samplerId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "Sampler object was disposed");
     XLOG("Sampler object was disposed: 0x{:08X}", GLuint(samplerId_));
@@ -12,7 +13,7 @@ void GpuSampler::Dispose() {
     samplerId_.UnsafeReset();
 }
 
-auto GpuSampler::Allocate(GlContext& gl, std::string_view name) -> GpuSampler {
+ENGINE_EXPORT auto GpuSampler::Allocate(GlContext& gl, std::string_view name) -> GpuSampler {
     GpuSampler sampler{};
     GLCALL(glGenSamplers(1, sampler.samplerId_.Ptr()));
     if (!name.empty()) {
@@ -32,7 +33,7 @@ auto GpuSampler::Allocate(GlContext& gl, std::string_view name) -> GpuSampler {
     return sampler;
 }
 
-auto GpuSampler::WithDepthCompare(bool enable, GLenum compareFunc) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithDepthCompare(bool enable, GLenum compareFunc) && -> GpuSampler&& {
     {
         GLenum f = compareFunc;
         assert(
@@ -44,19 +45,19 @@ auto GpuSampler::WithDepthCompare(bool enable, GLenum compareFunc) && -> GpuSamp
     return std::move(*this);
 }
 
-auto GpuSampler::WithBorderColor(glm::vec4 color) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithBorderColor(glm::vec4 color) && -> GpuSampler&& {
     GLfloat colorArr[] = {color.r, color.g, color.b, color.a};
     GLCALL(glSamplerParameterfv(samplerId_, GL_TEXTURE_BORDER_COLOR, colorArr));
     return std::move(*this);
 }
 
-auto GpuSampler::WithLinearMagnify(bool filterLinear) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithLinearMagnify(bool filterLinear) && -> GpuSampler&& {
     magnificationFilter_ = filterLinear ? GL_LINEAR : GL_NEAREST;
     GLCALL(glSamplerParameteri(samplerId_, GL_TEXTURE_MAG_FILTER, magnificationFilter_));
     return std::move(*this);
 }
 
-auto GpuSampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mipsLinear) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mipsLinear) && -> GpuSampler&& {
     if (useMips) {
         if (minifyLinear) {
             minificationFilter_ = mipsLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
@@ -70,25 +71,25 @@ auto GpuSampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mip
     return std::move(*this);
 }
 
-auto GpuSampler::WithLinearMinify(bool filterLinear) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithLinearMinify(bool filterLinear) && -> GpuSampler&& {
     filterLinearMinify_ = filterLinear;
     return std::move(*this).SetMinificationFilter(filterLinearMinify_, filterUsingMips_, filterLinearMips_);
 }
 
-auto GpuSampler::WithLinearMinifyOverMips(bool filterUsingMips, bool filterLinear) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithLinearMinifyOverMips(bool filterUsingMips, bool filterLinear) && -> GpuSampler&& {
     filterUsingMips_  = filterUsingMips;
     filterLinearMips_ = filterLinear;
     return std::move(*this).SetMinificationFilter(filterLinearMinify_, filterUsingMips_, filterLinearMips_);
 }
 
-auto GpuSampler::WithMipConfig(GLfloat minMip, GLfloat maxMip, GLfloat bias) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithMipConfig(GLfloat minMip, GLfloat maxMip, GLfloat bias) && -> GpuSampler&& {
     GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MIN_LOD, minMip));
     GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_LOD, maxMip));
     GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_LOD_BIAS, bias));
     return std::move(*this);
 }
 
-auto GpuSampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) && -> GpuSampler&& {
     auto assertInput = [](GLenum wrap) {
         assert(
             wrap == GL_CLAMP_TO_EDGE | wrap == GL_MIRRORED_REPEAT | wrap == GL_REPEAT
@@ -103,11 +104,11 @@ auto GpuSampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ) && -> GpuSam
     return std::move(*this);
 }
 
-auto GpuSampler::WithWrap(GLenum wrapXYZ) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithWrap(GLenum wrapXYZ) && -> GpuSampler&& {
     return std::move(*this).WithWrap(wrapXYZ, wrapXYZ, wrapXYZ);
 }
 
-auto GpuSampler::WithAnisotropicFilter(GlContext const& gl, GLfloat maxAnisotropy) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::WithAnisotropicFilter(GlContext const& gl, GLfloat maxAnisotropy) && -> GpuSampler&& {
     if (gl.Extensions().Supports(GlExtensions::EXT_texture_filter_anisotropic)) {
         GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy));
     }

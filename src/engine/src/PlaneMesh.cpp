@@ -1,5 +1,7 @@
 #include "engine/PlaneMesh.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr engine::PlaneMesh::Vertex SEGMENT_DATA[] = {
@@ -14,7 +16,7 @@ constexpr engine::PlaneMesh::Vertex SEGMENT_DATA[] = {
 namespace engine {
 
 // based on https://stackoverflow.com/a/5920190/8564999
-auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwiseTriangles) -> PlaneMesh {
+ENGINE_EXPORT auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwiseTriangles) -> PlaneMesh {
     constexpr int32_t NUM_SEGMENT_VERTS = 4;
     // numSegments += 1;
     PlaneMesh mesh;
@@ -37,20 +39,6 @@ auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwi
     }
 
     int32_t idx = 0;
-    // for (int row = 0; row < numSegments.y - 1;) {
-    //     for (int col = 0; col < numSegments.x; ++col) {
-    //         mesh.indices[idx++] = col + row * numSegments.x;
-    //         mesh.indices[idx++] = col + (row + 1) * numSegments.x;
-    //     }
-    //     ++row;
-    //     if (row >= numSegments.y - 1) { break; }
-    //     for (int col = numSegments.x - 1; col > 0; --col) {
-    //         mesh.indices[idx++] = col + (row + 1) * numSegments.x;
-    //         mesh.indices[idx++] = col - 1 + row * numSegments.x;
-    //     }
-    //     ++row;
-    // }
-    // if ((numSegments.y & 1) && numSegments.y > 2) { mesh.indices[idx++] = (numSegments.y - 1) * numSegments.x; }
 
     for (int32_t row = 0; row < numSegments.y - 1; ++row) {
         mesh.indices[idx++] = row * numSegments.x;

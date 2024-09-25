@@ -7,6 +7,8 @@
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr GLint BLIT_UNIFORM_TEXTURE_LOCATION  = 0;
@@ -39,7 +41,7 @@ auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgram 
 
 namespace engine::gl {
 
-void CommonRenderers::Initialize(GlContext& gl) {
+ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize");
     axesRenderer_      = AxesRenderer::Allocate(gl);
@@ -91,44 +93,44 @@ void CommonRenderers::Initialize(GlContext& gl) {
          .size       = stubColorTexture_.Size()});
 }
 
-void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {
+ENGINE_EXPORT void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     axesRenderer_.Render(mvp, scale);
     debugPoints_.PushPoint(glm::scale(mvp, glm::vec3{scale * 0.1f}), color);
 }
 
-void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) {
+ENGINE_EXPORT void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     axesRenderer_.Render(mvp, scale);
 }
 
-void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) const {
+ENGINE_EXPORT void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderBox, CommonRenderers isn't initialized");
     boxRenderer_.Render(centerMvp, color);
 }
 
-void CommonRenderers::RenderFrustum(
+ENGINE_EXPORT void CommonRenderers::RenderFrustum(
     glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
     frustumRenderer_.Render(centerMvp, frustum, color, thickness);
 }
 
-void CommonRenderers::RenderFulscreenTriangle() const {
+ENGINE_EXPORT void CommonRenderers::RenderFulscreenTriangle() const {
     assert(IsInitialized() && "Bad call to RenderFulscreenTriangle, CommonRenderers isn't initialized");
     RenderVao(datalessTriangleVao_);
 }
 
-void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
+ENGINE_EXPORT void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
     assert(IsInitialized() && "Bad call to RenderBillboard, CommonRenderers isn't initialized");
     billboardRenderer_.Render(args);
 }
 
-void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
+ENGINE_EXPORT void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
     lineRenderer_.Render(camera);
 }
 
-void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) {
+ENGINE_EXPORT void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) {
     assert(IsInitialized() && "Bad call to FlushLinesToGpu, CommonRenderers isn't initialized");
     auto linesOffset = 0;
     {
@@ -144,13 +146,13 @@ void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const
     }
 }
 
-void CommonRenderers::RenderPoints(glm::mat4 const& camera) const {
+ENGINE_EXPORT void CommonRenderers::RenderPoints(glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderPoints, CommonRenderers isn't initialized");
     pointRenderer_.Render(glm::mat4{1.0f}, 0, pointsLimitInternal_);
     pointRenderer_.Render(camera, POINTS_FIRST_EXTERNAL, pointsLimitExternal_);
 }
 
-void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> const& points) {
+ENGINE_EXPORT void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> const& points) {
     assert(IsInitialized() && "Bad call to FlushPointsToGpu, CommonRenderers isn't initialized");
     {
         if (debugPoints_.IsDataDirty()) {
@@ -165,7 +167,7 @@ void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> co
     }
 }
 
-void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {
+ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {
     assert(IsInitialized() && "Bad call to Blit2D, CommonRenderers isn't initialized");
     auto programGuard = gl::UniformCtx(blitProgram_);
     programGuard.SetUniformValue2(BLIT_UNIFORM_UV_SCALE_LOCATION, uvScale.x, uvScale.y);
@@ -180,15 +182,15 @@ void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale
     RenderFulscreenTriangle();
 }
 
-auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey {
+ENGINE_EXPORT auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey {
     return samplersCache_.Store(name, std::move(sampler));
 }
 
-auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuSampler const& {
+ENGINE_EXPORT auto CommonRenderers::FindSampler(SamplersCache::CacheKey sampler) const -> GpuSampler const& {
     return samplersCache_.GetSampler(sampler);
 }
 
-void CommonRenderers::OnFrameEnd() {
+ENGINE_EXPORT void CommonRenderers::OnFrameEnd() {
     if (debugPoints_.IsDataDirty()) {
         if (debugPoints_.DataSize() > POINTS_FIRST_EXTERNAL) {
             XLOGW(

@@ -1,6 +1,24 @@
 #include "engine/gl/Texture.hpp"
 #include "engine/gl/Context.hpp"
+
 #include "engine_private/Prelude.hpp"
+
+namespace {
+
+static void GenerateMipmapsImpl(GLenum target, GLuint texture, GLint minLevel, GLint maxLevel) {
+    GLCALL(glBindTexture(target, texture));
+    GLCALL(glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, minLevel));
+    GLCALL(glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, maxLevel));
+    GLCALL(glGenerateMipmap(target));
+}
+
+static void Fill2DImpl(GLenum target, engine::gl::TextureCtx::FillArgs const& args) {
+    GLint offsetX = 0, offsetY = 0;
+    GLCALL(glTexSubImage2D(
+        target, args.mipLevel, offsetX, offsetY, args.size.x, args.size.y, args.dataFormat, args.dataType, args.data));
+}
+
+} // namespace
 
 namespace engine::gl {
 
@@ -8,7 +26,7 @@ ENGINE_STATIC bool TextureCtx::hasInstances_{false};
 ENGINE_STATIC GlHandle TextureCtx::contextTexture_{GL_NONE};
 ENGINE_STATIC GLenum TextureCtx::contextTarget_{GL_NONE};
 
-TextureCtx::TextureCtx(Texture const& useTexture) noexcept {
+ENGINE_EXPORT TextureCtx::TextureCtx(Texture const& useTexture) noexcept {
     assert(!hasInstances_);
     contextTexture_.UnsafeAssign(useTexture.textureId_);
     contextTarget_ = useTexture.TextureSlotTarget();
@@ -16,7 +34,7 @@ TextureCtx::TextureCtx(Texture const& useTexture) noexcept {
     hasInstances_ = true;
 }
 
-TextureCtx::~TextureCtx() noexcept {
+ENGINE_EXPORT TextureCtx::~TextureCtx() noexcept {
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
     contextTexture_.UnsafeReset();
@@ -24,7 +42,7 @@ TextureCtx::~TextureCtx() noexcept {
     hasInstances_ = false;
 }
 
-void Texture::Dispose() {
+ENGINE_EXPORT void Texture::Dispose() {
     if (textureId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "Texture object was disposed");
     XLOG("Texture object was disposed: 0x{:08X}", GLuint(textureId_));
@@ -32,7 +50,7 @@ void Texture::Dispose() {
     textureId_.UnsafeReset();
 }
 
-auto Texture::Allocate2D(
+ENGINE_EXPORT auto Texture::Allocate2D(
     GlContext const& gl, GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
     {
         GLenum t = textureType;
@@ -88,7 +106,7 @@ auto Texture::Allocate2D(
     return texture;
 }
 
-auto Texture::AllocateZS(
+ENGINE_EXPORT auto Texture::AllocateZS(
     GlContext const& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
     -> Texture {
     {
@@ -104,35 +122,22 @@ auto Texture::AllocateZS(
     return texture;
 }
 
-static void GenerateMipmapsImpl(GLenum target, GLuint texture, GLint minLevel, GLint maxLevel) {
-    GLCALL(glBindTexture(target, texture));
-    GLCALL(glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, minLevel));
-    GLCALL(glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, maxLevel));
-    GLCALL(glGenerateMipmap(target));
-}
-
-auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) & -> TextureCtx& {
+ENGINE_EXPORT auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) & -> TextureCtx& {
     GenerateMipmapsImpl(contextTarget_, contextTexture_, minLevel, maxLevel);
     return *this;
 }
 
-auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) && -> TextureCtx&& {
+ENGINE_EXPORT auto TextureCtx::GenerateMipmaps(GLint minLevel, GLint maxLevel) && -> TextureCtx&& {
     GenerateMipmapsImpl(contextTarget_, contextTexture_, minLevel, maxLevel);
     return std::move(*this);
 }
 
-static void Fill2DImpl(GLenum target, TextureCtx::FillArgs const& args) {
-    GLint offsetX = 0, offsetY = 0;
-    GLCALL(glTexSubImage2D(
-        target, args.mipLevel, offsetX, offsetY, args.size.x, args.size.y, args.dataFormat, args.dataType, args.data));
-}
-
-auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) & -> TextureCtx& {
+ENGINE_EXPORT auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) & -> TextureCtx& {
     Fill2DImpl(contextTarget_, args);
     return *this;
 }
 
-auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) && -> TextureCtx&& {
+ENGINE_EXPORT auto TextureCtx::Fill2D(TextureCtx::FillArgs const& args) && -> TextureCtx&& {
     Fill2DImpl(contextTarget_, args);
     return std::move(*this);
 }

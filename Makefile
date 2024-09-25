@@ -1,19 +1,11 @@
 DEBUG?=1
-USE_HOT_RELOADING?=1 # doesn't work
+USE_HOT_RELOADING?=1
 USE_DEP_FILES?=1
 USE_PCH?=1
 # USE_DYNLIB_ENGINE?=1
 # COMPILER_DUMP?=1
 
-ifeq ($(OS),Windows_NT)
-    DETECTED_OS := windows
-else
-    DETECTED_OS := $(shell uname | tr "[:upper:]" "[:lower:]")
-endif
-
-.PHONY: all
-all: build_engine
-all: build_app
+.DEFAULT_GOAL := all
 
 .PHONY: init_repo
 init_repo:
@@ -31,6 +23,13 @@ init_dev:
 	$(MAKE) rm
 	bear -a make -j16 DEBUG=y
 
+
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := windows
+else
+    DETECTED_OS := $(shell uname | tr "[:upper:]" "[:lower:]")
+endif
+
 BUILD_DIR=build/$(if ${DEBUG},debug,release)
 INSTALL_DIR=${BUILD_DIR}/install
 MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -42,8 +41,8 @@ ENGINE_LIB=$(if ${USE_DYNLIB_ENGINE},${BUILD_DIR}/engine/libengine.so,${BUILD_DI
 PRECOMPILED_HEADER=${BUILD_DIR}/engine/Precompiled.hpp.pch
 
 THIRD_PARTY_DEPS=\
-	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
-	${BUILD_DIR}/third_party/glfw/src/libglfw3.a \
+	$(if ${DEBUG},${BUILD_DIR}/third_party/spdlog/libspdlog.a,) \
+	${BUILD_DIR}/third_party/glfw/src/libglfw.so \
 	${BUILD_DIR}/third_party/glad/gl.o \
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
 	${BUILD_DIR}/third_party/stb/stb_image.o
@@ -57,6 +56,7 @@ COMPILE_FLAGS=-std=c++20 \
 	$(if $(USE_DEP_FILES),-MMD,) \
 	$(if $(COMPILER_DUMP),-save-stats,) \
 	$(if ${DEBUG},-g -DXDEBUG,) \
+	-fvisibility=hidden -fvisibility-inlines-hidden \
 	-fno-exceptions -fno-rtti \
 	-Wno-switch-enum \
 	-Wno-c++98-compat-pedantic \
@@ -79,7 +79,7 @@ CLANG_FORMAT=clang-format-17
 
 src_app_ = App.cpp Main.cpp
 outpaths_app = $(addprefix ${BUILD_DIR}/app/, ${src_app_})
-outdirs_app = $(sort $(dir ${outpaths_app}))
+outdirs_app = $(sort $(dir ${outpaths_app}) ${BUILD_DIR}/app)
 obj_app = ${outpaths_app:.cpp=.o}
 
 src_engine_ = \
@@ -117,7 +117,7 @@ else ifeq (linux,${DETECTED_OS})
 endif
 
 outpaths_engine=$(addprefix ${BUILD_DIR}/engine/src/, ${src_engine_})
-outdirs_engine = $(sort $(dir ${outpaths_engine}))
+outdirs_engine=$(sort $(dir ${outpaths_engine}) ${BUILD_DIR}/engine/src)
 obj_engine=${outpaths_engine:.cpp=.o}
 
 ifeq (1,${USE_DEP_FILES})
@@ -127,18 +127,23 @@ ifeq (1,${USE_DEP_FILES})
 endif
 
 ifneq ($(f),) # force rebulid
-.PHONY: ${APP_LIB} $(obj_app) $(obj_engine)
+.PHONY: ${APP_LIB}
 endif
+
+.PHONY: all
+all: build_engine build_app ${INSTALL_DIR}/app
 
 # hot reload
 .PHONY: hot
-hot: ${APP_LIB}
+hot: ${APP_LIB} ${outdirs_app}
 	-cp ${ENGINE_LIB} ${INSTALL_DIR}
+	rm ${INSTALL_DIR}/$(notdir ${APP_LIB})
 	-cp ${APP_LIB} ${INSTALL_DIR}
 
 .PHONY: wtf
 wtf:
-	$(info > ${outdirs_app})
+	$(info > ${APP_THIRD_PARTY_DEPS})
+	$(info > ${ENGINE_THIRD_PARTY_DEPS})
 
 .PHONY: run
 run: ${INSTALL_DIR}/app
@@ -159,44 +164,48 @@ rm:
 	-rm -f ${APP_MAIN_EXE} ${APP_HOTRELOAD_EXE}
 
 .PHONY: build_app
-build_app: ${ENGINE_LIB} ${outdirs_app} ${APP_EXE}
+build_app: ${outdirs_app} ${ENGINE_LIB} ${APP_EXE}
 
 .PHONY: build_engine
 build_engine: ${outdirs_engine} ${ENGINE_LIB}
 
+APP_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},,${THIRD_PARTY_DEPS})
+ENGINE_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},${THIRD_PARTY_DEPS},)
+
 .PHONY: ${INSTALL_DIR}/app
 ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
+	$(info > Installing ${INSTALL_DIR}/app)
 	cp -asf $(realpath data) ${INSTALL_DIR}
 	-cp ${ENGINE_LIB} ${INSTALL_DIR}
 	-cp ${APP_LIB} ${INSTALL_DIR}
 	cp ${APP_EXE} $@
 
 # linking app
-${APP_MAIN_EXE}: ${obj_app} ${THIRD_PARTY_DEPS} ${ENGINE_LIB}
+${APP_MAIN_EXE}: ${obj_app} ${APP_THIRD_PARTY_DEPS} ${ENGINE_LIB}
 	$(info > Linking executable $@)
 	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
-${APP_LIB}: ${obj_app} ${THIRD_PARTY_DEPS} ${ENGINE_LIB}
+${APP_LIB}: ${APP_THIRD_PARTY_DEPS} ${obj_app} ${ENGINE_LIB}
 	$(info > Linking dynamic $@)
 	${CC} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
 
-${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${THIRD_PARTY_DEPS} ${ENGINE_LIB} ${APP_LIB}
+${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${APP_THIRD_PARTY_DEPS} ${ENGINE_LIB} ${APP_LIB}
 	$(info > Linking executable $@)
 	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 # linking engine library
-${BUILD_DIR}/engine/libengine.a: ${obj_engine}
+${BUILD_DIR}/engine/libengine.a: ${obj_engine} ${ENGINE_THIRD_PARTY_DEPS}
 	$(info > Linking static $@)
 	@ar r $@ ${obj_engine}
 
-${BUILD_DIR}/engine/libengine.so: ${obj_engine}
+${BUILD_DIR}/engine/libengine.so: ${obj_engine} ${ENGINE_THIRD_PARTY_DEPS}
 	$(info > Linking dynamic $@)
 	${CC} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
 
 # compiling main executable sources
 ${BUILD_DIR}/app/%.o: src/app/%.cpp
 	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
+	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
 
 # compiling engine sources
 ${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},) ${THIRD_PARTY_DEPS}
@@ -211,7 +220,7 @@ ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
 
-${BUILD_DIR}/third_party/glfw/src/libglfw3.so:
+${BUILD_DIR}/third_party/glfw/src/libglfw.so:
 	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -DBUILD_SHARED_LIBS=ON -S third_party/glfw -B ${BUILD_DIR}/third_party/glfw && cmake --build $(dir $@)
 
 ${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
@@ -219,7 +228,7 @@ ${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
 
 ${BUILD_DIR}/third_party/glad/gl.o:
 	mkdir -p $(dir $@)
-	$(CC) ${COMPILE_FLAGS} -I third_party/glad/include -c third_party/glad/src/gl.c -o $@
+	$(CC) ${COMPILE_FLAGS} -DGLAD_API_CALL_EXPORT=1 -DGLAD_API_CALL_EXPORT_BUILD=1 -I third_party/glad/include -c third_party/glad/src/gl.c -o $@
 
 ${BUILD_DIR}/third_party/glm/glm/libglm.a:
 	cmake -S third_party/glm \

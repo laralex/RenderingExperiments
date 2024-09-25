@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include <glad/gl.h>
 
 #include <unordered_set>
 

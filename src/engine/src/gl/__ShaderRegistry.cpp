@@ -1,9 +1,11 @@
 #include "engine/gl/ShaderRegistry.hpp"
 #include "engine/Assets.hpp"
 
-namespace engine::gl {
+#include "engine_private/Prelude.hpp"
 
-ShaderRegistry::ShaderRegistry() {
+namespace engine::gl::shader {
+
+ENGINE_EXPORT ShaderRegistry::ShaderRegistry() noexcept {
     auto insertV = [](std::unordered_map<VertexShaderId, std::string>& map, VertexShaderId id, std::string filepath) {
         std::string code = LoadTextFile(filepath);
         map.emplace(id, code);
@@ -23,7 +25,7 @@ ShaderRegistry::ShaderRegistry() {
     insertF(fragmentSrcCode_, FragmentShaderId::CONSTANT, "data/engine/shaders/constant.frag");
 }
 
-ShaderRegistry::~ShaderRegistry() {
+ENGINE_EXPORT ShaderRegistry::~ShaderRegistry() {
     for (auto& vs : vertexShaders_) {
         GLCALL(glDeleteShader(vs.second));
     }

@@ -1,8 +1,9 @@
 #include "engine/gl/TextureUnits.hpp"
 #include "engine/gl/Capabilities.hpp"
-
 #include "engine/gl/Context.hpp"
+
 #include "engine_private/Prelude.hpp"
+
 #include <utility>
 
 namespace {
@@ -45,7 +46,7 @@ constexpr auto TextureTypeToOffset [[nodiscard]] (GLenum textureType) -> size_t 
 
 namespace engine::gl {
 
-void GlTextureUnits::Initialize(GlContext const& gl) {
+ENGINE_EXPORT void GlTextureUnits::Initialize(GlContext const& gl) {
     if (isInitialized_) { return; }
     isRecordingSnapshot_ = false;
 
@@ -59,7 +60,7 @@ void GlTextureUnits::Initialize(GlContext const& gl) {
     isInitialized_ = true;
 }
 
-void GlTextureUnits::BindTexture(size_t slotIdx, GLenum textureType, GLuint texture) {
+ENGINE_EXPORT void GlTextureUnits::BindTexture(size_t slotIdx, GLenum textureType, GLuint texture) {
     size_t bindingOffset = slotIdx * NUM_TEXTURE_TYPES + TextureTypeToOffset(textureType);
     if (isRecordingSnapshot_) {
         stateSnapshot_.push(TextureUnitSnapshot{
@@ -73,7 +74,7 @@ void GlTextureUnits::BindTexture(size_t slotIdx, GLenum textureType, GLuint text
     currentBindings_[bindingOffset] = texture;
 }
 
-void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
+ENGINE_EXPORT void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
     if (isRecordingSnapshot_) {
         stateSnapshot_.push(TextureUnitSnapshot{
             .slotIdx     = slotIdx,
@@ -85,28 +86,28 @@ void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
     currentSamplerBindings_[slotIdx] = sampler;
 }
 
-void GlTextureUnits::Bind2D(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D, texture); }
+ENGINE_EXPORT void GlTextureUnits::Bind2D(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D, texture); }
 
-void GlTextureUnits::Bind2DArray(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D_ARRAY, texture); }
+ENGINE_EXPORT void GlTextureUnits::Bind2DArray(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D_ARRAY, texture); }
 
-void GlTextureUnits::BindCubemap(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_CUBE_MAP, texture); }
+ENGINE_EXPORT void GlTextureUnits::BindCubemap(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_CUBE_MAP, texture); }
 
-void GlTextureUnits::BindCubemapArray(size_t slotIdx, GLuint texture) {
+ENGINE_EXPORT void GlTextureUnits::BindCubemapArray(size_t slotIdx, GLuint texture) {
     BindTexture(slotIdx, GL_TEXTURE_CUBE_MAP_ARRAY, texture);
 }
 
-void GlTextureUnits::BeginStateSnapshot() {
+ENGINE_EXPORT void GlTextureUnits::BeginStateSnapshot() {
     assert(!isRecordingSnapshot_);
     DiscardSnapshot();
     isRecordingSnapshot_ = true;
 }
 
-void GlTextureUnits::EndStateSnapshot() {
+ENGINE_EXPORT void GlTextureUnits::EndStateSnapshot() {
     assert(isRecordingSnapshot_);
     isRecordingSnapshot_ = false;
 }
 
-void GlTextureUnits::RestoreState() {
+ENGINE_EXPORT void GlTextureUnits::RestoreState() {
     assert(!isRecordingSnapshot_);
     isRecordingSnapshot_ = false;
 
@@ -126,7 +127,7 @@ void GlTextureUnits::RestoreState() {
     }
 }
 
-void GlTextureUnits::DiscardSnapshot() {
+ENGINE_EXPORT void GlTextureUnits::DiscardSnapshot() {
     while (!stateSnapshot_.empty()) {
         stateSnapshot_.pop();
     }

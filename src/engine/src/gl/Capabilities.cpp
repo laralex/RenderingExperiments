@@ -1,8 +1,10 @@
 #include "engine/gl/Capabilities.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace engine::gl {
 
-void GlCapabilities::Initialize() {
+ENGINE_EXPORT void GlCapabilities::Initialize() {
     if (isInitialized_) { return; }
 
     GLubyte const* vendor;

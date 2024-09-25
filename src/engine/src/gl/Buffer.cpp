@@ -1,9 +1,11 @@
 #include <engine/gl/Buffer.hpp>
 #include <engine/gl/Debug.hpp>
 
+#include "engine_private/Prelude.hpp"
+
 namespace engine::gl {
 
-void GpuBuffer::Dispose() {
+ENGINE_EXPORT void GpuBuffer::Dispose() {
     if (bufferId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "GpuBuffer was disposed");
     XLOG("GpuBuffer was disposed: 0x{:08X}", GLuint(bufferId_));
@@ -11,7 +13,7 @@ void GpuBuffer::Dispose() {
     bufferId_.UnsafeReset();
 }
 
-auto GpuBuffer::Allocate(
+ENGINE_EXPORT auto GpuBuffer::Allocate(
     GlContext const& gl, GLenum targetType, GLenum usage, CpuMemory<GLvoid const> data, std::string_view name)
     -> GpuBuffer {
     {
@@ -40,7 +42,7 @@ auto GpuBuffer::Allocate(
     return gpuBuffer;
 }
 
-void GpuBuffer::Fill(CpuMemory<GLvoid const> cpuData, GLintptr gpuByteOffset) const {
+ENGINE_EXPORT void GpuBuffer::Fill(CpuMemory<GLvoid const> cpuData, GLintptr gpuByteOffset) const {
     assert(
         usage_ != GL_STATIC_DRAW & usage_ != GL_STATIC_READ & usage_ != GL_STATIC_COPY
         && "Error filling GpuBuffer which was declared STATIC");

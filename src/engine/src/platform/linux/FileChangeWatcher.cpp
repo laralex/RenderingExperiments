@@ -1,6 +1,8 @@
 #include "engine/platform/linux/FileChangeWatcher.hpp"
 #include "engine/Precompiled.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 #include <fcntl.h>
 #include <sys/inotify.h>
 #include <sys/types.h>
@@ -8,7 +10,7 @@
 
 namespace engine::platform::linux {
 
-auto WatchedDirectory::Allocate(std::string_view watchDirectory, FileChangedCallback cb)
+ENGINE_EXPORT auto WatchedDirectory::Allocate(std::string_view watchDirectory, FileChangedCallback cb)
     -> std::optional<WatchedDirectory> {
     WatchedDirectory out;
     int inotifyFileDescriptor = inotify_init1(IN_NONBLOCK);
@@ -21,14 +23,14 @@ auto WatchedDirectory::Allocate(std::string_view watchDirectory, FileChangedCall
     return std::optional{std::move(out)};
 }
 
-WatchedDirectory::WatchedDirectory(WatchedDirectory&& other)
+ENGINE_EXPORT WatchedDirectory::WatchedDirectory(WatchedDirectory&& other)
     : inotifyFileDescriptor_(other.inotifyFileDescriptor_)
     , watchDirectoryDescriptor_(other.watchDirectoryDescriptor_) {
     other.inotifyFileDescriptor_    = 0;
     other.watchDirectoryDescriptor_ = 0;
 }
 
-WatchedDirectory& WatchedDirectory::operator=(WatchedDirectory&& other) {
+ENGINE_EXPORT WatchedDirectory& WatchedDirectory::operator=(WatchedDirectory&& other) {
     inotifyFileDescriptor_          = other.inotifyFileDescriptor_;
     watchDirectoryDescriptor_       = other.watchDirectoryDescriptor_;
     other.inotifyFileDescriptor_    = 0;
@@ -36,7 +38,7 @@ WatchedDirectory& WatchedDirectory::operator=(WatchedDirectory&& other) {
     return *this;
 }
 
-WatchedDirectory::~WatchedDirectory() {
+ENGINE_EXPORT WatchedDirectory::~WatchedDirectory() {
     if (inotifyFileDescriptor_ < 0) { return; }
     // set for non-blocking reads
     fcntl(inotifyFileDescriptor_, F_SETFL, fcntl(inotifyFileDescriptor_, F_GETFL) | O_NONBLOCK);
@@ -48,7 +50,7 @@ WatchedDirectory::~WatchedDirectory() {
     inotifyFileDescriptor_ = 0;
 }
 
-void FileChangeWatcher::PollEvents(WatchedDirectory const& directory) noexcept {
+ENGINE_EXPORT void FileChangeWatcher::PollEvents(WatchedDirectory const& directory) noexcept {
     // TODO: InotifyDescriptor should be 1 for the app
     // watch descriptors are 1 per directory and are stored in even structure "inotify_event"
     int bytesWritten = read(directory.InotifyDescriptor(), eventBuffer_, std::size(eventBuffer_));

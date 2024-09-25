@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/gl/Context.hpp"
-#include <glad/gl.h>
 #include <string_view>
 
 #ifdef XDEBUG

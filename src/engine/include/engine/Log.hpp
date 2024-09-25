@@ -1,13 +1,13 @@
 #pragma once
 
+#define SPDLOG_COMPILED_LIB 1
+#define SPDLOG_NO_EXCEPTIONS 1
+#include <spdlog/spdlog.h>
 
 #ifdef XDEBUG
 
-#define SPDLOG_COMPILED_LIB 1
-#define SPDLOG_NO_EXCEPTIONS 1
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
-#include "spdlog/spdlog.h"
 #pragma clang diagnostic pop
 // clang-format off
 #define X_VA_ARGS(...) , ##__VA_ARGS__

@@ -2,23 +2,25 @@
 #include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/Texture.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace engine::gl {
 
 ENGINE_STATIC bool FramebufferDrawCtx::hasInstances_{false};
 ENGINE_STATIC GlHandle FramebufferDrawCtx::contextFramebuffer_{GL_NONE};
 ENGINE_STATIC GLenum FramebufferDrawCtx::framebufferTarget_{GL_DRAW_FRAMEBUFFER};
 
-FramebufferDrawCtx::FramebufferDrawCtx(Framebuffer const& useFramebuffer, bool bindAsDraw) noexcept
+ENGINE_EXPORT FramebufferDrawCtx::FramebufferDrawCtx(Framebuffer const& useFramebuffer, bool bindAsDraw) noexcept
     : FramebufferDrawCtx(useFramebuffer.Id(), bindAsDraw) { }
 
-FramebufferDrawCtx::FramebufferDrawCtx(GLuint useFramebuffer, bool bindAsDraw) noexcept {
+ENGINE_EXPORT FramebufferDrawCtx::FramebufferDrawCtx(GLuint useFramebuffer, bool bindAsDraw) noexcept {
     // XLOG("FramebufferCtx ctor {}", useFramebuffer);
     assert(!hasInstances_ && "FramebufferDrawCtx another already exists in the scope");
     GuardAnother(useFramebuffer, bindAsDraw);
     hasInstances_ = true;
 }
 
-FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
+ENGINE_EXPORT FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
     // XLOG("FramebufferCtx dtor {}", contextFramebuffer_.id);
     if (!hasInstances_) { return; }
     // assert(hasInstances_);
@@ -27,16 +29,16 @@ FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
     hasInstances_ = false;
 }
 
-void FramebufferDrawCtx::GuardAnother(GLuint useFramebuffer, bool bindAsDraw) noexcept {
+ENGINE_EXPORT void FramebufferDrawCtx::GuardAnother(GLuint useFramebuffer, bool bindAsDraw) noexcept {
     // safe, because FramebufferDrawCtx doesn't own any resources, no leaking
     contextFramebuffer_.UnsafeAssign(GlHandle{useFramebuffer});
     framebufferTarget_ = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
     GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
 }
 
-Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE); }
+ENGINE_EXPORT Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE); }
 
-void Framebuffer::Dispose() {
+ENGINE_EXPORT void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }
     // LogDebugLabel(*this, "Framebuffer object was disposed");
     XLOG("Framebuffer object was disposed: 0x{:08X}", GLuint(fbId_));
@@ -44,7 +46,7 @@ void Framebuffer::Dispose() {
     fbId_.UnsafeReset();
 }
 
-auto Framebuffer::Allocate(GlContext const& gl, std::string_view name) -> Framebuffer {
+ENGINE_EXPORT auto Framebuffer::Allocate(GlContext const& gl, std::string_view name) -> Framebuffer {
     Framebuffer fb{};
     GLCALL(glGenFramebuffers(1, fb.fbId_.Ptr()));
     fb.BindRead();
@@ -56,44 +58,44 @@ auto Framebuffer::Allocate(GlContext const& gl, std::string_view name) -> Frameb
     return fb;
 }
 
-void Framebuffer::BindBackbuffer() { GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, 0U)); }
+ENGINE_EXPORT void Framebuffer::BindBackbuffer() { GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, 0U)); }
 
-void Framebuffer::BindDraw() const { GLCALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbId_)); }
+ENGINE_EXPORT void Framebuffer::BindDraw() const { GLCALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbId_)); }
 
-void Framebuffer::BindRead() const { GLCALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, fbId_)); }
+ENGINE_EXPORT void Framebuffer::BindRead() const { GLCALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, fbId_)); }
 
-auto FramebufferDrawCtx::ClearColor(GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) const
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearColor(GLint drawBufferIdx, GLint r, GLint g, GLint b, GLint a) const
     -> FramebufferDrawCtx const& {
     GLint rgba[] = {r, g, b, a};
     GLCALL(glClearBufferiv(GL_COLOR, drawBufferIdx, rgba));
     return *this;
 }
 
-auto FramebufferDrawCtx::ClearColor(GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) const
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearColor(GLint drawBufferIdx, GLuint r, GLuint g, GLuint b, GLuint a) const
     -> FramebufferDrawCtx const& {
     GLuint rgba[] = {r, g, b, a};
     GLCALL(glClearBufferuiv(GL_COLOR, drawBufferIdx, rgba));
     return *this;
 }
 
-auto FramebufferDrawCtx::ClearColor(GLint drawBufferIdx, GLfloat r, GLfloat g, GLfloat b, GLfloat a) const
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearColor(GLint drawBufferIdx, GLfloat r, GLfloat g, GLfloat b, GLfloat a) const
     -> FramebufferDrawCtx const& {
     GLfloat rgba[] = {r, g, b, a};
     GLCALL(glClearBufferfv(GL_COLOR, drawBufferIdx, rgba));
     return *this;
 }
 
-auto FramebufferDrawCtx::ClearDepth(GLfloat value) const -> FramebufferDrawCtx const& {
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearDepth(GLfloat value) const -> FramebufferDrawCtx const& {
     GLCALL(glClearBufferfv(GL_DEPTH, 0, &value));
     return *this;
 }
 
-auto FramebufferDrawCtx::ClearStencil(GLint value) const -> FramebufferDrawCtx const& {
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearStencil(GLint value) const -> FramebufferDrawCtx const& {
     GLCALL(glClearBufferiv(GL_STENCIL, 0, &value));
     return *this;
 }
 
-auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -> FramebufferDrawCtx const& {
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -> FramebufferDrawCtx const& {
     GLCALL(glClearBufferfi(GL_DEPTH_STENCIL, 0, depth, stencil));
     return *this;
 }
@@ -105,7 +107,7 @@ auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -
 // }
 
 // valid attachments: COLOR_ATTACHMENTi, DEPTH_ATTACHMENT, or STENCIL_ATTACHMENT
-auto FramebufferDrawCtx::Invalidate(GlContext const& gl, CpuMemory<GLenum const> attachments) const
+ENGINE_EXPORT auto FramebufferDrawCtx::Invalidate(GlContext const& gl, CpuMemory<GLenum const> attachments) const
     -> FramebufferDrawCtx const& {
     if (gl.Extensions().Supports(GlExtensions::ARB_invalidate_subdata)) {
         GLCALL(glInvalidateFramebuffer(framebufferTarget_, attachments.NumElements(), attachments[0]));
@@ -113,7 +115,7 @@ auto FramebufferDrawCtx::Invalidate(GlContext const& gl, CpuMemory<GLenum const>
     return *this;
 }
 
-auto FramebufferDrawCtx::IsComplete(GlContext const& gl) const -> bool {
+ENGINE_EXPORT auto FramebufferDrawCtx::IsComplete(GlContext const& gl) const -> bool {
     bool isComplete = false;
     GLCALL(isComplete = glCheckFramebufferStatus(framebufferTarget_) == GL_FRAMEBUFFER_COMPLETE);
     if (!isComplete) {
@@ -122,11 +124,11 @@ auto FramebufferDrawCtx::IsComplete(GlContext const& gl) const -> bool {
     return isComplete;
 }
 
-FramebufferEditCtx::FramebufferEditCtx(Framebuffer& useFramebuffer, bool bindAsDraw) noexcept
+ENGINE_EXPORT FramebufferEditCtx::FramebufferEditCtx(Framebuffer& useFramebuffer, bool bindAsDraw) noexcept
     : ctx_{useFramebuffer, bindAsDraw}
     , fb_{useFramebuffer} { }
 
-auto FramebufferEditCtx::AttachTexture(
+ENGINE_EXPORT auto FramebufferEditCtx::AttachTexture(
     GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     assert(
@@ -163,7 +165,7 @@ auto FramebufferEditCtx::AttachTexture(
     return *this;
 }
 
-auto FramebufferEditCtx::AttachRenderbuffer(
+ENGINE_EXPORT auto FramebufferEditCtx::AttachRenderbuffer(
     GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     GLCALL(glFramebufferRenderbuffer(ctx_.BoundTarget(), attachment, rb.RenderbufferSlotTarget(), rb.Id()));
@@ -172,13 +174,13 @@ auto FramebufferEditCtx::AttachRenderbuffer(
     return *this;
 }
 
-auto FramebufferEditCtx::CommitDrawbuffers() const -> FramebufferEditCtx const& {
+ENGINE_EXPORT auto FramebufferEditCtx::CommitDrawbuffers() const -> FramebufferEditCtx const& {
     assert(ctx_.BoundTarget() == GL_DRAW_FRAMEBUFFER);
     GLCALL(glDrawBuffers(static_cast<GLsizei>(Framebuffer::MAX_DRAW_BUFFERS), fb_.drawBuffers_));
     return *this;
 }
 
-auto FramebufferEditCtx::SetReadbuffer(GLenum attachment) const -> FramebufferEditCtx const& {
+ENGINE_EXPORT auto FramebufferEditCtx::SetReadbuffer(GLenum attachment) const -> FramebufferEditCtx const& {
     assert(ctx_.BoundTarget() == GL_READ_FRAMEBUFFER);
     GLCALL(glReadBuffer(attachment));
     return *this;

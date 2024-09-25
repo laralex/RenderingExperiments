@@ -4,6 +4,8 @@
 #include "engine/PlaneMesh.hpp"
 #include "engine/UvSphereMesh.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 using namespace engine::gl;
@@ -87,7 +89,7 @@ auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&&
 
 namespace engine::gl {
 
-auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+ENGINE_EXPORT auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint8_t>{
@@ -106,7 +108,7 @@ auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::Attri
         });
 }
 
-auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+ENGINE_EXPORT auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
     -> GpuMesh {
     return AllocateMesh(
         gl,
@@ -126,7 +128,7 @@ auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, Gp
         });
 }
 
-auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+ENGINE_EXPORT auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
     -> GpuMesh {
     return AllocateMesh(
         gl,
@@ -146,7 +148,7 @@ auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuM
         });
 }
 
-auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+ENGINE_EXPORT auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint16_t>{

@@ -1,18 +1,20 @@
 #include "engine/WindowContext.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 namespace engine {
 
-WindowCtx::WindowCtx(GLFWwindow* window)
+ENGINE_EXPORT WindowCtx::WindowCtx(GLFWwindow* window)
     : window_(window) {
     int w = 0, h = 0;
     if (window != nullptr) { glfwGetFramebufferSize(window, &w, &h); }
     windowSize_ = {w, h};
 }
 
-auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
+ENGINE_EXPORT auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
     auto found                 = keys_.find(keyboardKey);
     ButtonCallback oldCallback = nullptr;
     if (found != keys_.end()) { oldCallback = found->second; }
@@ -20,7 +22,7 @@ auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback
     return oldCallback;
 }
 
-auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback) -> ButtonCallback {
+ENGINE_EXPORT auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback) -> ButtonCallback {
     auto found                 = mouseButtons_.find(button);
     ButtonCallback oldCallback = nullptr;
     if (found != mouseButtons_.end()) { oldCallback = found->second; }
@@ -28,18 +30,18 @@ auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback ca
     return oldCallback;
 }
 
-void WindowCtx::UpdateResolution(int64_t width, int64_t height) {
+ENGINE_EXPORT void WindowCtx::UpdateResolution(int64_t width, int64_t height) {
     if (width < 0) { width = 0; }
     if (height < 0) { height = 0; }
     windowSize_ = {static_cast<int32_t>(width), static_cast<int32_t>(height)};
 }
 
-void WindowCtx::UpdateCursorPosition(double xpos, double ypos) {
+ENGINE_EXPORT void WindowCtx::UpdateCursorPosition(double xpos, double ypos) {
     glm::vec2 newPos{static_cast<float>(xpos), static_cast<float>(ypos)};
     mousePos_ = newPos;
 }
 
-void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int mods) {
+ENGINE_EXPORT void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int mods) {
     // TODO: reduce overhead
     float state = static_cast<float>(action == GLFW_PRESS) - (action == GLFW_RELEASE);
     switch (mouseButton) {
@@ -60,13 +62,13 @@ void WindowCtx::UpdateMouseButton(GlfwMouseButton mouseButton, int action, int m
     }
 }
 
-void WindowCtx::UpdateKeyboardKey(GlfwKey keyboardKey, int action, int mods) {
+ENGINE_EXPORT void WindowCtx::UpdateKeyboardKey(GlfwKey keyboardKey, int action, int mods) {
     if (auto const found = keys_.find(keyboardKey); found != keys_.cend()) {
         found->second(action == GLFW_PRESS, action == GLFW_RELEASE, static_cast<WindowCtx::KeyModFlags>(mods));
     }
 }
 
-auto WindowCtx::IsMousePressed(GlfwMouseButton mouseButton) const -> float {
+ENGINE_EXPORT auto WindowCtx::IsMousePressed(GlfwMouseButton mouseButton) const -> float {
     // TODO: reduce overhead
     switch (mouseButton) {
     case GLFW_MOUSE_BUTTON_LEFT:
@@ -80,16 +82,16 @@ auto WindowCtx::IsMousePressed(GlfwMouseButton mouseButton) const -> float {
     }
 }
 
-void WindowCtx::UpdateCursorEntered(bool entered) { mouseInsideWindow_ = entered; }
+ENGINE_EXPORT void WindowCtx::UpdateCursorEntered(bool entered) { mouseInsideWindow_ = entered; }
 
-void WindowCtx::OnFrameEnd() {
+ENGINE_EXPORT void WindowCtx::OnPollEvents() {
     mousePress_      = glm::max(glm::vec3{0.0f}, mousePress_);
     mousePosDelta_   = mousePos_ - isNonFirstFrame_ * mousePosPrev_;
     mousePosPrev_    = mousePos_;
     isNonFirstFrame_ = 1.0f;
 }
 
-auto operator&(WindowCtx::KeyModFlags a, WindowCtx::KeyModFlags b) -> bool {
+ENGINE_EXPORT auto operator&(WindowCtx::KeyModFlags a, WindowCtx::KeyModFlags b) -> bool {
     using T = std::underlying_type_t<WindowCtx::KeyModFlags>;
     return static_cast<T>(a) & static_cast<T>(b);
 }

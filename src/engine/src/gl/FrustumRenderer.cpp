@@ -5,6 +5,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr GLint UNIFORM_MVP_LOCATION   = 0;
@@ -137,7 +139,7 @@ constexpr uint8_t indices[] = {
 
 namespace engine::gl {
 
-auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRenderer {
+ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRenderer {
     constexpr GLint ATTRIB_FRUSTUM_WEIGHTS_LOCATION = 0;
     constexpr GLint ATTRIB_OTHER_WEIGHTS_LOCATION   = 1;
 
@@ -187,14 +189,13 @@ auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRenderer {
     return renderer;
 }
 
-void FrustumRenderer::Render(
+ENGINE_EXPORT void FrustumRenderer::Render(
     glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     auto programGuard = gl::UniformCtx(program_);
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
-        .nearFarThickness   = {frustum.near, frustum.far, thickness, 0.0},
+        .nearFarThickness   = {frustum.near, frustum.far, thickness*2.0f, 0.0},
     };
-
     ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
     // programGuard.SetUbo(uboLocation_, UBO_BINDING);

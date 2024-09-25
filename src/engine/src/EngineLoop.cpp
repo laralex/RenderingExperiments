@@ -1,4 +1,6 @@
 #include "engine/EngineLoop.hpp"
+
+#include "engine/Precompiled.hpp"
 #include "engine_private/Prelude.hpp"
 
 #define GLFW_INCLUDE_NONE
@@ -185,7 +187,9 @@ void ExecuteQueue(engine::EngineHandle engine, std::queue<engine::UserAction>& q
 }
 
 auto InitializeCommonResources [[nodiscard]]() -> bool {
-    spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v");
+    if (engine::DEBUG_BUILD) {
+        spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v");
+    }
     XLOGW("glfwInit()");
     if (!glfwInit()) {
         XLOGE("Failed to initialize GLFW");
@@ -258,6 +262,10 @@ ENGINE_EXPORT auto TickEngine(engine::EngineHandle engine) -> engine::EngineResu
     EnginePersistentData& engineData = *engine->persistent;
     WindowCtx& windowCtx             = engineData.windowCtx;
     GLFWwindow* window               = windowCtx.Window();
+
+    glfwPollEvents();
+    windowCtx.OnPollEvents();
+
     if (glfwWindowShouldClose(window)) { return EngineResult::WINDOW_CLOSED_NORMALLY; }
     auto& windowQueue = GetEngineQueue(engine, UserActionType::WINDOW);
     auto& renderQueue = GetEngineQueue(engine, UserActionType::RENDER);
@@ -271,8 +279,6 @@ ENGINE_EXPORT auto TickEngine(engine::EngineHandle engine) -> engine::EngineResu
     engineData.renderCallback(renderCtx, windowCtx, engineData.applicationData);
 
     glfwSwapBuffers(window);
-    glfwPollEvents();
-    windowCtx.OnFrameEnd();
 
     ++engineData.frameIdx;
     return EngineResult::SUCCESS;
@@ -289,6 +295,7 @@ ENGINE_EXPORT auto SetRenderCallback(engine::EngineHandle engine, engine::Render
         return nullptr;
     }
     if (!engine->persistent) [[unlikely]] { return nullptr; }
+    XLOGW("EngineLoop::SetRenderCallback");
     auto oldCallback                   = engine->persistent->renderCallback;
     engine->persistent->renderCallback = newCallback;
     return oldCallback;

@@ -1,5 +1,7 @@
 #include "engine/UvSphereMesh.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr float PI = glm::pi<float>();
@@ -21,7 +23,7 @@ auto ComputeEquiareaSphereUv [[nodiscard]] (glm::vec3 unitSpherePosition) -> glm
 namespace engine {
 
 // adopted from https://danielsieger.com/blog/2021/03/27/generating-spheres.html
-auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
+ENGINE_EXPORT auto UvSphereMesh::Generate(GenerationArgs args) -> UvSphereMesh {
     UvSphereMesh mesh;
     if (args.numMeridians <= 2) args.numMeridians = 3;
     if (args.numParallels <= 2) args.numParallels = 3;

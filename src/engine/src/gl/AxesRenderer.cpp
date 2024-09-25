@@ -5,6 +5,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
 
 namespace {
@@ -109,7 +111,7 @@ constexpr GLint UNIFORM_SCALE_LOCATION = 1;
 
 namespace engine::gl {
 
-auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
+ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
@@ -159,7 +161,7 @@ auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     return renderer;
 }
 
-void AxesRenderer::Render(glm::mat4 const& mvp, float scale) const {
+ENGINE_EXPORT void AxesRenderer::Render(glm::mat4 const& mvp, float scale) const {
     bool isCustom       = scale != 1.0f;
     auto const& program = isCustom ? customizedProgram_ : defaultProgram_;
 

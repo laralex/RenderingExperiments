@@ -1,5 +1,6 @@
 #include "engine/Assets.hpp"
 #include "engine/gl/Texture.hpp"
+
 #include "engine_private/Prelude.hpp"
 
 #include <stb_image.h>
@@ -41,20 +42,20 @@ ENGINE_EXPORT auto LoadBinaryFile(std::string_view const filepath, FileSizeCallb
     return fileLength;
 }
 
-ImageLoader::~ImageLoader() noexcept {
+ENGINE_EXPORT ImageLoader::~ImageLoader() noexcept {
     for (auto decodedImage : loadedImages_) {
         stbi_image_free(static_cast<void*>(decodedImage.second.data));
     }
     loadedImages_.clear();
 }
 
-auto ImageLoader::ImageData(int32_t loadedImageId) const -> CpuView<uint8_t const> {
+ENGINE_EXPORT auto ImageLoader::ImageData(int32_t loadedImageId) const -> CpuView<uint8_t const> {
     auto find = loadedImages_.find(loadedImageId);
     if (find == loadedImages_.cend()) { return CpuView<uint8_t>{}; }
     return find->second;
 }
 
-auto ImageLoader::Load(std::string_view const filepath, int32_t numDesiredChannels) -> std::optional<LoadInfo> {
+ENGINE_EXPORT auto ImageLoader::Load(std::string_view const filepath, int32_t numDesiredChannels) -> std::optional<LoadInfo> {
     auto numBytes = LoadBinaryFile(filepath, [&](size_t filesize) {
         temporaryBuffer_.resize(filesize);
         return CpuMemory{temporaryBuffer_.data(), filesize};
@@ -62,7 +63,7 @@ auto ImageLoader::Load(std::string_view const filepath, int32_t numDesiredChanne
     return Load(CpuMemory{temporaryBuffer_.data(), numBytes}, numDesiredChannels);
 }
 
-auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo> {
+ENGINE_EXPORT auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo> {
     LoadInfo result{};
     if (int ok = stbi_info_from_memory(
             encodedImageData.data, encodedImageData.NumElements(), &result.width, &result.height,
@@ -102,7 +103,7 @@ auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredCh
 
 namespace engine::gl {
 
-auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args) -> std::optional<Texture> {
+ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args) -> std::optional<Texture> {
     auto cpuImageInfo = args.loader.Load(args.filepath, args.numChannels);
     if (!cpuImageInfo) {
         XLOGE("Failed to load texture: {}", args.loader.LatestError());
@@ -127,7 +128,8 @@ auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args
 } // namespace engine::gl
 
 namespace engine::gl::shader {
-auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines)
+
+ENGINE_EXPORT auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines)
     -> std::string {
     std::string code          = LoadTextFile(filepath);
     static bool isInitialized = false;

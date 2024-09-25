@@ -5,6 +5,8 @@
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace {
 
 constexpr GLint UNIFORM_MVP_LOCATION = 0;
@@ -13,7 +15,7 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRenderer {
+ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION        = 0;
     constexpr GLint ATTRIB_UV_LOCATION              = 1;
     constexpr GLint ATTRIB_NORMAL_LOCATION          = 2;
@@ -115,7 +117,7 @@ auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRend
     return renderer;
 }
 
-void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
+ENGINE_EXPORT void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0 || firstInstance >= lastInstance_) {
         // XLOGW("Limit of points is <= 0 in PointRenderer");
         return;
@@ -126,12 +128,12 @@ void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32
         vao_, std::min(firstInstance, lastInstance_), std::min(lastInstance_ - firstInstance, numInstances));
 }
 
-void PointRenderer::LimitInstances(int32_t numInstances) {
+ENGINE_EXPORT void PointRenderer::LimitInstances(int32_t numInstances) {
     lastInstance_ =
         std::min(numInstances, static_cast<int32_t>(instancesBuffer_.SizeBytes() / sizeof(PointRendererInput::Point)));
 }
 
-void PointRenderer::Fill(
+ENGINE_EXPORT void PointRenderer::Fill(
     std::vector<PointRendererInput::Point> const& points, int32_t numPoints, int32_t numPointsOffset) {
     using T = typename std::decay<decltype(*points.begin())>::type;
     if (std::size(points) == 0 | numPoints == 0) { return; }

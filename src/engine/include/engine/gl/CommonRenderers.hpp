@@ -10,7 +10,6 @@
 #include "engine/gl/SamplersCache.hpp"
 #include "engine/gl/Texture.hpp"
 
-#include <glad/gl.h>
 #include <glm/mat4x4.hpp>
 
 namespace engine::gl {

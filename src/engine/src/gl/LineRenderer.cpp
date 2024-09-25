@@ -1,7 +1,8 @@
 #include "engine/gl/LineRenderer.hpp"
-
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
+
+#include "engine_private/Prelude.hpp"
 
 namespace {
 
@@ -11,7 +12,7 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) -> LineRenderer {
+ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) -> LineRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
 
@@ -52,13 +53,13 @@ auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) -> LineRendere
     return renderer;
 }
 
-void LineRenderer::Render(glm::mat4 const& camera) const {
+ENGINE_EXPORT void LineRenderer::Render(glm::mat4 const& camera) const {
     auto programGuard = UniformCtx{program_};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVao(vao_, GL_LINES);
 }
 
-void LineRenderer::Fill(
+ENGINE_EXPORT void LineRenderer::Fill(
     std::vector<LineRendererInput::Line> const& lines, size_t numLines, size_t numLinesOffset) const {
     using T               = typename std::decay<decltype(*lines.begin())>::type;
     auto const byteOffset = numLinesOffset * sizeof(T);

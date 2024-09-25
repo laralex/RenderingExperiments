@@ -50,7 +50,7 @@ public:
     void UpdateCursorEntered(bool entered);
     void UpdateMouseButton(GlfwMouseButton button, int action, int mods);
     void UpdateKeyboardKey(GlfwKey keyboardKey, int action, int mods);
-    void OnFrameEnd();
+    void OnPollEvents();
 
 private:
     GLFWwindow* window_{nullptr};

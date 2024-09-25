@@ -1,10 +1,12 @@
 #include "engine/Unprojection.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 namespace engine {
 
 // adopted from paper
 // https://web.archive.org/web/20120531231005/http://crazyjoke.free.fr/doc/3D/plane%20extraction.pdf
-FrustumPlanes CameraToPlanes(glm::mat4 const& mvp, bool normalize) {
+ENGINE_EXPORT FrustumPlanes CameraToPlanes(glm::mat4 const& mvp, bool normalize) {
     FrustumPlanes planes;
 
     planes.left = glm::vec4{
@@ -62,7 +64,7 @@ FrustumPlanes CameraToPlanes(glm::mat4 const& mvp, bool normalize) {
 }
 
 // proj in column major order
-Frustum ProjectionToFrustum(glm::mat4 const& proj) {
+ENGINE_EXPORT Frustum ProjectionToFrustum(glm::mat4 const& proj) {
     float near          = proj[3][2] / (proj[2][2] - 1);
     float far           = proj[3][2] / (proj[2][2] + 1);
     glm::vec2 unproject = near / glm::vec2{proj[0][0], proj[1][1]};

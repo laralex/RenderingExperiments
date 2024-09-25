@@ -1,12 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <glad/gl.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <optional>
 #include <string_view>
+#include <functional>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
@@ -15,8 +15,9 @@
 #define ENGINE_STATIC CR_STATE
 
 // #include "engine/CommonInterfaces.hpp"
-#include "engine/gl/Capabilities.hpp"
 #include "engine/gl/Common.hpp"
+
+#include "engine/gl/Capabilities.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/Debug.hpp"
 #include "engine/gl/Extensions.hpp"

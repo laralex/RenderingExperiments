@@ -6,7 +6,7 @@
 
 #include <unordered_map>
 
-namespace engine::gl {
+namespace engine::gl::shader {
 
 enum class VertexShaderId : std::size_t {
     AXES = 0,

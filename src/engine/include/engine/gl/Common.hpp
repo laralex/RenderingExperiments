@@ -1,10 +1,12 @@
 #pragma once
 
-#include "engine/gl/Context.hpp"
-
 #include <cassert>
+#undef GLAD_API_CALL
+#define GLAD_API_CALL_EXPORT 1
 #include <glad/gl.h>
 #include <glm/mat4x4.hpp>
+
+#include "engine/gl/Context.hpp"
 
 namespace engine {
 template <typename T> struct CpuView;

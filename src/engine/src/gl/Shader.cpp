@@ -1,6 +1,7 @@
-#include <engine/Assets.hpp>
-#include <engine/gl/Shader.hpp>
-#include <engine_private/Prelude.hpp>
+#include "engine/Assets.hpp"
+#include "engine/gl/Shader.hpp"
+
+#include "engine_private/Prelude.hpp"
 
 #include <iostream>
 #include <regex>
@@ -100,7 +101,7 @@ auto ExpandRegistryRecursively(IncludeRegistry& includeRegistry) {
 
 namespace engine::gl::shader {
 
-void LoadCommonIncludes(IncludeRegistry& out) {
+ENGINE_EXPORT void LoadCommonIncludes(IncludeRegistry& out) {
     AddInclude(out, "common/version/330", "#version 330 core", 0);
     AddInclude(out, "common/version/420", "#version 420 core", 0);
     AddInclude(out, "common/consts", LoadTextFile("data/engine/shaders/include/constants.inc"), 0);
@@ -114,15 +115,15 @@ void LoadCommonIncludes(IncludeRegistry& out) {
     ExpandRegistryRecursively(out);
 }
 
-void LoadVertexIncludes(IncludeRegistry& out) { }
+ENGINE_EXPORT void LoadVertexIncludes(IncludeRegistry& out) { }
 
-void LoadFragmentIncludes(IncludeRegistry& out) {
+ENGINE_EXPORT void LoadFragmentIncludes(IncludeRegistry& out) {
     AddInclude(
         out, "frag/gradient_noise/eval", "(1.0 / 255.0) * GradientNoise(gl_FragCoord.xy) - (0.5 / 255.0)", 0, false);
     ExpandRegistryRecursively(out);
 }
 
-auto ParseParts(std::string_view code) -> ShaderParsing {
+ENGINE_EXPORT auto ParseParts(std::string_view code) -> ShaderParsing {
     ShaderParsing parse;
     parse.parts.reserve(64);
 
@@ -178,7 +179,7 @@ auto ParseParts(std::string_view code) -> ShaderParsing {
     return parse;
 }
 
-auto GenerateCode
+ENGINE_EXPORT auto GenerateCode
     [[nodiscard]] (std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines)
     -> std::string {
     auto parsing = shader::ParseParts(originalCode);
@@ -195,7 +196,7 @@ auto GenerateCode
     return ss.str();
 }
 
-void InjectDefines(std::stringstream& destination, CpuView<shader::Define const> defines) {
+ENGINE_EXPORT void InjectDefines(std::stringstream& destination, CpuView<shader::Define const> defines) {
     if constexpr (engine::DEBUG_BUILD) { destination << "#define DEBUG 1\n"; }
     size_t numDefines = defines.NumElements();
     for (size_t i = 0; i < numDefines; ++i) {
@@ -222,7 +223,7 @@ void InjectDefines(std::stringstream& destination, CpuView<shader::Define const>
     }
 }
 
-auto InjectDefines(std::string_view code, CpuView<shader::Define const> defines) -> std::string {
+ENGINE_EXPORT auto InjectDefines(std::string_view code, CpuView<shader::Define const> defines) -> std::string {
     std::stringstream ss;
     auto versionEnd = code.find('\n') + 1;
     ss << code.substr(0U, versionEnd);

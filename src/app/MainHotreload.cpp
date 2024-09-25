@@ -2,9 +2,12 @@
 #include "engine/Log.hpp"
 
 #define CR_HOST CR_UNSAFE // required in the host only and before including cr.h
+// #define CR_HOST CR_SAFEST
+
 #ifdef XDEBUG
 #define CR_DEBUG
-#endif
+#endif // XDEBUG
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
 #include <cr.h>
@@ -12,11 +15,15 @@
 
 #include <cassert>
 
-constexpr int32_t HOT_RELOAD_AFTER_FRAME = 100;
+constexpr int32_t HOT_RELOAD_AFTER_FRAME = 50;
 
 // must be full absolute path
 constexpr char const* HOT_RELOAD_LIBRARY_PATH =
+#ifdef XDEBUG
     "/home/alex/sidework/game-dev/learnopengl/build/debug/install/libapp.so";
+#else
+    "/home/alex/sidework/game-dev/learnopengl/build/release/install/libapp.so";
+#endif
 
 auto main(int argc, char* argv[]) -> int {
     cr_plugin hotReloader{};

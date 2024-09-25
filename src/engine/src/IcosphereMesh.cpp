@@ -1,5 +1,7 @@
 #include "engine/IcosphereMesh.hpp"
 
+#include "engine_private/Prelude.hpp"
+
 #include <glm/ext/scalar_constants.hpp>
 #include <map>
 
@@ -52,7 +54,7 @@ auto MakeIcosahedron [[nodiscard]] () -> engine::IcosphereMesh {
 
 namespace engine {
 
-auto IcosphereMesh::Generate(GenerationArgs args) -> IcosphereMesh {
+ENGINE_EXPORT auto IcosphereMesh::Generate(GenerationArgs args) -> IcosphereMesh {
     IcosphereMesh mesh = MakeIcosahedron();
     for (int32_t i = 0; i < args.numSubdivisions; ++i) {
         // split each triangle into 4
