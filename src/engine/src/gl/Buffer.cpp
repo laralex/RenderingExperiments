@@ -29,6 +29,8 @@ ENGINE_EXPORT auto GpuBuffer::Allocate(
     GLCALL(glGenBuffers(1, gpuBuffer.bufferId_.Ptr()));
     GLCALL(glBindBuffer(targetType, gpuBuffer.bufferId_));
     GLCALL(glBufferData(targetType, data.NumElements(), data[0], usage));
+    //TODO glBufferStorageEXT
+    assert(false);
     GLCALL(glBindBuffer(targetType, 0));
 
     gpuBuffer.targetType_ = targetType;
