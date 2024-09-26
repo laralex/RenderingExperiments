@@ -1,6 +1,5 @@
 #include "engine/gl/TextureUnits.hpp"
-#include "engine/gl/Capabilities.hpp"
-#include "engine/gl/Context.hpp"
+#include "engine/Precompiled.hpp"
 
 #include "engine_private/Prelude.hpp"
 

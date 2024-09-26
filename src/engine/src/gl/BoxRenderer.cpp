@@ -121,7 +121,7 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
         gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)},
         "BoxRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "BoxRenderer");
-    (void)gl::VaoMutableCtx{renderer.vao_}
+    std::ignore = gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
             {.location        = ATTRIB_POSITION_LOCATION,

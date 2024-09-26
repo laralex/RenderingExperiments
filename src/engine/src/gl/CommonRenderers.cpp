@@ -53,10 +53,10 @@ ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
     pointRenderer_ = PointRenderer::Allocate(gl, MAX_POINTS);
 
     datalessTriangleVao_ = Vao::Allocate(gl, "Dataless Triangle VAO");
-    (void)VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
+    std::ignore = VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
 
     datalessQuadVao_ = Vao::Allocate(gl, "Dataless Quad VAO");
-    (void)VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
+    std::ignore = VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
 
     isInitialized_ = true;
     blitProgram_   = AllocateBlitter(gl);
@@ -86,7 +86,7 @@ ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
         42,
         255,
     };
-    (void)gl::TextureCtx{stubColorTexture_}.Fill2D(
+    std::ignore = gl::TextureCtx{stubColorTexture_}.Fill2D(
         {.dataFormat = GL_RGB,
          .dataType   = GL_UNSIGNED_BYTE,
          .data       = TEXTURE_DATA_STUB_COLOR,

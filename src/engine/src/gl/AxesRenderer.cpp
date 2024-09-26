@@ -122,7 +122,7 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
         gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{indices, sizeof(indices)},
         "AxesRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "AxesRenderer");
-    (void)gl::VaoMutableCtx{renderer.vao_}
+    std::ignore = gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
             {.location        = ATTRIB_POSITION_LOCATION,
@@ -156,7 +156,7 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
 
     makeProgram(renderer.customizedProgram_, "AxesRenderer");
     makeProgram(renderer.defaultProgram_, "AxesRenderer/Default");
-    (void)gl::UniformCtx{renderer.defaultProgram_}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
+    gl::UniformCtx{renderer.defaultProgram_}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
 
     return renderer;
 }

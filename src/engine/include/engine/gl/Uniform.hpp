@@ -8,6 +8,7 @@ namespace engine::gl {
 // Helper object, binds GL program in ctor, unbinds it in dtor
 // No two instances of the class should exist in one scope (checked by assert)
 class UniformCtx final {
+
 public:
 #define Self UniformCtx
     explicit Self(GpuProgram const& useProgram) noexcept;
@@ -159,8 +160,8 @@ public:
     }
 
 private:
-    ENGINE_STATIC static GlHandle contextProgram_;
-    ENGINE_STATIC static bool hasInstances_;
+    static GlHandle contextProgram_;
+    static bool hasInstances_;
 };
 
 } // namespace engine::gl

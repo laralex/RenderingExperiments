@@ -21,7 +21,7 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
         gl, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW,
         CpuMemory<void const>{nullptr, maxLines * sizeof(LineRendererInput::Line)}, "LineRenderer Vertices");
     renderer.vao_ = gl::Vao::Allocate(gl, "LineRenderer VAO");
-    (void)gl::VaoMutableCtx{renderer.vao_}
+    std::ignore = gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
             {.location        = ATTRIB_POSITION_LOCATION,

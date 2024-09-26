@@ -1,6 +1,8 @@
 #pragma once
 
-#include "engine/Precompiled.hpp"
+#include <glad/gl.h>
+#include <string_view>
+#include <string>
 
 namespace engine::gl {
 

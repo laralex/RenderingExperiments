@@ -1,7 +1,6 @@
 #pragma once
 
-#include "engine/Precompiled.hpp"
-#include "engine/gl/Context.hpp"
+#include <glad/gl.h>
 #include <stack>
 #include <vector>
 

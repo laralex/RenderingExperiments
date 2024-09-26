@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cassert>
-#undef GLAD_API_CALL
-#define GLAD_API_CALL_EXPORT 1
 #include <glad/gl.h>
 #include <glm/mat4x4.hpp>
 

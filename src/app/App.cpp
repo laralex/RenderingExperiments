@@ -141,7 +141,7 @@ static void ConfigureApplication(
     // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test
     // renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate(app->gl, "Main Pass FBO");
-    (void)gl::FramebufferEditCtx{app->outputFramebuffer}
+    std::ignore = gl::FramebufferEditCtx{app->outputFramebuffer}
         .AttachTexture(app->gl, GL_COLOR_ATTACHMENT0, app->outputColor)
         .AttachTexture(app->gl, GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth)
         // .AttachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer)
@@ -158,7 +158,7 @@ static void ConfigureApplication(
     // });
 }
 
-void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
+static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
     using namespace engine;
     auto appPtr = static_cast<std::unique_ptr<Application>*>(appData);
     if (!appPtr) [[unlikely]] { return; }
@@ -166,6 +166,10 @@ void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, vo
     if (!app->isInitialized) [[unlikely]] {
         ConfigureApplication(ctx, windowCtx, app);
         app->isInitialized = true;
+    }
+
+    if (ctx.frameIdx % 250 == 0) {
+        XLOG("{} FPS, {} ms, {} frame", ctx.prevFPS, ctx.prevFrametimeMs, ctx.frameIdx);
     }
 
     glm::ivec2 renderSize = windowCtx.WindowSize();
@@ -308,7 +312,7 @@ void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, vo
         GLCALL(glDepthMask(GL_TRUE));
         GLCALL(glDepthFunc(GL_LEQUAL));
 
-        glm::vec3 lightColor{1.0f};
+        glm::vec3 lightColor{0.2f};
         app->flatRenderer.Render(gl::FlatRenderArgs{
             .lightWorldPosition        = lightPosition,
             .lightColor                = lightColor,
@@ -342,7 +346,7 @@ void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, vo
         auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Debug pass");
 
         glm::mat4 model{1.0};
-        model = glm::rotate(model, rotationSpeed * 0.5f, VEC_UP);
+        model = glm::rotate(model, rotationSpeed * -2.5f, VEC_UP);
         model = glm::translate(model, VEC_RIGHT * 1.6f);
 
         glm::mat4 mvp = camera * model;
@@ -351,13 +355,13 @@ void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, vo
         if (app->controlDebugCamera) {
             Frustum frustum = ProjectionToFrustum(proj);
             auto frustumMvp = camera * app->cameraMovement.ComputeModelMatrix();
-            app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.14f);
+            app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
             app->commonRenderers.RenderAxes(frustumMvp, 0.5f, ColorCode::BLACK);
         }
 
         {
             // glm::mat4 mvp = camera * model;
-            glm::vec2 billboardSize        = glm::vec2{1.0f, 1.0f};
+            glm::vec2 billboardSize        = glm::vec2{10.0f, 1.0f};
             glm::vec3 billboardPivotOffset = glm::vec3{0.0f, 0.0f, 0.0f};
             gl::ScreenShaderArgs screen{
                 .pixelsPerUnitX = 0.001f * static_cast<float>(screenSize.x),
@@ -422,20 +426,20 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     GLFWwindow* window = windowCtx.Window();
     using KeyModFlags  = engine::WindowCtx::KeyModFlags;
     auto& app          = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_A, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_A, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.y += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_S, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_S, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.z += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_D, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_D, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [&](bool pressed, bool released, KeyModFlags) {
         static bool controlDebugCamera = true;
         if (pressed) {
             app->controlDebugCameraSwitched = true;
@@ -444,20 +448,20 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         }
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardAltPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardShiftPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [&](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(
             engine, engine::UserActionType::WINDOW, [=](void*) { glfwSetWindowShouldClose(window, true); });
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {
             static bool setToFullscreen = true;
             if (!pressed) { return; }
@@ -475,7 +479,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         });
     });
 
-    (void)windowCtx.SetKeyboardCallback(GLFW_KEY_P, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [&](bool pressed, bool released, KeyModFlags) {
         static bool setToWireframe = true;
         if (!pressed) { return; }
 
@@ -489,7 +493,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         setToWireframe = !setToWireframe;
     });
 
-    (void)windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released, KeyModFlags) {
         if (released) {
             auto mousePosition = windowCtx.MousePosition();
             XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);
@@ -500,9 +504,6 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
 auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
     XLOGW("HotStartApplication {}", (void*)app::Render);
 
-    ConfigureWindow(destination.engine);
-
-    auto _ = engine::SetRenderCallback(destination.engine, app::Render);
     return engine::EngineResult::SUCCESS;
 }
 
@@ -519,13 +520,17 @@ auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> 
         GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
     });
 
+    ConfigureWindow(destination.engine);
+
+    std::ignore = engine::SetRenderCallback(destination.engine, app::Render);
+
     return HotStartApplication(destination);
 }
 
 auto DestroyApplication(app::ApplicationState& destination) -> engine::EngineResult {
     destination.app.reset();
     destination.engineData.reset();
-    (void)engine::DestroyEngine(destination.engine);
+    std::ignore = engine::DestroyEngine(destination.engine);
     return engine::EngineResult::SUCCESS;
 }
 

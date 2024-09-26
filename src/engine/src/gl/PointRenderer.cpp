@@ -55,7 +55,7 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
         indexType = GL_UNSIGNED_INT;
     }
 
-    (void)gl::VaoMutableCtx{renderer.vao_}
+    std::ignore = gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.meshPositionsBuffer_,
             {.location        = ATTRIB_POSITION_LOCATION,

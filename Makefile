@@ -1,28 +1,14 @@
-DEBUG?=1
+# DEBUG?=1
+RUN_AFTER_BUILD?=1
 USE_HOT_RELOADING?=1
 USE_DEP_FILES?=1
 USE_PCH?=1
+USE_CCACHE?=1
+USE_CLANGD?=1
 # USE_DYNLIB_ENGINE?=1
-# COMPILER_DUMP?=1
+# USE_COMPILER_DUMP?=1
 
 .DEFAULT_GOAL := all
-
-.PHONY: init_repo
-init_repo:
-	sudo apt install libwayland-dev libxkbcommon-dev xorg-dev
-	wget https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz \
-		-O ccache.tar.xz && mkdir -p ccache_prebuilt \
-		&& tar -xJf ccache.tar.xz --directory ccache_prebuilt \
-		&& cp ccache_prebuilt/*/ccache . \
-		&& rm -rf ccache_prebuilt ccache.tar.xz
-	git submodule update --init --remote
-	git submodule status
-
-.PHONY: init_dev
-init_dev:
-	$(MAKE) rm
-	bear -a make -j16 DEBUG=y
-
 
 ifeq ($(OS),Windows_NT)
     DETECTED_OS := windows
@@ -47,14 +33,14 @@ THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
 	${BUILD_DIR}/third_party/stb/stb_image.o
 
-CC=./ccache clang++-17
+CC=$(if ${USE_CCACHE},./ccache,) clang++
 
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
 COMPILE_FLAGS=-std=c++20 \
 	$(if ${USE_DYNLIB_ENGINE},-fPIC,) \
 	$(if ${USE_HOT_RELOADING},-fPIC,) \
 	$(if $(USE_DEP_FILES),-MMD,) \
-	$(if $(COMPILER_DUMP),-save-stats,) \
+	$(if $(USE_COMPILER_DUMP),-save-stats,) \
 	$(if ${DEBUG},-g -DXDEBUG,) \
 	-fvisibility=hidden -fvisibility-inlines-hidden \
 	-fno-exceptions -fno-rtti \
@@ -131,7 +117,30 @@ ifneq ($(f),) # force rebulid
 endif
 
 .PHONY: all
-all: build_engine build_app ${INSTALL_DIR}/app
+all: build_engine build_app ${INSTALL_DIR}/app $(if ${RUN_AFTER_BUILD},run,)
+
+# Auto-install prerequisites
+.PHONY: init_repo
+init_repo:
+	sudo apt update
+	sudo apt install clang cmake -y
+	sudo apt install libwayland-dev libxkbcommon-dev xorg-dev -y
+	git submodule update --init --remote
+	git submodule status
+
+# NOTE: `bear` is a CLI tool, that hooks every clang call
+# and generates a `compile_commands.json` file designated for clangd
+# `bear` must be installed by you (e.g. apt-get install bear)
+.PHONY: intellisense
+intellisense: rm
+	$(if ${USE_CLANGD},bear -a make -j16 DEBUG=${DEBUG})
+
+ccache:
+	wget https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz \
+		-O ccache.tar.xz && mkdir -p ccache_prebuilt \
+		&& tar -xJf ccache.tar.xz --directory ccache_prebuilt \
+		&& cp ccache_prebuilt/*/ccache . \
+		&& rm -rf ccache_prebuilt ccache.tar.xz
 
 # hot reload
 .PHONY: hot
@@ -162,6 +171,11 @@ rm_all:
 rm:
 	-rm -r ${BUILD_DIR}/app ${BUILD_DIR}/engine ${BUILD_DIR}/install
 	-rm -f ${APP_MAIN_EXE} ${APP_HOTRELOAD_EXE}
+
+.PHONY: build_tools
+build_tools: $(if ${USE_CCACHE},ccache,)
+
+-include build_tools # run build_tools regardless of the current target
 
 .PHONY: build_app
 build_app: ${outdirs_app} ${ENGINE_LIB} ${APP_EXE}
@@ -205,7 +219,7 @@ ${BUILD_DIR}/engine/libengine.so: ${obj_engine} ${ENGINE_THIRD_PARTY_DEPS}
 # compiling main executable sources
 ${BUILD_DIR}/app/%.o: src/app/%.cpp
 	$(info > Compiling $@)
-	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
+	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
 
 # compiling engine sources
 ${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},) ${THIRD_PARTY_DEPS}

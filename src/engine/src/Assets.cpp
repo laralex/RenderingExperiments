@@ -121,7 +121,7 @@ ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureAr
         .mipLevel   = 0,
     });
 
-    if (args.withMips) { (void)textureGuard.GenerateMipmaps(); }
+    if (args.withMips) { std::ignore = textureGuard.GenerateMipmaps(); }
     return texture;
 }
 

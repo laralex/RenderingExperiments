@@ -151,7 +151,7 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
         gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)},
         "FrustumRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "FrustumRenderer");
-    (void)gl::VaoMutableCtx{renderer.vao_}
+    std::ignore = gl::VaoMutableCtx{renderer.vao_}
         .MakeVertexAttribute(
             renderer.attributeBuffer_,
             {.location        = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,

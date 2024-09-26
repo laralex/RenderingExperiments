@@ -166,7 +166,6 @@ auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistor
     RenderCtx const& prevRenderCtx = frameHistory[prevFrameHistoryIdx];
     prevRenderCtx.Update(glfwGetTimerValue(), frameIdx, renderCtx);
 
-    if (frameHistoryIdx == 0) { XLOG("{} FPS, {} ms", renderCtx.prevFPS, renderCtx.prevFrametimeMs); }
     return renderCtx;
 }
 
@@ -226,13 +225,15 @@ ENGINE_EXPORT auto ColdStartEngine(engine::EngineHandle engine) -> engine::Engin
         assert(InitializeCommonResources());
     }
     engine->persistent = std::make_shared<engine::EnginePersistentData>();
-    return HotStartEngine(engine, engine->persistent);
+    return InitializeEngineData(*engine->persistent);
 }
 
 ENGINE_EXPORT auto HotStartEngine(engine::EngineHandle engine, std::shared_ptr<engine::EnginePersistentData> data) -> engine::EngineResult {
     if (engine == engine::ENGINE_HANDLE_NULL) { return engine::EngineResult::ERROR_ENGINE_NULL; }
     engine->persistent = data;
-    return InitializeEngineData(*engine->persistent);
+    // NOTE: I suppose, resettings the callbacks is not necessary for hot start
+    // cr.h library loads the dynamic libraries to the same addresses
+    return engine::EngineResult::SUCCESS;
 }
 
 ENGINE_EXPORT auto DestroyEngine(engine::EngineHandle engine) -> std::shared_ptr<engine::EnginePersistentData> {
@@ -273,9 +274,6 @@ ENGINE_EXPORT auto TickEngine(engine::EngineHandle engine) -> engine::EngineResu
     ExecuteQueue(engine, renderQueue);
 
     RenderCtx& renderCtx = UpdateEngineLoop(engineData.frameHistory, engineData.frameIdx);
-    if (engineData.frameIdx % 100 == 0) {
-        XLOG("fi {} cb {}", engineData.frameIdx, (void*)engineData.renderCallback);
-    }
     engineData.renderCallback(renderCtx, windowCtx, engineData.applicationData);
 
     glfwSwapBuffers(window);
