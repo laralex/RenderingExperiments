@@ -116,10 +116,10 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)},
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)},
         "AxesRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<GLvoid const>{indices, sizeof(indices)},
+        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<GLvoid const>{indices, sizeof(indices)},
         "AxesRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "AxesRenderer");
     std::ignore = gl::VaoMutableCtx{renderer.vao_}

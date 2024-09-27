@@ -27,7 +27,7 @@ ENGINE_EXPORT GlGuardAux::GlGuardAux() noexcept {
     GLCALL(glGetIntegerv(GL_DRAW_INDIRECT_BUFFER_BINDING, &drawIndirectBuffer_));
     GLCALL(glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &programPipeline_));
 
-    GLCALL(glGetIntegerv(GL_TEXTURE_BUFFER_BINDING, &textureBuffer_));
+    // GLCALL(glGetIntegerv(GL_TEXTURE_BUFFER_BINDING, &textureBuffer_));
     GLCALL(glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, &transformFeedbackBuffer_));
 }
 

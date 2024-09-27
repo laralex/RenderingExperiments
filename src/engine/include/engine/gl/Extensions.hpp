@@ -34,16 +34,17 @@ public:
         KHR_texture_compression_astc_hdr,
         KHR_texture_compression_astc_ldr,
         KHR_texture_compression_astc_sliced_3d,
+        ARB_buffer_storage,
         ARB_debug_output,
         ARB_ES3_2_compatibility,
         ARB_invalidate_subdata,
         ARB_framebuffer_sRGB,
         ARB_shading_language_include,
+        ARB_texture_filter_anisotropic,
         ARB_texture_storage,
         ARB_texture_storage_multisample,
         EXT_debug_label,
         EXT_debug_marker,
-        EXT_texture_filter_anisotropic,
         NUM_HARDCODED_EXTENSIONS
     };
 

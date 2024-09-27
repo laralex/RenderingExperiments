@@ -115,10 +115,10 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
 
     BoxRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{vertexData, sizeof(vertexData)},
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<void const>{vertexData, sizeof(vertexData)},
         "BoxRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)},
+        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<void const>{indices, sizeof(indices)},
         "BoxRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "BoxRenderer");
     std::ignore = gl::VaoMutableCtx{renderer.vao_}

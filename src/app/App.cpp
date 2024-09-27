@@ -6,6 +6,7 @@
 #include "engine/PlaneMesh.hpp"
 #include "engine/Unprojection.hpp"
 #include "engine/UvSphereMesh.hpp"
+#include "engine/gl/Buffer.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
@@ -126,7 +127,7 @@ static void ConfigureApplication(
 
     app->texture          = std::move(*maybeTexture);
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
-        app->gl, GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
+        app->gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
         "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
     gl::SamplerTiling albedoTiling{glm::vec2{0.25f}, glm::vec2{0.0f}};

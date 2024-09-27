@@ -72,7 +72,7 @@ ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     renderer.program_ = std::move(*maybeProgram);
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
-        gl, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
+        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     return renderer;

@@ -2,6 +2,7 @@
 
 // #include "engine/IcosphereMesh.hpp"
 #include "engine/BoxMesh.hpp"
+#include "engine/gl/Buffer.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
@@ -30,17 +31,17 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
     PointRenderer renderer;
     size_t numPositionsBytes      = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
     renderer.meshPositionsBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes},
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<const void>{mesh.vertexPositions.data(), numPositionsBytes},
         "PointRenderer/TemplatePositionsVBO");
     size_t numDataBytes            = std::size(mesh.vertexPositions) * sizeof(mesh.vertexPositions[0]);
     renderer.meshAttributesBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<const void>{mesh.vertexData.data(), numDataBytes},
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<const void>{mesh.vertexData.data(), numDataBytes},
         "PointRenderer/TemplateVBO");
     renderer.instancesBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, maxPoints * sizeof(T)},
+        gl, GL_ARRAY_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, maxPoints * sizeof(T)},
         "PointRenderer/InstancesVBO");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
+        gl, GL_ELEMENT_ARRAY_BUFFER, {},
         CpuMemory<void const>{mesh.indices.data(), std::size(mesh.indices) * sizeof(mesh.indices[0])},
         "PointRenderer/TemplateEBO");
 

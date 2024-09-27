@@ -145,10 +145,10 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
 
     FrustumRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{vertexData, sizeof(vertexData)},
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<void const>{vertexData, sizeof(vertexData)},
         "FrustumRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, CpuMemory<void const>{indices, sizeof(indices)},
+        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<void const>{indices, sizeof(indices)},
         "FrustumRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "FrustumRenderer");
     std::ignore = gl::VaoMutableCtx{renderer.vao_}
@@ -184,7 +184,7 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
     renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
-        gl, GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FrustumRenderer UBO");
+        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FrustumRenderer UBO");
 
     return renderer;
 }

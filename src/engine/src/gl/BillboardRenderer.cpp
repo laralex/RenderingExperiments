@@ -1,6 +1,7 @@
 
 #include "engine/gl/BillboardRenderer.hpp"
 #include "engine/Assets.hpp"
+#include "engine/gl/Buffer.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -39,7 +40,7 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragm
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
-        gl, GL_UNIFORM_BUFFER, GL_STREAM_DRAW, CpuMemory<const void>{nullptr, sizeof(BillboardRenderArgs::ShaderArgs)},
+        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<const void>{nullptr, sizeof(BillboardRenderArgs::ShaderArgs)},
         "BillboardRenderer UBO");
     // TODO: customVaoProgram_
     // TODO: provided fragment shader

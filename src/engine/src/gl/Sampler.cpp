@@ -93,7 +93,7 @@ ENGINE_EXPORT auto GpuSampler::WithWrap(GLenum wrapX, GLenum wrapY, GLenum wrapZ
     auto assertInput = [](GLenum wrap) {
         assert(
             wrap == GL_CLAMP_TO_EDGE | wrap == GL_MIRRORED_REPEAT | wrap == GL_REPEAT
-            | wrap == GL_MIRROR_CLAMP_TO_EDGE);
+            /*| wrap == GL_MIRROR_CLAMP_TO_EDGE*/);
     };
     assertInput(wrapX);
     assertInput(wrapY);
@@ -109,8 +109,8 @@ ENGINE_EXPORT auto GpuSampler::WithWrap(GLenum wrapXYZ) && -> GpuSampler&& {
 }
 
 ENGINE_EXPORT auto GpuSampler::WithAnisotropicFilter(GlContext const& gl, GLfloat maxAnisotropy) && -> GpuSampler&& {
-    if (gl.Extensions().Supports(GlExtensions::EXT_texture_filter_anisotropic)) {
-        GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy));
+    if (gl.Extensions().Supports(GlExtensions::ARB_texture_filter_anisotropic)) {
+        GLCALL(glSamplerParameterf(samplerId_, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy));
     }
     return std::move(*this);
 }

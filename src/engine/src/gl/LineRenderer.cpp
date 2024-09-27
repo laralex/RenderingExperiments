@@ -18,7 +18,7 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
 
     LineRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW,
+        gl, GL_ARRAY_BUFFER, gl::GpuBuffer::CLIENT_UPDATE,
         CpuMemory<void const>{nullptr, maxLines * sizeof(LineRendererInput::Line)}, "LineRenderer Vertices");
     renderer.vao_ = gl::Vao::Allocate(gl, "LineRenderer VAO");
     std::ignore = gl::VaoMutableCtx{renderer.vao_}
