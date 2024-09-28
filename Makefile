@@ -1,6 +1,6 @@
 DEBUG?=1
 RUN_AFTER_BUILD?=1
-USE_HOT_RELOADING?=1
+# USE_HOT_RELOADING?=1
 USE_DEP_FILES?=1
 USE_PCH?=1
 USE_CCACHE?=1
@@ -98,7 +98,7 @@ src_engine_ = \
 	gl/FrustumRenderer.cpp gl/Guard.cpp \
 	gl/LineRenderer.cpp \
 	gl/Extensions.cpp gl/Framebuffer.cpp \
-	gl/Program.cpp \
+	gl/Program.cpp gl/ProgramOwner.cpp \
 	gl/Renderbuffer.cpp \
 	gl/Sampler.cpp gl/SamplersCache.cpp \
 	gl/Shader.cpp gl/Texture.cpp \

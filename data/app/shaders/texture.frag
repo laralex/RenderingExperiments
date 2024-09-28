@@ -19,7 +19,7 @@ layout(binding = UBO_SAMPLER_TILING_BINDING, std140) uniform SamplerTilingUBO {
 
 void main() {
     vec4 albedoTiling = u_UvScaleOffset[u_TextureIndices.albedo];
-    out_FragColor = texture(u_AlbedoTexture, v_Uv * albedoTiling.xy + albedoTiling.zw) + vec4(0.5, 0.0, 0.1, 0.0);
+    out_FragColor = texture(u_AlbedoTexture, v_Uv * albedoTiling.xy + albedoTiling.zw);
     // out_FragColor = vec4(v_Uv, 1.0, 1.0);
 }
 

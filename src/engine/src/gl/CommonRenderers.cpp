@@ -93,39 +93,39 @@ ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
          .size       = stubColorTexture_.Size()});
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color) {
+ENGINE_EXPORT void CommonRenderers::RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale, ColorCode color) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
-    axesRenderer_.Render(mvp, scale);
+    axesRenderer_.Render(gl, mvp, scale);
     debugPoints_.PushPoint(glm::scale(mvp, glm::vec3{scale * 0.1f}), color);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderAxes(glm::mat4 const& mvp, float scale) {
+ENGINE_EXPORT void CommonRenderers::RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
-    axesRenderer_.Render(mvp, scale);
+    axesRenderer_.Render(gl, mvp, scale);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderBox(glm::mat4 const& centerMvp, glm::vec4 color) const {
+ENGINE_EXPORT void CommonRenderers::RenderBox(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderBox, CommonRenderers isn't initialized");
     boxRenderer_.Render(centerMvp, color);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderFrustum(
+ENGINE_EXPORT void CommonRenderers::RenderFrustum(GlContext const& gl,
     glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
     frustumRenderer_.Render(centerMvp, frustum, color, thickness);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderFulscreenTriangle() const {
+ENGINE_EXPORT void CommonRenderers::RenderFulscreenTriangle(GlContext const& gl) const {
     assert(IsInitialized() && "Bad call to RenderFulscreenTriangle, CommonRenderers isn't initialized");
     RenderVao(datalessTriangleVao_);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderBillboard(BillboardRenderArgs const& args) const {
+ENGINE_EXPORT void CommonRenderers::RenderBillboard(GlContext const& gl, BillboardRenderArgs const& args) const {
     assert(IsInitialized() && "Bad call to RenderBillboard, CommonRenderers isn't initialized");
     billboardRenderer_.Render(args);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderLines(glm::mat4 const& camera) const {
+ENGINE_EXPORT void CommonRenderers::RenderLines(GlContext const& gl, glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
     lineRenderer_.Render(camera);
 }
@@ -146,7 +146,7 @@ ENGINE_EXPORT void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInpu
     }
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderPoints(glm::mat4 const& camera) const {
+ENGINE_EXPORT void CommonRenderers::RenderPoints(GlContext const& gl, glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderPoints, CommonRenderers isn't initialized");
     pointRenderer_.Render(glm::mat4{1.0f}, 0, pointsLimitInternal_);
     pointRenderer_.Render(camera, POINTS_FIRST_EXTERNAL, pointsLimitExternal_);
@@ -179,7 +179,7 @@ ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm
     GLCALL(glDisable(GL_DEPTH_TEST));
     GLCALL(glDepthMask(GL_FALSE));
 
-    RenderFulscreenTriangle();
+    RenderFulscreenTriangle(gl);
 }
 
 ENGINE_EXPORT auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey {

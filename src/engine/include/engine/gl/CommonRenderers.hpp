@@ -30,20 +30,20 @@ public:
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
     void OnFrameEnd();
 
-    void RenderAxes(glm::mat4 const& mvp, float scale, ColorCode color);
-    void RenderAxes(glm::mat4 const& mvp, float scale = 1.0f);
+    void RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale, ColorCode color);
+    void RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale = 1.0f);
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
-    void RenderBox(glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
-    void RenderFrustum(
+    void RenderBox(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
+    void RenderFrustum(GlContext const& gl,
         glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f},
         float thickness = 0.015f) const;
-    void RenderBillboard(BillboardRenderArgs const& args) const;
-    void RenderLines(glm::mat4 const& camera) const;
+    void RenderBillboard(GlContext const& gl, BillboardRenderArgs const& args) const;
+    void RenderLines(GlContext const& gl, glm::mat4 const& camera) const;
     void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&);
-    void RenderPoints(glm::mat4 const& camera) const;
+    void RenderPoints(GlContext const& gl, glm::mat4 const& camera) const;
     void FlushPointsToGpu(std::vector<PointRendererInput::Point> const&);
 
-    void RenderFulscreenTriangle() const;
+    void RenderFulscreenTriangle(GlContext const& gl) const;
     void Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale = glm::vec2{1.0f}) const;
 
     auto VaoDatalessTriangle [[nodiscard]] () const -> Vao const& { return datalessTriangleVao_; }

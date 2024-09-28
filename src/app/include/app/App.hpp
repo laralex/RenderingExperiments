@@ -53,7 +53,7 @@ struct Application final {
     engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuMesh sphereMesh2{};
     engine::gl::GpuMesh planeMesh{};
-    engine::gl::GpuProgramOwner::Handle program{};
+    engine::gl::GpuProgramHandle program{};
     engine::gl::Texture texture{};
     engine::gl::GpuBuffer uboSamplerTiling{};
     UboDataSamplerTiling uboDataSamplerTiling{};
@@ -72,7 +72,6 @@ struct Application final {
     AppDebugMode debugMode{AppDebugMode::NONE};
 
     engine::platform::FileChangeNotifier fileNotifier{};
-    std::shared_ptr<engine::gl::GpuProgramOwner> shaderFileWatcher = {};
     bool isInitialized = false;
 };
 

@@ -35,6 +35,10 @@ static void ConfigureApplication(
     glm::ivec2 maxScreenSize = windowCtx.WindowSize() * 4;
     app->gl.Initialize();
     gl::InitializeDebug(app->gl);
+    assert(app->fileNotifier.Initialize());
+    auto shaderWatcher = app->gl.Programs();
+    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/app/shaders"));
+
     app->commonRenderers.Initialize(app->gl);
     app->samplerNearestWrap = app->commonRenderers.CacheSampler(
         "repeat/nearest",
@@ -53,12 +57,9 @@ static void ConfigureApplication(
         Define{.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = Define::INT32},
     };
 
-    app->shaderFileWatcher = std::make_shared<engine::gl::GpuProgramOwner>();
-    auto maybeProgram = app->shaderFileWatcher->LinkProgramFromFiles(app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program");
+    auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program", true);
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
-    assert(app->fileNotifier.Initialize());
-    assert(app->fileNotifier.SubscribeWatcher(app->shaderFileWatcher, "data/app/shaders/texture.frag"));
 
     app->boxMesh = gl::AllocateBoxMesh(
         app->gl, BoxMesh::Generate(VEC_ONES, true),
@@ -160,6 +161,16 @@ static void ConfigureApplication(
     //     "data/engine/shaders", [](std::string_view file, bool isDirectory) {
     //     XLOG("Changed file: {}", file);
     // });
+
+    for (auto const& program : shaderWatcher->RequiredProgramsToWatch()) {
+        for (auto const& shaderFilepath : program.shadersFilepaths) {
+            if (shaderFilepath.size() == 0) { continue; }
+            assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, shaderFilepath));
+        }
+    }
+    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/app/shaders/texture.frag"));
+    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/engine/shaders/axes.vert"));
+    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/engine/shaders"));
 }
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
@@ -257,10 +268,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glFrontFace(GL_CCW));
         GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        app->commonRenderers.RenderAxes(mvp, 0.4f, ColorCode::CYAN);
+        app->commonRenderers.RenderAxes(app->gl, mvp, 0.4f, ColorCode::CYAN);
 
         constexpr GLint TEXTURE_SLOT = 0;
-        auto programGuard            = gl::UniformCtx(app->shaderFileWatcher->ViewProgram(app->program));
+        auto programGuard            = gl::UniformCtx(app->gl.GetProgram(app->program));
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
@@ -306,8 +317,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 mvp = camera * model;
 
         // app->commonRenderers.RenderAxes(mvp, 1.5f, ColorCode::WHITE);
-        app->commonRenderers.RenderAxes(camera, 0.4f, ColorCode::BROWN);
-        app->commonRenderers.RenderAxes(camera * lightModel, 0.2f, ColorCode::YELLOW);
+        app->commonRenderers.RenderAxes(app->gl, camera, 0.4f, ColorCode::BROWN);
+        app->commonRenderers.RenderAxes(app->gl, camera * lightModel, 0.2f, ColorCode::YELLOW);
 
         gl::GpuMesh const& mesh = app->sphereMesh;
         GLCALL(glEnable(GL_CULL_FACE));
@@ -354,13 +365,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         model = glm::translate(model, VEC_RIGHT * 1.6f);
 
         glm::mat4 mvp = camera * model;
-        app->commonRenderers.RenderBox(camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
+        app->commonRenderers.RenderBox(app->gl, camera * model, glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
         if (app->controlDebugCamera) {
             Frustum frustum = ProjectionToFrustum(proj);
             auto frustumMvp = camera * app->cameraMovement.ComputeModelMatrix();
-            app->commonRenderers.RenderFrustum(frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
-            app->commonRenderers.RenderAxes(frustumMvp, 0.5f, ColorCode::BLACK);
+            app->commonRenderers.RenderFrustum(app->gl, frustumMvp, frustum, glm::vec4(0.0f, 0.5f, 1.0f, 1.0f), 0.02f);
+            app->commonRenderers.RenderAxes(app->gl, frustumMvp, 0.5f, ColorCode::BLACK);
         }
 
         {
@@ -372,7 +383,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
                 .pixelsPerUnitY = 0.001f * static_cast<float>(screenSize.y),
                 .pixelsHeight   = static_cast<float>(screenSize.y),
                 .aspectRatio    = aspectRatio};
-            app->commonRenderers.RenderBillboard(gl::BillboardRenderArgs{
+            app->commonRenderers.RenderBillboard(app->gl, gl::BillboardRenderArgs{
                 app->commonRenderers.VaoDatalessQuad(),
                 GL_TRIANGLE_STRIP,
                 screen,
@@ -382,7 +393,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             });
         }
 
-        app->commonRenderers.RenderAxes(mvp, 0.5f, ColorCode::WHITE);
+        app->commonRenderers.RenderAxes(app->gl, mvp, 0.5f, ColorCode::WHITE);
 
         gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
     }
@@ -409,13 +420,13 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             app->commonRenderers.FlushLinesToGpu(app->debugLines.Data());
             app->debugLines.Clear();
         }
-        app->commonRenderers.RenderLines(camera);
+        app->commonRenderers.RenderLines(app->gl, camera);
 
         if (app->debugPoints.IsDataDirty()) {
             app->commonRenderers.FlushPointsToGpu(app->debugPoints.Data());
             app->debugPoints.Clear();
         }
-        app->commonRenderers.RenderPoints(camera);
+        app->commonRenderers.RenderPoints(app->gl, camera);
     }
 
     app->commonRenderers.OnFrameEnd();

@@ -5,13 +5,44 @@
 #include <sys/inotify.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <sys/inotify.h>
 #include <fcntl.h>
+#include <errno.h>
+
+namespace {
+
+const std::unordered_map<int, char const*> POSIX_ERRORS = {
+    {EACCES, "EACCES"},
+    {EBADF, "EBADF"},
+    {EEXIST, "EEXIST"},
+    {EFAULT, "EFAULT"},
+    {ENAMETOOLONG, "ENAMETOOLONG"},
+    {ENOENT, "ENOENT"},
+    {ENOSPC, "ENOSPC"},
+    {ENOTDIR, "ENOTDIR"},
+    {EINVAL, "EINVAL"},
+    {EMFILE, "EMFILE"},
+    {ENOMEM, "ENOMEM"},
+};
+
+auto NoPosixError [[nodiscard]]() -> bool {
+    bool noError = errno == 0;
+    auto findErr = POSIX_ERRORS.find(errno);
+    errno = 0;
+    if (findErr != POSIX_ERRORS.cend()) {
+        XLOGE("POSIX errno {}", findErr->second);
+    }
+    assert(noError);
+    return noError;
+}
+
+} // namespace anonymous
 
 namespace engine::platform {
 
 auto FileChangeNotifier::Initialize() noexcept -> bool {
+    errno = 0;
     inotifyDescriptor_ = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+    NoPosixError();
     if (inotifyDescriptor_ >= 0) {
         return true;
     }
@@ -25,21 +56,31 @@ auto FileChangeNotifier::IsInitialized() const noexcept -> bool {
 
 auto FileChangeNotifier::PollChanges() noexcept -> bool {
     assert(IsInitialized());
-    std::lock_guard const lock(fileWatchersMutex_);
 
     int bytesWritten = read(inotifyDescriptor_, eventBuffer_, std::size(eventBuffer_));
-    int i            = 0;
+    if (bytesWritten <= 0) {
+        return false;
+    }
+
+    int i = 0;
+    std::lock_guard const lock(fileWatchersMutex_);
     while (i < bytesWritten) {
         inotify_event* event = reinterpret_cast<inotify_event*>(&eventBuffer_[i]);
         i += sizeof(inotify_event) + event->len;
         //if (event->len == 0) { continue; }
         bool isDirectory = (event->mask & IN_ISDIR) != 0;
-        if ((event->mask & IN_MODIFY) == 0) { continue; }
+        if ((Bits(event->mask) & (Bits(IN_MODIFY) | Bits(IN_CLOSE_WRITE))) == 0) { continue; }
         auto const findWatchers = descriptor2watchers_.find(event->wd);
+        auto changedPath = findWatchers->second.filepath;
+        if (event->len > 0) {
+            changedPath /= std::string_view{event->name, event->len};
+        }
+        auto changedPathStr = std::string(std::move(changedPath));
+        XLOG("FileChangeNotifier detected change: {}", changedPathStr.c_str());
         for (auto& watcher : findWatchers->second.watchers) {
             std::shared_ptr w{watcher.lock()};
             if (!w) { continue; }
-            w->OnFileChanged(findWatchers->second.filepath, std::string_view{event->name, event->len}, isDirectory);
+            w->OnFileChanged(changedPathStr, isDirectory);
         }
     }
     return bytesWritten > 0;
@@ -61,6 +102,7 @@ auto FileChangeNotifier::SubscribeWatcher(std::weak_ptr<IFileWatcher> watcher, s
     if (find == filename2descriptor_.cend()) {
         // start watching new file
         int watchDescriptor = inotify_add_watch(inotifyDescriptor_, filepath.c_str(), IN_MODIFY);
+        NoPosixError();
         filename2descriptor_.emplace(filepath, watchDescriptor);
         descriptor2watchers_.emplace(watchDescriptor, WatchedFile{
             .watchers = std::vector{std::move(watcher)},
@@ -107,6 +149,7 @@ void FileChangeNotifier::CloseWatchDescriptor(int watchDescriptor) {
     assert(IsInitialized());
     fcntl(inotifyDescriptor_, F_SETFL, fcntl(inotifyDescriptor_, F_GETFL) | O_NONBLOCK);
     inotify_rm_watch(inotifyDescriptor_, watchDescriptor);
+    NoPosixError();
     close(watchDescriptor);
 }
 

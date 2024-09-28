@@ -1,6 +1,7 @@
 
 #include "engine/gl/AxesRenderer.hpp"
 #include "engine/Assets.hpp"
+#include "engine/gl/Context.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -139,31 +140,34 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
              .offset          = offsetof(Vertex, colorIdx)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = gl::shader::Define::INT32},
+    using gl::shader::Define;
+    std::vector<gl::shader::Define> defines = {
+        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = Define::INT32},
     };
 
-    auto makeProgram = [&](GpuProgram& out, std::string_view name) {
-        auto maybeProgram = gl::LinkProgramFromFiles(
+    auto makeProgram = [&](GpuProgramHandle& out, std::string_view name) {
+        auto definesClone = defines;
+        auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
             gl, "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
-            CpuView{defines, std::size(defines)}, name);
+            std::move(definesClone), name, true);
         assert(maybeProgram);
         out = std::move(*maybeProgram);
     };
 
     makeProgram(renderer.customizedProgram_, "AxesRenderer");
     makeProgram(renderer.defaultProgram_, "AxesRenderer/Default");
-    gl::UniformCtx{renderer.defaultProgram_}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
+    gl::UniformCtx{gl.GetProgram(renderer.defaultProgram_)}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
 
     return renderer;
 }
 
-ENGINE_EXPORT void AxesRenderer::Render(glm::mat4 const& mvp, float scale) const {
+ENGINE_EXPORT void AxesRenderer::Render(GlContext const& gl, glm::mat4 const& mvp, float scale) const {
     bool isCustom       = scale != 1.0f;
-    auto const& program = isCustom ? customizedProgram_ : defaultProgram_;
+    auto const programHandle = isCustom ? customizedProgram_ : defaultProgram_;
+    auto const& program = gl.GetProgram(programHandle);
 
     auto programGuard = gl::UniformCtx{program};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));

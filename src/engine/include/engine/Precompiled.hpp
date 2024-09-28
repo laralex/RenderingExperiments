@@ -26,6 +26,7 @@
 #include "engine/gl/Context.hpp"
 #include "engine/gl/Debug.hpp"
 #include "engine/gl/Extensions.hpp"
+#include "engine/gl/ProgramOwner.hpp"
 #include "engine/Log.hpp"
 
 struct GLFWwindow;
@@ -37,6 +38,9 @@ constexpr bool DEBUG_BUILD = true;
 #else
 constexpr bool DEBUG_BUILD = false;
 #endif // XDEBUG
+
+template<typename T>
+constexpr uint32_t Bits(T value) { return static_cast<uint32_t>(value); }
 
 enum class ColorCode : int32_t {
     RED = 0,

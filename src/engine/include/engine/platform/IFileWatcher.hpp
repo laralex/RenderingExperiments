@@ -1,6 +1,6 @@
 #pragma once
 
-#include <filesystem>
+#include <string>
 
 namespace engine::platform {
 
@@ -15,7 +15,7 @@ public:
     virtual ~Self()              = default;
 #undef Self
 
-    virtual void OnFileChanged(std::filesystem::path const& watchedFilepath, std::string_view subpath, bool isDirectory) = 0;
+    virtual void OnFileChanged(std::string const& path, bool isDirectory) = 0;
 };
 
 } // namespace engien::platform
