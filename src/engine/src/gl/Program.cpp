@@ -1,6 +1,7 @@
 #include "engine/gl/Program.hpp"
 
 #include "engine_private/Prelude.hpp"
+#include <optional>
 
 namespace {
 
@@ -18,37 +19,44 @@ ENGINE_EXPORT void GpuProgram::Dispose() {
     programId_.UnsafeReset();
 }
 
+ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmentShader) const -> bool {
+    GLCALL(glAttachShader(programId_, vertexShader));
+    GLCALL(glAttachShader(programId_, fragmentShader));
+
+    GLCALL(glLinkProgram(programId_));
+    GLint isLinked;
+    GLCALL(glGetProgramiv(programId_, GL_LINK_STATUS, &isLinked));
+
+    GLCALL(glDetachShader(programId_, vertexShader));
+    GLCALL(glDetachShader(programId_, fragmentShader));
+
+    if (isLinked == GL_TRUE) { return true; }
+
+    static char infoLog[512];
+    GLCALL(glGetProgramInfoLog(programId_, 512, nullptr, infoLog));
+    XLOGE("Failed to link graphics program:\n{}", infoLog);
+    return false;
+}
+
 ENGINE_EXPORT auto GpuProgram::Allocate(
     GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name)
     -> std::optional<GpuProgram> {
+    auto program = GpuProgram();
     GLuint programId;
     GLCALL(programId = glCreateProgram());
-    GLCALL(glAttachShader(programId, vertexShader));
-    GLCALL(glAttachShader(programId, fragmentShader));
+    program.programId_ = programId;
 
-    GLCALL(glLinkProgram(programId));
-    GLint isLinked;
-    GLCALL(glGetProgramiv(programId, GL_LINK_STATUS, &isLinked));
-
-    GLCALL(glDetachShader(programId, vertexShader));
-    GLCALL(glDetachShader(programId, fragmentShader));
-
-    if (isLinked == GL_TRUE) {
-        auto program       = GpuProgram();
-        program.programId_ = GlHandle{programId};
-        if (!name.empty()) {
-            DebugLabel(gl, program, name);
-            LogDebugLabel(gl, program, "GpuProgram was compiled");
-        }
-        return std::optional{std::move(program)}; // success
+    if (!program.LinkGraphical(vertexShader, fragmentShader)) {
+        XLOGE("Failed to link graphics program name={}", name);
+        GLCALL(glDeleteProgram(program.programId_));
+        return std::nullopt;
     }
 
-    static char infoLog[512];
-    GLCALL(glGetProgramInfoLog(programId, 512, nullptr, infoLog));
-    GLCALL(glDeleteProgram(programId));
-    XLOGE("Failed to link graphics program (name={}):\n{}", name, infoLog);
-
-    return std::nullopt;
+    if (!name.empty()) {
+        DebugLabel(gl, program, name);
+        LogDebugLabel(gl, program, "GpuProgram was compiled");
+    }
+    return std::optional{std::move(program)};
 }
 
 ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GLuint {

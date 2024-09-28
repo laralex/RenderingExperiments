@@ -5,6 +5,10 @@
 
 namespace engine::gl::shader {
 
+constexpr char const* VERTEX_FILE_EXTENSION = ".vert";
+constexpr char const* FRAGMENT_FILE_EXTENSION = ".frag";
+constexpr char const* COMPUTE_FILE_EXTENSION = ".comp";
+
 struct IncludeEntry final {
     std::string text       = "/*NO_INCLUDE_TEXT*/";
     int64_t recursionLimit = 0;

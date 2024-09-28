@@ -16,3 +16,7 @@
 [submodule "third_party/cr"]
 	path = third_party/cr
 	url = https://github.com/fungos/cr
+[submodule "third_party/concurrentqueue"]
+	path = third_party/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue.git
+	branch = tags/v1.0.4

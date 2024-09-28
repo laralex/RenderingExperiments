@@ -27,6 +27,13 @@ auto LinkProgramFromFiles [[nodiscard]] (
     CpuView<shader::Define const> defines, std::string_view name = {}, bool logCode = false)
 -> std::optional<GpuProgram>;
 
+auto RelinkProgram [[nodiscard]] (
+    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
+    GpuProgram const& oldProgram, bool logCode) -> bool;
+auto RelinkProgramFromFiles [[nodiscard]] (
+    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
+    CpuView<shader::Define const> defines, GpuProgram const& oldProgram, bool logCode) -> bool;
+
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
 void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);
 
@@ -46,9 +53,15 @@ public:
         other.UnsafeReset();
     }
     Self& operator=(Self&& other) {
+        if (*this == other) { return *this; }
         assert(id_ == GL_NONE && "OpenGL resource leaked");
         id_ = other.id_;
         other.UnsafeReset();
+        return *this;
+    }
+    Self& operator=(GLuint id) {
+        assert(id_ == GL_NONE && "OpenGL resource leaked");
+        id_ = id;
         return *this;
     }
 #undef Self

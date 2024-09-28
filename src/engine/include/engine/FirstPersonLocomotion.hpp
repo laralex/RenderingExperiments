@@ -10,12 +10,14 @@ class FirstPersonLocomotion final : public IDirty {
 
 public:
 #define Self FirstPersonLocomotion
-    explicit Self() = default;
-    virtual ~Self() override { }
+    explicit Self()              = default;
+    ~Self() override             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
-    Self(Self&&)                 = default;
-    Self& operator=(Self&&)      = default;
+protected:
+    Self(Self&&)                 = delete;
+    Self& operator=(Self&&)      = delete;
+public:
 #undef Self
 
     static auto ComputeViewMatrix
@@ -24,7 +26,7 @@ public:
         return glm::lookAtRH(position, position + forward, up);
     }
 
-    virtual void CommitChanges() override {
+    void CommitChanges() override {
         if (isDirtyOrient_) {
             CommitGlobalRotChange();
         } else if (isDirtyForwardUp_) {

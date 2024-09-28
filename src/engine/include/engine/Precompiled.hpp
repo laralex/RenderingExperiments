@@ -7,12 +7,17 @@
 #include <optional>
 #include <string_view>
 #include <functional>
+#include <memory>
+#include <vector>
+#include <unordered_map>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
-#include <cr.h>
+#include <cr/cr.h>
 #pragma clang diagnostic pop
 #define ENGINE_STATIC CR_STATE
+
+#include <concurrentqueue/concurrentqueue.h>
 
 // #include "engine/CommonInterfaces.hpp"
 #include "engine/gl/Common.hpp"

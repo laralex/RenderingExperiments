@@ -16,17 +16,25 @@ ENGINE_EXPORT WindowCtx::WindowCtx(GLFWwindow* window)
 
 ENGINE_EXPORT auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
     auto found                 = keys_.find(keyboardKey);
-    ButtonCallback oldCallback = nullptr;
-    if (found != keys_.end()) { oldCallback = found->second; }
-    keys_[keyboardKey] = callback;
+    if (found == keys_.cend()) {
+        keys_[keyboardKey] = callback;
+        return nullptr;
+    }
+    ButtonCallback oldCallback = found->second;
+    XLOGW("WindowCtx::SetKeyboardCallback overwriting key: {}", keyboardKey);
+    found->second = callback;
     return oldCallback;
 }
 
 ENGINE_EXPORT auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback) -> ButtonCallback {
     auto found                 = mouseButtons_.find(button);
-    ButtonCallback oldCallback = nullptr;
-    if (found != mouseButtons_.end()) { oldCallback = found->second; }
-    mouseButtons_[button] = callback;
+    if (found == mouseButtons_.cend()) {
+        mouseButtons_[button] = callback;
+        return nullptr;
+    }
+    ButtonCallback oldCallback = found->second;
+    XLOGW("WindowCtx::SetMouseButtonCallback overwriting button: {}", button);
+    found->second = callback;
     return oldCallback;
 }
 

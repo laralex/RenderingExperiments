@@ -56,23 +56,24 @@ Now you can choose to install prerequisites automatically, or manually
         ```
 
 Internal dependencies (you don't need to do anything to install):
-* [ccache](https://ccache.dev/) `v4.8.3` for faster compilation
+* OpenGL `4.3`
 * [GLFW](https://github.com/glfw/glfw) `v3.4` for cross-platform window interaction
-* [STB image](https://github.com/nothings/stb) `v2.30` for decoding images
-* [GLAD](https://gen.glad.sh/) `v2.0.7` for fetching OpenGL function pointers
 * [GLM](https://github.com/g-truc/glm) `v1.0.1` for math utilities
-* [spdlog]() `v1.14.1` for logging
+* [GLAD](https://gen.glad.sh/) `v2.0.7` for fetching OpenGL function pointers
+* [spdlog](https://github.com/gabime/spdlog) `v1.14.1` for logging
+* [STB image](https://github.com/nothings/stb) `v2.30` for decoding images
+* [concurrentqueue](https://github.com/cameron314/concurrentqueue) `v1.0.4` for multi-threaded message queue
 * [cr.h](https://github.com/fungos/cr) for simple hot reloading of dynamic libraries
+* [ccache](https://ccache.dev/) `v4.8.3` for faster compilation
 
 ## Build:
 1. Clone the repository
-
-    ```
+    ```bash
     git clone --recurse-submodules https://github.com/laralex/RenderingExperiments.git
     ```
 
 1. Run this to build everything (`-j16` for faster multi-threaded build)
-    ```
+    ```bash
     make -j16
     ```
     > NOTE: you can tweak build options in the `Makefile`. You can disable an option by commenting it out with `#`

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/Precompiled.hpp"
 #include "engine/RenderContext.hpp"
 #include "engine/WindowContext.hpp"
 
@@ -47,7 +46,12 @@ enum class UserActionType : size_t {
     WINDOW,
     NUM_TYPES,
 };
-using UserAction = std::function<void(void* applicationData)>;
+
+struct UserAction {
+    UserActionType type;
+    std::function<void(void* applicationData)> callback;
+    std::string label;
+};
 
 // Just create engine handle
 auto CreateEngine [[nodiscard]] () -> EngineHandle;
@@ -74,6 +78,6 @@ auto GetApplicationData [[nodiscard]] (EngineHandle engine) -> void*;
 
 auto GetWindowContext [[nodiscard]] (EngineHandle engine) -> WindowCtx&;
 
-void QueueForNextFrame(EngineHandle, UserActionType type, UserAction action);
+void QueueForNextFrame(EngineHandle, UserAction&& action);
 
 } // namespace engine

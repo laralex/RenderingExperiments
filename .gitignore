@@ -1,4 +1,8 @@
 /*
+!.vscode
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 !.gitignore
 !.gitmodules
 !.clang-format

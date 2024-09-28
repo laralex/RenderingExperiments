@@ -8,6 +8,7 @@
 #include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
+#include "engine/gl/ProgramOwner.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -42,20 +43,22 @@ static void ConfigureApplication(
             .WithLinearMinify(false)
             .WithWrap(GL_REPEAT));
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_TEXTURE_BINDING", .value = UNIFORM_TEXTURE_BINDING, .type = gl::shader::Define::INT32},
-        {.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = gl::shader::Define::INT32},
+    using gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_TEXTURE_BINDING", .value = UNIFORM_TEXTURE_BINDING, .type = Define::INT32},
+        Define{.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
-        app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag",
-        CpuView{defines, std::size(defines)}, "Test program");
+    app->shaderFileWatcher = std::make_shared<engine::gl::GpuProgramOwner>();
+    auto maybeProgram = app->shaderFileWatcher->LinkProgramFromFiles(app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program");
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
+    assert(app->fileNotifier.Initialize());
+    assert(app->fileNotifier.SubscribeWatcher(app->shaderFileWatcher, "data/app/shaders/texture.frag"));
 
     app->boxMesh = gl::AllocateBoxMesh(
         app->gl, BoxMesh::Generate(VEC_ONES, true),
@@ -257,7 +260,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->commonRenderers.RenderAxes(mvp, 0.4f, ColorCode::CYAN);
 
         constexpr GLint TEXTURE_SLOT = 0;
-        auto programGuard            = gl::UniformCtx(app->program);
+        auto programGuard            = gl::UniformCtx(app->shaderFileWatcher->ViewProgram(app->program));
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));
@@ -418,7 +421,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     app->commonRenderers.OnFrameEnd();
     app->gl.TextureUnits().RestoreState();
     if (ctx.frameIdx % 100 == 0) {
-        // app->fileWatcher.PollEvents(app->watchedShaderDir);
+        app->fileNotifier.PollChanges();
     }
 }
 
@@ -457,26 +460,32 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         app->keyboardShiftPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_ESCAPE, [&](bool pressed, bool released, KeyModFlags) {
-        engine::QueueForNextFrame(
-            engine, engine::UserActionType::WINDOW, [=](void*) { glfwSetWindowShouldClose(window, true); });
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_E, [&](bool pressed, bool released, KeyModFlags) {
+        engine::QueueForNextFrame(engine, engine::UserAction{
+            .type = engine::UserActionType::WINDOW,
+            .callback = [=](void*) { glfwSetWindowShouldClose(window, true); },
+            .label = "glfwSetWindowShouldClose",
+        });
     });
 
     std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&](bool pressed, bool released, KeyModFlags) {
-        engine::QueueForNextFrame(engine, engine::UserActionType::WINDOW, [=](void*) {
-            static bool setToFullscreen = true;
-            if (!pressed) { return; }
+        engine::QueueForNextFrame(engine, engine::UserAction{
+            .type = engine::UserActionType::WINDOW,
+            .callback = [=](void*) {
+                static bool setToFullscreen = true;
+                if (!pressed) { return; }
 
-            GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
-            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-            if (setToFullscreen) {
-                glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-            } else {
-                // TODO: avoid hardcoding resolution
-                glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
+                GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+                const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                if (setToFullscreen) {
+                    glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+                } else {
+                    // TODO: avoid hardcoding resolution
+                    glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
+                }
+                XLOG("Fullscreen mode: {}", setToFullscreen);
+                setToFullscreen = !setToFullscreen;
             }
-            XLOG("Fullscreen mode: {}", setToFullscreen);
-            setToFullscreen = !setToFullscreen;
         });
     });
 
@@ -504,6 +513,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
 
 auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
     XLOGW("HotStartApplication {}", (void*)app::Render);
+    ConfigureWindow(destination.engine);
 
     return engine::EngineResult::SUCCESS;
 }
@@ -517,11 +527,10 @@ auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> 
     destination.app = std::make_unique<Application>();
     engine::SetApplicationData(destination.engine, &destination.app);
 
-    engine::QueueForNextFrame(destination.engine, engine::UserActionType::RENDER, [](void* applicationData) {
-        GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
+    engine::QueueForNextFrame(destination.engine, engine::UserAction{
+        .type = engine::UserActionType::RENDER,
+        .callback = [](void* applicationData) { GLCALL(glEnable(GL_FRAMEBUFFER_SRGB)); }
     });
-
-    ConfigureWindow(destination.engine);
 
     std::ignore = engine::SetRenderCallback(destination.engine, app::Render);
 

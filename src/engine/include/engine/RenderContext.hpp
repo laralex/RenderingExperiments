@@ -1,7 +1,5 @@
 #pragma once
 
-#include "engine/Precompiled.hpp"
-
 namespace engine {
 
 struct RenderCtx final {

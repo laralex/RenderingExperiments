@@ -13,11 +13,15 @@
 #include "engine/gl/SamplersCache.hpp"
 #include "engine/gl/Texture.hpp"
 #include "engine/gl/TextureUnits.hpp"
-#include "engine/platform/linux/FileChangeWatcher.hpp"
+#include "engine/gl/ProgramOwner.hpp"
+#include "engine/platform/FileChangeNotifier.hpp"
 #include "engine/EngineLoop.hpp"
+#include "engine/platform/IFileWatcher.hpp"
+#include "engine/platform/posix/FileChangeNotifier.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
 
 namespace app {
 
@@ -49,7 +53,7 @@ struct Application final {
     engine::gl::GpuMesh sphereMesh{};
     engine::gl::GpuMesh sphereMesh2{};
     engine::gl::GpuMesh planeMesh{};
-    engine::gl::GpuProgram program{};
+    engine::gl::GpuProgramOwner::Handle program{};
     engine::gl::Texture texture{};
     engine::gl::GpuBuffer uboSamplerTiling{};
     UboDataSamplerTiling uboDataSamplerTiling{};
@@ -67,9 +71,8 @@ struct Application final {
     engine::ImageLoader imageLoader{};
     AppDebugMode debugMode{AppDebugMode::NONE};
 
-    engine::platform::linux::FileChangeWatcher fileWatcher{};
-    engine::platform::linux::WatchedDirectory watchedShaderDir{};
-
+    engine::platform::FileChangeNotifier fileNotifier{};
+    std::shared_ptr<engine::gl::GpuProgramOwner> shaderFileWatcher = {};
     bool isInitialized = false;
 };
 

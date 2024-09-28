@@ -27,7 +27,7 @@ struct EnginePersistentData {
     int64_t frameIdx{1U};
     RenderCallback renderCallback{[](RenderCtx const&, WindowCtx const&, void*) {}};
 
-    std::queue<UserAction> actionQueues[static_cast<size_t>(UserActionType::NUM_TYPES)]{};
+    moodycamel::ConcurrentQueue<UserAction> actionQueues[static_cast<size_t>(UserActionType::NUM_TYPES)];
     bool isInitialized = false;
 
 };
@@ -49,6 +49,7 @@ struct EngineCtx {
 
 namespace {
 
+using ActionQueue = moodycamel::ConcurrentQueue<engine::UserAction>;
 constexpr size_t MAX_ENGINES = 16U;
 
 ENGINE_STATIC int64_t g_numEngineInstances = 0;
@@ -169,19 +170,21 @@ auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistor
     return renderCtx;
 }
 
-std::queue<engine::UserAction>& GetEngineQueue(engine::EngineHandle engine, engine::UserActionType type) {
+auto GetEngineQueue[[nodiscard]](engine::EngineHandle engine, engine::UserActionType type) -> ActionQueue& {
     assert(engine != nullptr && engine->persistent.get() && "Invalid engine for GetEngineQueue");
     assert(
         static_cast<size_t>(type) < std::size(engine->persistent->actionQueues) && "Invalid queue for GetEngineQueue");
     return engine->persistent->actionQueues[static_cast<size_t>(type)];
 }
 
-void ExecuteQueue(engine::EngineHandle engine, std::queue<engine::UserAction>& queue) {
+void ExecuteQueue(engine::EngineHandle engine, ActionQueue& queue) {
     auto* appData = engine->persistent->applicationData;
-    while (!queue.empty()) {
-        auto& action = queue.front();
-        action(appData);
-        queue.pop();
+    engine::UserAction destAction;
+    while (queue.try_dequeue(destAction)) {
+        destAction.callback(appData);
+        if (std::size(destAction.label) > 0) {
+            XLOG("ExecuteQueue done: {}", destAction.label);
+        }
     }
 }
 
@@ -317,7 +320,9 @@ ENGINE_EXPORT auto GetApplicationData(engine::EngineHandle engine) -> void* {
     return engine->persistent->applicationData;
 }
 
-ENGINE_EXPORT void QueueForNextFrame(engine::EngineHandle engine, engine::UserActionType type, engine::UserAction action) {
+// NOTE: action must live until the task is dequeued
+// No callback is provided on that, so just keep it alive for atleast a couple of frames
+ENGINE_EXPORT void QueueForNextFrame(engine::EngineHandle engine, engine::UserAction&& action) {
     if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
         XLOGE("Failed to run QueueForNextFrame, invalid engine given");
         return;
@@ -327,7 +332,8 @@ ENGINE_EXPORT void QueueForNextFrame(engine::EngineHandle engine, engine::UserAc
         return;
     }
     // NOTE: storing callbacks is dangerous for hot-reloading
-    GetEngineQueue(engine, type).push(action);
+    GetEngineQueue(engine, action.type).enqueue(std::move(action));
+    XLOGW("enqueue");
 }
 
 } // namespace engine

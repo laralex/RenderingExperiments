@@ -10,7 +10,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
-#include <cr.h>
+#include <cr/cr.h>
 #pragma clang diagnostic pop
 
 #include <cassert>

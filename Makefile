@@ -1,10 +1,11 @@
-# DEBUG?=1
+DEBUG?=1
 RUN_AFTER_BUILD?=1
 USE_HOT_RELOADING?=1
 USE_DEP_FILES?=1
 USE_PCH?=1
 USE_CCACHE?=1
 USE_CLANGD?=1
+# USE_SANITIZER?=1
 # USE_DYNLIB_ENGINE?=1
 # USE_COMPILER_DUMP?=1
 
@@ -12,15 +13,22 @@ USE_CLANGD?=1
 
 ifeq ($(OS),Windows_NT)
     DETECTED_OS := windows
+	PLATFORM_FOLDER=win
+	EXE := .exe
+	COMPILE_FLAGS += -DXPLATFORM_WINDOWS
 else
     DETECTED_OS := $(shell uname | tr "[:upper:]" "[:lower:]")
+	PLATFORM_FOLDER=posix
+	EXE :=
+	COMPILE_FLAGS += -DXPLATFORM_LINUX
+	INCLUDE_DIR += -I/usr/include
 endif
 
 BUILD_DIR=build/$(if ${DEBUG},debug,release)
-INSTALL_DIR=${BUILD_DIR}/install
+INSTALL_DIR+=${BUILD_DIR}/install
 MAKEFILE_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-APP_MAIN_EXE=${BUILD_DIR}/app/run_app
-APP_HOTRELOAD_EXE=${BUILD_DIR}/app/run_app_hotreload
+APP_MAIN_EXE=${BUILD_DIR}/app/run_app${EXE}
+APP_HOTRELOAD_EXE=${BUILD_DIR}/app/run_app_hotreload${EXE}
 APP_EXE=$(if ${USE_HOT_RELOADING},${APP_HOTRELOAD_EXE},${APP_MAIN_EXE})
 APP_LIB=${BUILD_DIR}/app/libapp.so
 ENGINE_LIB=$(if ${USE_DYNLIB_ENGINE},${BUILD_DIR}/engine/libengine.so,${BUILD_DIR}/engine/libengine.a)
@@ -36,12 +44,13 @@ THIRD_PARTY_DEPS=\
 CC=$(if ${USE_CCACHE},./ccache,) clang++
 
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
-COMPILE_FLAGS=-std=c++20 \
+COMPILE_FLAGS += -std=c++20 \
 	$(if ${USE_DYNLIB_ENGINE},-fPIC,) \
 	$(if ${USE_HOT_RELOADING},-fPIC,) \
 	$(if $(USE_DEP_FILES),-MMD,) \
 	$(if $(USE_COMPILER_DUMP),-save-stats,) \
 	$(if ${DEBUG},-g -DXDEBUG,) \
+	$(if ${USE_SANITIZER},-fno-omit-frame-pointer -fsanitize=address,) \
 	-fvisibility=hidden -fvisibility-inlines-hidden \
 	-fno-exceptions -fno-rtti \
 	-Wno-switch-enum \
@@ -58,7 +67,8 @@ INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
 INCLUDE_DIR+=-I third_party/glm/
 INCLUDE_DIR+=-I third_party/stb/
-INCLUDE_DIR+=-I third_party/cr/
+# for cr and concurrentqueue
+INCLUDE_DIR+=-I third_party
 INCLUDE_DIR+=-I data
 LDFLAGS+=-pthread -ldl
 CLANG_FORMAT=clang-format-17
@@ -69,13 +79,14 @@ outdirs_app = $(sort $(dir ${outpaths_app}) ${BUILD_DIR}/app)
 obj_app = ${outpaths_app:.cpp=.o}
 
 src_engine_ = \
-	platform/GpuConfiguration.cpp \
 	Assets.cpp BoxMesh.cpp \
 	EngineLoop.cpp IcosphereMesh.cpp \
 	LineRendererInput.cpp PointRendererInput.cpp \
 	PlaneMesh.cpp Unprojection.cpp \
 	UvSphereMesh.cpp \
 	Precompiled.cpp WindowContext.cpp \
+	platform/GpuConfiguration.cpp \
+	platform/${PLATFORM_FOLDER}/FileChangeNotifier.cpp \
 	gl/AxesRenderer.cpp \
 	gl/BoxRenderer.cpp gl/ProceduralMeshes.cpp \
 	gl/BillboardRenderer.cpp \
@@ -93,14 +104,6 @@ src_engine_ = \
 	gl/Shader.cpp gl/Texture.cpp \
 	gl/TextureUnits.cpp gl/Uniform.cpp \
 	gl/Vao.cpp
-
-ifeq (windows,${DETECTED_OS})
-	COMPILE_FLAGS += -DXPLATFORM_WINDOWS
-else ifeq (linux,${DETECTED_OS})
-	COMPILE_FLAGS += -DXPLATFORM_LINUX
-	src_engine_ += platform/linux/FileChangeWatcher.cpp
-	INCLUDE_DIR+=-I/usr/include
-endif
 
 outpaths_engine=$(addprefix ${BUILD_DIR}/engine/src/, ${src_engine_})
 outdirs_engine=$(sort $(dir ${outpaths_engine}) ${BUILD_DIR}/engine/src)
