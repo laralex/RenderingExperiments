@@ -34,10 +34,16 @@ struct GLFWwindow;
 namespace engine {
 
 #ifdef XDEBUG
-constexpr bool DEBUG_BUILD = true;
+constexpr bool XDEBUG_BUILD = true;
 #else
-constexpr bool DEBUG_BUILD = false;
+constexpr bool XDEBUG_BUILD = false;
 #endif // XDEBUG
+
+#ifdef XVERBOSE
+constexpr int32_t XVERBOSITY = 100;
+#else
+constexpr int32_t XVERBOSITY = 4;
+#endif // XVERBOSE
 
 template <typename T> constexpr uint32_t Bits(T value) { return static_cast<uint32_t>(value); }
 

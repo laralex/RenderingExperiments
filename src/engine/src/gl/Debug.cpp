@@ -20,7 +20,7 @@ constexpr bool ENABLE_DEBUG_GROUP_LOGS   = false;
 void GLAPIENTRY DebugOutputCallback(
     GLenum source, GLenum type, GLuint /*id*/, GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam) {
-    if constexpr (engine::DEBUG_BUILD) {
+    if constexpr (engine::XDEBUG_BUILD) {
         // NVIDIA: Buffer detailed info: Buffer object 15 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW)
         // will use VIDEO memory as the source for buffer object operations.
         if (source == 0x8246U) { return; }

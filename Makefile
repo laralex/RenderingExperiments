@@ -5,6 +5,7 @@ USE_DEP_FILES?=1
 USE_PCH?=1
 USE_CCACHE?=1
 USE_CLANGD?=1
+# USE_VERBOSE_LOG?=1
 # USE_SANITIZER?=1
 # USE_DYNLIB_ENGINE?=1
 # USE_COMPILER_DUMP?=1
@@ -35,7 +36,7 @@ ENGINE_LIB=$(if ${USE_DYNLIB_ENGINE},${BUILD_DIR}/engine/libengine.so,${BUILD_DI
 PRECOMPILED_HEADER=${BUILD_DIR}/engine/Precompiled.hpp.pch
 
 THIRD_PARTY_DEPS=\
-	$(if ${DEBUG},${BUILD_DIR}/third_party/spdlog/libspdlog.a,) \
+	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
 	${BUILD_DIR}/third_party/glfw/src/libglfw.so \
 	${BUILD_DIR}/third_party/glad/gl.o \
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
@@ -51,6 +52,7 @@ COMPILE_FLAGS += -std=c++20 \
 	$(if $(USE_COMPILER_DUMP),-save-stats,) \
 	$(if ${DEBUG},-g -DXDEBUG,) \
 	$(if ${USE_SANITIZER},-fno-omit-frame-pointer -fsanitize=address,) \
+	$(if ${USE_VERBOSE_LOG},-DXVERBOSE,) \
 	-fvisibility=hidden -fvisibility-inlines-hidden \
 	-fno-exceptions -fno-rtti \
 	-Wno-switch-enum \
@@ -81,7 +83,7 @@ obj_app = ${outpaths_app:.cpp=.o}
 src_engine_ = \
 	Assets.cpp BoxMesh.cpp \
 	EngineLoop.cpp IcosphereMesh.cpp \
-	LineRendererInput.cpp PointRendererInput.cpp \
+	LineRendererInput.cpp Log.cpp PointRendererInput.cpp \
 	PlaneMesh.cpp Unprojection.cpp \
 	UvSphereMesh.cpp \
 	Precompiled.cpp WindowContext.cpp \
@@ -193,7 +195,9 @@ ENGINE_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},${THIRD_PARTY_DEPS},)
 .PHONY: ${INSTALL_DIR}/app
 ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	$(info > Installing ${INSTALL_DIR}/app)
-	cp -asf $(realpath data) ${INSTALL_DIR}
+# NOTE: in debug, in build/install only symlinks are stored, to apply shader editing into original files
+# in release, in build/install reside copies, thus shader editing is not saved in original files
+	cp -af $(if DEBUG,-s,) $(realpath data) ${INSTALL_DIR}
 	-cp ${ENGINE_LIB} ${INSTALL_DIR}
 	-cp ${APP_LIB} ${INSTALL_DIR}
 	cp ${APP_EXE} $@

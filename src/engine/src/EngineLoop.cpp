@@ -82,6 +82,7 @@ void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mod
 }
 
 void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    XLOGW("GLFW key {} scancode {} action {} mods {}", key, scancode, action, mods);
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     ctx->UpdateKeyboardKey(key, action, mods);
@@ -105,7 +106,7 @@ auto CreateWindow [[nodiscard]] (int width, int height, std::string_view name, G
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
     int isDebugContext = GLFW_FALSE;
-    if constexpr (engine::DEBUG_BUILD) {
+    if constexpr (engine::XDEBUG_BUILD) {
         isDebugContext = GLFW_TRUE;
         XLOG("! GLFW - making debug-context for OpenGL");
     }
@@ -182,12 +183,14 @@ void ExecuteQueue(engine::EngineHandle engine, ActionQueue& queue) {
     engine::UserAction destAction;
     while (queue.try_dequeue(destAction)) {
         destAction.callback(appData);
-        if (std::size(destAction.label) > 0) { XLOG("ExecuteQueue done: {}", destAction.label); }
+        if (std::size(destAction.label) > 0) {
+            XLOGD("ExecuteQueue done: {}", destAction.label);
+        }
     }
 }
 
 auto InitializeCommonResources [[nodiscard]] () -> bool {
-    if (engine::DEBUG_BUILD) { spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v"); }
+    engine::InitLogging();
     XLOGW("glfwInit()");
     if (!glfwInit()) {
         XLOGE("Failed to initialize GLFW");
@@ -322,16 +325,15 @@ ENGINE_EXPORT auto GetApplicationData(engine::EngineHandle engine) -> void* {
 // No callback is provided on that, so just keep it alive for atleast a couple of frames
 ENGINE_EXPORT void QueueForNextFrame(engine::EngineHandle engine, engine::UserAction&& action) {
     if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
-        XLOGE("Failed to run QueueForNextFrame, invalid engine given");
+        XLOGE("Failed to run QueueForNextFrame, invalid engine given: {}", action.label);
         return;
     }
     if (!engine->persistent.get()) [[unlikely]] {
-        XLOGE("Failed to run QueueForNextFrame, engine data is uninitialized");
+        XLOGE("Failed to run QueueForNextFrame, engine data is uninitialized: {}", action.label);
         return;
     }
     // NOTE: storing callbacks is dangerous for hot-reloading
     GetEngineQueue(engine, action.type).enqueue(std::move(action));
-    XLOGW("enqueue");
 }
 
 } // namespace engine

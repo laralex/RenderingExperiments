@@ -20,7 +20,7 @@ ENGINE_EXPORT void GlExtensions::Initialize() {
     // NOTE: std::string_view doesn't work even with transparent hashing (StringHash)
     auto supports = [&](char const* ext, bool procAddressOk) {
         bool supported = allExtensions_.find(ext) != allExtensions_.end();
-        XLOG("Extension {} supported={} procAddressOk={}", ext, static_cast<int>(supported), procAddressOk);
+        XLOGD("Extension {} supported={} procAddressOk={}", ext, static_cast<int>(supported), procAddressOk);
         return supported && procAddressOk;
     };
     constexpr bool OK                                      = true;

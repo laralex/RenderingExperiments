@@ -16,7 +16,7 @@ ENGINE_EXPORT auto LoadTextFile(std::string_view const filepath) -> std::string 
     }
     ss << file.rdbuf();
     file.close();
-    XLOG("Loaded text file: {}", filepath);
+    XLOGD("Loaded text file: {}", filepath);
     return ss.str();
 }
 

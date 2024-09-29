@@ -114,6 +114,14 @@ Internal dependencies (you don't need to do anything to install):
     ```bash
     make run
     ```
+    Controls:
+    * `W/S` - move forward / backwards
+    * `A/D` - move left / right
+    * `LEFT SHIFT + W/S` - move up/down
+    * `ESC` - exit
+    * `P` - wireframe mode
+    * `Q` - remember camera location, this location is used for culling, press `Q` again to teleport to remembered location
+    > NOTE: if some controls don't seem to work (especially ESC/SHIFT/ALT/CTRL/etc, make sure to start the application when current keyboard layout is English, any other won't work)
 
 5. If the application is running, and you want to recompile it without stopping the application, you can use
     ```bash

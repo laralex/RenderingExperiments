@@ -197,7 +197,7 @@ ENGINE_EXPORT auto GenerateCode
 }
 
 ENGINE_EXPORT void InjectDefines(std::stringstream& destination, CpuView<shader::Define const> defines) {
-    if constexpr (engine::DEBUG_BUILD) { destination << "#define DEBUG 1\n"; }
+    if constexpr (engine::XDEBUG_BUILD) { destination << "#define DEBUG 1\n"; }
     size_t numDefines = defines.NumElements();
     for (size_t i = 0; i < numDefines; ++i) {
         shader::Define const& define = *defines[i];

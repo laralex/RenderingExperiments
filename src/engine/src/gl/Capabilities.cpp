@@ -10,15 +10,18 @@ ENGINE_EXPORT void GlCapabilities::Initialize() {
     GLubyte const* vendor;
     GLCALL(vendor = glGetString(GL_VENDOR));
     vendor_ = std::string_view{reinterpret_cast<char const*>(vendor)};
-    XLOG("GlCapabilities::Vendor = {}", vendor_);
     GLubyte const* renderer;
     GLCALL(renderer = glGetString(GL_RENDERER));
     renderer_ = std::string_view{reinterpret_cast<char const*>(renderer)};
+
+    // if constexpr(XVERBOSE_BUILD) {
+    XLOG("GlCapabilities::Vendor = {}", vendor_);
     XLOG("GlCapabilities::VendorDevice = {}", renderer_);
+    // }
 
     auto getCapability = [](GLenum cap, std::string_view capStr, GLint& destination) {
         GLCALL(glGetIntegerv(cap, &destination));
-        XLOG("GlCapabilities::{} = {}", capStr, destination);
+        XLOGD("GlCapabilities::{} = {}", capStr, destination);
     };
 
     getCapability(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS", maxTextureUnits);

@@ -446,7 +446,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
 static auto ConfigureWindow(engine::EngineHandle engine) {
     auto& windowCtx    = engine::GetWindowContext(engine);
-    GLFWwindow* window = windowCtx.Window();
     using KeyModFlags  = engine::WindowCtx::KeyModFlags;
     auto& app          = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
     std::ignore        = windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
@@ -462,7 +461,7 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_Q, [&app](bool pressed, bool released, KeyModFlags) {
         static bool controlDebugCamera = true;
         if (pressed) {
             app->controlDebugCameraSwitched = true;
@@ -471,45 +470,55 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         }
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_ALT, [&app](bool pressed, bool released, KeyModFlags) {
         app->keyboardAltPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_LEFT_SHIFT, [&app](bool pressed, bool released, KeyModFlags) {
         app->keyboardShiftPressed += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_E, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_E, [&app, engine](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(
             engine,
             engine::UserAction{
                 .type     = engine::UserActionType::WINDOW,
-                .callback = [=](void*) { glfwSetWindowShouldClose(window, true); },
+                .callback = [=](void*) {
+                    auto& windowCtx    = engine::GetWindowContext(engine);
+                    glfwSetWindowShouldClose(windowCtx.Window(), true);
+                },
                 .label    = "glfwSetWindowShouldClose",
             });
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&app, engine](bool pressed, bool released, KeyModFlags) {
         engine::QueueForNextFrame(
-            engine, engine::UserAction{.type = engine::UserActionType::WINDOW, .callback = [=](void*) {
-                                           static bool setToFullscreen = true;
-                                           if (!pressed) { return; }
+            engine, engine::UserAction{
+                .type = engine::UserActionType::WINDOW,
+                .callback = [=](void*) {
+                    static bool setToFullscreen = true;
+                    if (!pressed) { return; }
 
-                                           GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
-                                           const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-                                           if (setToFullscreen) {
-                                               glfwSetWindowMonitor(
-                                                   window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-                                           } else {
-                                               // TODO: avoid hardcoding resolution
-                                               glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
-                                           }
-                                           XLOG("Fullscreen mode: {}", setToFullscreen);
-                                           setToFullscreen = !setToFullscreen;
-                                       }});
+                    auto& windowCtx    = engine::GetWindowContext(engine);
+                    GLFWwindow* window = windowCtx.Window();
+
+                    GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+                    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                    if (setToFullscreen) {
+                        glfwSetWindowMonitor(
+                            window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+                    } else {
+                        // TODO: avoid hardcoding resolution
+                        glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
+                    }
+                    XLOG("Fullscreen mode: {}", setToFullscreen);
+                    setToFullscreen = !setToFullscreen;
+                },
+                .label = "Toggle GLFW fullscreen"
+        });
     });
 
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [&app](bool pressed, bool released, KeyModFlags) {
         static bool setToWireframe = true;
         if (!pressed) { return; }
 
@@ -524,11 +533,11 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 
     std::ignore =
-        windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released, KeyModFlags) {
-            if (released) {
-                auto mousePosition = windowCtx.MousePosition();
-                XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);
-            }
+        windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&app, engine](bool pressed, bool released, KeyModFlags) {
+            if (!released) { return; }
+            auto& windowCtx    = engine::GetWindowContext(engine);
+            auto mousePosition = windowCtx.MousePosition();
+            XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);
         });
 }
 
@@ -548,11 +557,13 @@ auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> 
     destination.app = std::make_unique<Application>();
     engine::SetApplicationData(destination.engine, &destination.app);
 
-    engine::QueueForNextFrame(
-        destination.engine,
-        engine::UserAction{.type = engine::UserActionType::RENDER, .callback = [](void* applicationData) {
-                               GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
-                           }});
+    engine::QueueForNextFrame(destination.engine,engine::UserAction{
+        .type = engine::UserActionType::RENDER,
+        .callback = [](void* applicationData) {
+            GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
+        },
+        .label = "Set GL_FRAMEBUFFER_SRGB"
+    });
 
     std::ignore = engine::SetRenderCallback(destination.engine, app::Render);
 
