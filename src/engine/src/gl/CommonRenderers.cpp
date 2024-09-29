@@ -16,21 +16,22 @@ constexpr GLint BLIT_UNIFORM_UV_SCALE_LOCATION = 1;
 constexpr GLint BLIT_TEXTURE_SLOT              = 0; // TODO: 1 and above slots don't work
 constexpr int32_t POINTS_FIRST_EXTERNAL        = 64;
 
-auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgram {
+auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgramHandle {
     using namespace engine;
 
-    gl::shader::Define const defines[] = {
-        {.name = "UNIFORM_TEXTURE", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = gl::shader::Define::INT32},
+    using Define = gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "UNIFORM_TEXTURE", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
         gl, "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag",
-        CpuView{defines, std::size(defines)}, "Blit");
+        std::move(defines), "Blit");
     assert(maybeProgram);
-    gl::GpuProgram blitProgram = std::move(*maybeProgram);
+    gl::GpuProgramHandle blitProgram = std::move(*maybeProgram);
 
-    auto programGuard = gl::UniformCtx(blitProgram);
+    auto programGuard = gl::UniformCtx(gl.GetProgram(blitProgram));
     programGuard.SetUniformTexture(BLIT_UNIFORM_TEXTURE_LOCATION, BLIT_TEXTURE_SLOT);
     programGuard.SetUniformValue2(BLIT_UNIFORM_UV_SCALE_LOCATION, 1.0f, 1.0f);
 
@@ -106,13 +107,13 @@ ENGINE_EXPORT void CommonRenderers::RenderAxes(GlContext const& gl, glm::mat4 co
 
 ENGINE_EXPORT void CommonRenderers::RenderBox(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {
     assert(IsInitialized() && "Bad call to RenderBox, CommonRenderers isn't initialized");
-    boxRenderer_.Render(centerMvp, color);
+    boxRenderer_.Render(gl, centerMvp, color);
 }
 
 ENGINE_EXPORT void CommonRenderers::RenderFrustum(GlContext const& gl,
     glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
-    frustumRenderer_.Render(centerMvp, frustum, color, thickness);
+    frustumRenderer_.Render(gl, centerMvp, frustum, color, thickness);
 }
 
 ENGINE_EXPORT void CommonRenderers::RenderFulscreenTriangle(GlContext const& gl) const {
@@ -122,12 +123,12 @@ ENGINE_EXPORT void CommonRenderers::RenderFulscreenTriangle(GlContext const& gl)
 
 ENGINE_EXPORT void CommonRenderers::RenderBillboard(GlContext const& gl, BillboardRenderArgs const& args) const {
     assert(IsInitialized() && "Bad call to RenderBillboard, CommonRenderers isn't initialized");
-    billboardRenderer_.Render(args);
+    billboardRenderer_.Render(gl, args);
 }
 
 ENGINE_EXPORT void CommonRenderers::RenderLines(GlContext const& gl, glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderLines, CommonRenderers isn't initialized");
-    lineRenderer_.Render(camera);
+    lineRenderer_.Render(gl, camera);
 }
 
 ENGINE_EXPORT void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInput::Line> const& lines) {
@@ -148,8 +149,8 @@ ENGINE_EXPORT void CommonRenderers::FlushLinesToGpu(std::vector<LineRendererInpu
 
 ENGINE_EXPORT void CommonRenderers::RenderPoints(GlContext const& gl, glm::mat4 const& camera) const {
     assert(IsInitialized() && "Bad call to RenderPoints, CommonRenderers isn't initialized");
-    pointRenderer_.Render(glm::mat4{1.0f}, 0, pointsLimitInternal_);
-    pointRenderer_.Render(camera, POINTS_FIRST_EXTERNAL, pointsLimitExternal_);
+    pointRenderer_.Render(gl, glm::mat4{1.0f}, 0, pointsLimitInternal_);
+    pointRenderer_.Render(gl, camera, POINTS_FIRST_EXTERNAL, pointsLimitExternal_);
 }
 
 ENGINE_EXPORT void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererInput::Point> const& points) {
@@ -169,7 +170,7 @@ ENGINE_EXPORT void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererIn
 
 ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {
     assert(IsInitialized() && "Bad call to Blit2D, CommonRenderers isn't initialized");
-    auto programGuard = gl::UniformCtx(blitProgram_);
+    auto programGuard = gl::UniformCtx(gl.GetProgram(blitProgram_));
     programGuard.SetUniformValue2(BLIT_UNIFORM_UV_SCALE_LOCATION, uvScale.x, uvScale.y);
     gl.TextureUnits().Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
     // auto depthGuard = gl::GlGuardDepth(false);

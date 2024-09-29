@@ -9,7 +9,7 @@ namespace engine::gl {
 
 class GpuProgramOwner;
 class GpuProgram;
-using GpuProgramHandle = uint32_t;
+using GpuProgramHandle = int32_t; // TODO: currently defined in multiple places, because can't include "ProgramOwner.hpp"
 
 class GlContext final {
 

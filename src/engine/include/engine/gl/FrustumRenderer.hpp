@@ -21,7 +21,7 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] (GlContext const& gl) -> FrustumRenderer;
-    void Render(
+    void Render(GlContext const& gl,
         glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0),
         float thickness = 0.015f) const;
 
@@ -29,7 +29,7 @@ private:
     Vao vao_{};
     GpuBuffer attributeBuffer_{};
     GpuBuffer indexBuffer_{};
-    GpuProgram program_{};
+    GpuProgramHandle program_{};
     GpuBuffer ubo_{};
     GLint uboLocation_{-1};
 };

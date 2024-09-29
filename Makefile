@@ -59,7 +59,7 @@ COMPILE_FLAGS += -std=c++20 \
 	-Wno-c++98-c++11-compat-pedantic \
 	-Wno-c99-designator \
 	-Wno-padded \
-	-Wno-newline-eof \
+	-Wno-unknown-attributes \
 #-Weverything \
 
 INCLUDE_DIR+=-I src/engine/include
@@ -86,6 +86,7 @@ src_engine_ = \
 	UvSphereMesh.cpp \
 	Precompiled.cpp WindowContext.cpp \
 	platform/GpuConfiguration.cpp \
+	platform/Filesystem.cpp \
 	platform/${PLATFORM_FOLDER}/FileChangeNotifier.cpp \
 	gl/AxesRenderer.cpp \
 	gl/BoxRenderer.cpp gl/ProceduralMeshes.cpp \
@@ -110,8 +111,8 @@ outdirs_engine=$(sort $(dir ${outpaths_engine}) ${BUILD_DIR}/engine/src)
 obj_engine=${outpaths_engine:.cpp=.o}
 
 ifeq (1,${USE_DEP_FILES})
--include $(src_engine:.o=.d)
--include $(src_app:.o=.d)
+-include $(obj_engine:.o=.d)
+-include $(obj_app:.o=.d)
 -include ${PRECOMPILED_HEADER:.pch=.d}
 endif
 
@@ -154,8 +155,8 @@ hot: ${APP_LIB} ${outdirs_app}
 
 .PHONY: wtf
 wtf:
-	$(info > ${APP_THIRD_PARTY_DEPS})
-	$(info > ${ENGINE_THIRD_PARTY_DEPS})
+	$(info > ${outpaths_engine})
+	$(info > ${outpaths_app})
 
 .PHONY: run
 run: ${INSTALL_DIR}/app

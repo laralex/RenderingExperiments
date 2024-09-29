@@ -38,23 +38,24 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
              .offset          = offsetof(LineRendererInput::Vertex, colorIdx)})
         .MakeUnindexed(maxLines * 2);
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
+    using Define = gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
         gl, "data/engine/shaders/lines.vert", "data/engine/shaders/color_palette.frag",
-        CpuView{defines, std::size(defines)}, "LineRenderer");
+        std::move(defines), "LineRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
     return renderer;
 }
 
-ENGINE_EXPORT void LineRenderer::Render(glm::mat4 const& camera) const {
-    auto programGuard = UniformCtx{program_};
+ENGINE_EXPORT void LineRenderer::Render(GlContext const& gl, glm::mat4 const& camera) const {
+    auto programGuard = UniformCtx{gl.GetProgram(program_)};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVao(vao_, GL_LINES);
 }

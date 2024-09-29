@@ -57,7 +57,7 @@ static void ConfigureApplication(
         Define{.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = Define::INT32},
     };
 
-    auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program", true);
+    auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program");
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
@@ -162,15 +162,10 @@ static void ConfigureApplication(
     //     XLOG("Changed file: {}", file);
     // });
 
-    for (auto const& program : shaderWatcher->RequiredProgramsToWatch()) {
-        for (auto const& shaderFilepath : program.shadersFilepaths) {
-            if (shaderFilepath.size() == 0) { continue; }
-            assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, shaderFilepath));
-        }
+    for (auto it = shaderWatcher->FilepathsToWatchBegin(); it != shaderWatcher->FilepathsToWatchEnd(); ++it) {
+        if (it->size() == 0) { continue; }
+        assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, *it));
     }
-    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/app/shaders/texture.frag"));
-    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/engine/shaders/axes.vert"));
-    // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/engine/shaders"));
 }
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
@@ -328,7 +323,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthFunc(GL_LEQUAL));
 
         glm::vec3 lightColor{0.2f};
-        app->flatRenderer.Render(gl::FlatRenderArgs{
+        app->flatRenderer.Render(app->gl, gl::FlatRenderArgs{
             .lightWorldPosition        = lightPosition,
             .lightColor                = lightColor,
             .eyeWorldPosition          = cameraMovement.Position(),
@@ -342,7 +337,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         model = glm::scale(glm::mat4{1.0f}, glm::vec3{15.0f});
         mvp   = camera * model;
-        app->flatRenderer.Render(gl::FlatRenderArgs{
+        app->flatRenderer.Render(app->gl, gl::FlatRenderArgs{
             .lightWorldPosition = lightPosition,
             .lightColor         = lightColor,
             .eyeWorldPosition   = cameraMovement.Position(),
@@ -432,7 +427,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     app->commonRenderers.OnFrameEnd();
     app->gl.TextureUnits().RestoreState();
     if (ctx.frameIdx % 100 == 0) {
-        app->fileNotifier.PollChanges();
+        bool filesChanged = app->fileNotifier.PollChanges();
+        if (filesChanged) {
+            app->gl.Programs()->HotReloadPrograms(app->gl);
+        }
     }
 }
 

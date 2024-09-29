@@ -26,7 +26,7 @@ public:
     static auto Allocate [[nodiscard]] (GlContext const& gl, size_t maxPoints) -> PointRenderer;
     void Fill(std::vector<PointRendererInput::Point> const&, int32_t numPoints, int32_t numPointsOffset);
     void LimitInstances(int32_t numInstances);
-    void Render(
+    void Render(GlContext const& gl,
         glm::mat4 const& camera, int32_t firstInstance = 0,
         int32_t numInstances = std::numeric_limits<int32_t>::max()) const;
 
@@ -36,7 +36,7 @@ private:
     GpuBuffer meshAttributesBuffer_{};
     GpuBuffer instancesBuffer_{};
     GpuBuffer indexBuffer_{};
-    GpuProgram program_{};
+    GpuProgramHandle program_{};
     GLsizei lastInstance_{0};
 };
 

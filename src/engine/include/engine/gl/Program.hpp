@@ -24,12 +24,14 @@ public:
     static auto Allocate
         [[nodiscard]] (GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name = {})
         -> std::optional<GpuProgram>;
-    auto LinkGraphical [[nodiscard]](GLuint vertexShader, GLuint fragmentShader) const -> bool;
+    auto LinkGraphical [[nodiscard]](GLuint vertexShader, GLuint fragmentShader, bool isRecompile = false) const -> bool;
     auto Id [[nodiscard]] () const -> GLuint { return programId_; }
+    auto Type [[nodiscard]] () const -> Type { return type_; }
 
 private:
     void Dispose();
-    GlHandle programId_{GL_NONE};
+    GlHandle programId_ = GlHandle{GL_NONE};
+    enum Type type_ = Type::GRAPHICAL;
 
     friend class UniformCtx;
 };

@@ -56,29 +56,30 @@ namespace engine::gl {
 ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     FlatRenderer renderer;
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UBO_BINDING", .value = UBO_BINDING, .type = gl::shader::Define::INT32},
-        {.name = "USE_SPECULAR", .value = true, .type = gl::shader::Define::BOOLEAN8},
-        {.name = "USE_PHONG", .value = false, .type = gl::shader::Define::BOOLEAN8},
+    using Define = gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = Define::INT32},
+        Define{.name = "UBO_BINDING", .value = UBO_BINDING, .type = Define::INT32},
+        Define{.name = "USE_SPECULAR", .value = true, .type = Define::BOOLEAN8},
+        Define{.name = "USE_PHONG", .value = false, .type = Define::BOOLEAN8},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
         gl, "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag",
-        CpuView{defines, std::size(defines)}, "Lambert diffuse", false);
+        std::move(defines), "Lambert diffuse");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
         gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
-    renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
+    renderer.uboLocation_ = UniformCtx::GetUboLocation(gl.GetProgram(renderer.program_), "Ubo");
 
     return renderer;
 }
 
-ENGINE_EXPORT void FlatRenderer::Render(FlatRenderArgs const& args) const {
+ENGINE_EXPORT void FlatRenderer::Render(GlContext const& gl, FlatRenderArgs const& args) const {
     glm::mat3x4 normalToWorld = glm::transpose(glm::inverse(args.modelToWorld));
 
     UboData data{
@@ -106,7 +107,7 @@ ENGINE_EXPORT void FlatRenderer::Render(FlatRenderArgs const& args) const {
     ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
 
-    auto programGuard = gl::UniformCtx(program_);
+    auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
     RenderVao(args.vaoWithNormal, args.primitive);
 }
 

@@ -1,6 +1,7 @@
 #include "engine/gl/ProgramOwner.hpp"
 #include "engine/gl/Program.hpp"
 #include "engine/gl/Shader.hpp"
+#include "engine/platform/Filesystem.hpp"
 
 namespace {
 
@@ -18,7 +19,7 @@ namespace engine::gl {
 auto GpuProgramOwner::ViewProgram(GpuProgramHandle handle) const -> GpuProgram const& {
     auto find = programs_.find(handle);
     assert(find != std::cend(programs_));
-    return *find->second.get();
+    return *find->second.program.get();
 }
 
 auto GpuProgramOwner::ProvideProgram (GpuProgramHandle handle) const -> std::weak_ptr<GpuProgram> {
@@ -26,83 +27,87 @@ auto GpuProgramOwner::ProvideProgram (GpuProgramHandle handle) const -> std::wea
     if (find == std::cend(programs_)) {
         return {};
     }
-    return find->second;
+    return find->second.program;
 }
 
 auto GpuProgramOwner::DeleteProgram(GpuProgramHandle handle) -> bool {
         auto isDeleted = programs_.erase(handle) > 0;
-        for (auto it = std::begin(hotLoadPrograms_); it != std::end(hotLoadPrograms_); ++it) {
-            if (it->handle != handle) { continue; }
-            hotLoadPrograms_.erase(it);
-        }
         return isDeleted;
     }
 
 auto GpuProgramOwner::LinkProgramFromFiles(GlContext const& gl,
     std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    std::vector<shader::Define>&& defines, std::string_view name, bool hotReload) -> std::optional<GpuProgramHandle> {
+    std::vector<shader::Define>&& defines, std::string_view name, bool hotReload, bool logCode) -> std::optional<GpuProgramHandle> {
 
     std::error_code err;
-    auto vertexFullFilepath = std::filesystem::path{
-        std::begin(vertexFilepath), std::end(vertexFilepath), std::filesystem::path::generic_format};
-    vertexFullFilepath = std::filesystem::weakly_canonical(vertexFullFilepath, err).string();
+    std::string vertexFullFilepath, fragmentFullFilepath;
+    vertexFullFilepath = platform::AbsolutePath(vertexFilepath, err).string();
     assert(!err);
-    auto fragmentFullFilepath = std::filesystem::path{
-        std::begin(fragmentFilepath), std::end(fragmentFilepath), std::filesystem::path::generic_format};
-    fragmentFullFilepath = std::filesystem::weakly_canonical(fragmentFullFilepath, err).string();
+    fragmentFullFilepath = platform::AbsolutePath(fragmentFilepath, err).string();
     assert(!err);
 
     auto maybeGpuProgram = ::engine::gl::LinkProgramFromFiles(gl,
         vertexFullFilepath.c_str(), fragmentFullFilepath.c_str(),
-        CpuView{defines.data(), defines.size()}, name, false);
+        CpuView{defines.data(), defines.size()}, name, logCode);
     if (!maybeGpuProgram) { return std::nullopt; }
+
     GpuProgram gpuProgram = std::move(*maybeGpuProgram);
     GpuProgramHandle freeHandle = std::size(programs_);
-    programs_[freeHandle] = std::make_shared<GpuProgram>(std::move(gpuProgram));
-
+    programs_[freeHandle] = HotLoadProgram{
+        .program = std::make_shared<GpuProgram>(std::move(gpuProgram)),
+        .hotReload = hotReload,
+        .shadersFilepaths = {vertexFullFilepath, fragmentFullFilepath, {}, {}},
+        .defines = std::move(defines)
+    };
     if (hotReload) {
-        hotLoadPrograms_.push_back(HotLoadProgram{
-            .handle = freeHandle,
-            .shadersFilepaths = {vertexFullFilepath, fragmentFullFilepath, {}, {}},
-            .defines = std::move(defines)
-        });
+        filepathsToWatch_.insert(vertexFullFilepath);
+        filepathsToWatch_.insert(fragmentFullFilepath);
     }
     return std::optional{freeHandle};
 }
 
 void GpuProgramOwner::OnFileChanged(std::string const& path, bool isDirectory) {
-    XLOG("ProgramOwner detected change {} {}", path.c_str(), isDirectory);
-    // TODO: string copying (though hot reloading is rare, so maybe fine)
+    XLOG("GpuProgramOwner detected change {}", path.c_str());
     bool isVert = HasEnding(path, shader::VERTEX_FILE_EXTENSION);
     bool isFrag = HasEnding(path, shader::FRAGMENT_FILE_EXTENSION);
     bool isCompute = HasEnding(path, shader::COMPUTE_FILE_EXTENSION);
 
-    for (auto it = hotLoadPrograms_.cbegin(); it != hotLoadPrograms_.cend(); ++it) {
-        bool pathEq[HotLoadProgram::MAX_NUM_SHADERS] = {
-            std::filesystem::equivalent(it->shadersFilepaths[0], path),
-            std::filesystem::equivalent(it->shadersFilepaths[1], path),
-            std::filesystem::equivalent(it->shadersFilepaths[2], path),
-            std::filesystem::equivalent(it->shadersFilepaths[3], path),
+    for (auto it = programs_.cbegin(); it != programs_.cend(); ++it) {
+        if (!it->second.hotReload) { continue; }
+
+        bool pathEq[HotLoadProgram::MAX_NUM_SHADERS];
+        for (size_t i = 0; i < std::size(pathEq); ++i) {
+            pathEq[i] = std::filesystem::equivalent(it->second.shadersFilepaths[i], path);
         };
-        XLOG("v {} {} f {} {} c {} {}",
-            isVert, pathEq[0],
-            isFrag, pathEq[1],
-            isCompute, pathEq[0]);
+
         bool doRecompile = (isVert && pathEq[0] || isFrag && pathEq[1] || isCompute && pathEq[0]);
         if (!doRecompile) { continue; }
 
+        pendingHotReload_.push_back(it->first);
+
+    }
+}
+
+void GpuProgramOwner::HotReloadPrograms(GlContext const& gl) {
+    for(auto handle : pendingHotReload_) {
         bool ok = false;
-        GlContext gl; // TODO: works, but should be provided externally, for that maybe should poll pending changes
-        if (isVert || isFrag) {
+        auto find = programs_.find(handle);
+        if (find == std::cend(programs_)) { continue; }
+        auto const& payload = find->second;
+        auto programType = payload.program->Type();
+        if (programType == GpuProgram::Type::GRAPHICAL) {
             ok = RelinkProgramFromFiles(gl,
-                it->shadersFilepaths[0].c_str(), it->shadersFilepaths[1].c_str(),
-                CpuView{it->defines.data(), it->defines.size()},
-                *programs_[it->handle].get(), false);
+                payload.shadersFilepaths[0].c_str(), payload.shadersFilepaths[1].c_str(),
+                CpuView{payload.defines.data(), payload.defines.size()},
+                *payload.program.get(), false);
+        } else if (programType == GpuProgram::Type::COMPUTE) {
+            assert(false && "GpuProgramOwner::OnFileChanged not implemented for compute shaders");
         }
         if (!ok) {
-            XLOGE("ProgramOwner failed to relink program for hot-reloaded shader {}", path.c_str());
+            XLOGE("ProgramOwner failed to hot-reload program: {:08X}", payload.program->Id());
         }
     }
+    pendingHotReload_.clear();
 }
 
 } // namespace engine::gl

@@ -22,20 +22,21 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragm
     constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
     BillboardRenderer renderer;
 
-    gl::shader::Define const defines[] = {
-        {.name = "UBO_BINDING", .value = UBO_CONTEXT_BINDING, .type = gl::shader::Define::INT32},
-        // {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
-        {.name  = "UNIFORM_TEXTURE_LOCATION",
+    using Define = gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "UBO_BINDING", .value = UBO_CONTEXT_BINDING, .type = Define::INT32},
+        // Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
+        Define{.name  = "UNIFORM_TEXTURE_LOCATION",
          .value = BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION,
-         .type  = gl::shader::Define::INT32},
+         .type  = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
         gl, "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag",
-        CpuView{defines, std::size(defines)}, "BillboardRenderer - Quad");
+        std::move(defines), "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram_ = std::move(*maybeProgram);
-    auto programGuard        = UniformCtx{renderer.quadVaoProgram_};
+    auto programGuard        = UniformCtx{gl.GetProgram(renderer.quadVaoProgram_)};
     // programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, 1.0f, 0.42f, 1.0f, 1.0f);
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
@@ -47,8 +48,8 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragm
     return renderer;
 }
 
-ENGINE_EXPORT void BillboardRenderer::Render(BillboardRenderArgs const& args) const {
-    GpuProgram const& program = quadVaoProgram_;
+ENGINE_EXPORT void BillboardRenderer::Render(GlContext const& gl, BillboardRenderArgs const& args) const {
+    GpuProgram const& program = gl.GetProgram(quadVaoProgram_);
     auto programGuard         = gl::UniformCtx(program);
 
     ubo_.Fill(CpuMemory<GLvoid const>{&args.shaderArgs, sizeof(args.shaderArgs)});

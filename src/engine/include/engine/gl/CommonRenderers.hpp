@@ -79,7 +79,7 @@ private:
 
     Vao datalessTriangleVao_{};
     Vao datalessQuadVao_{};
-    GpuProgram blitProgram_{};
+    GpuProgramHandle blitProgram_{};
     SamplersCache::CacheKey samplerNearest_{};
     SamplersCache::CacheKey samplerLinear_{};
     SamplersCache::CacheKey samplerLinearRepeat_{};

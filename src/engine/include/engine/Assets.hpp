@@ -18,6 +18,8 @@ using FileSizeCallback = std::function<CpuMemory<uint8_t>(size_t)>;
 // Function returns the number of bytes actually written
 auto LoadBinaryFile [[nodiscard]] (std::string_view const filepath, FileSizeCallback sizeCallback) -> size_t;
 
+using ImageLoaderHandle = int32_t;
+
 struct ImageLoader final {
 
 public:
@@ -35,7 +37,7 @@ public:
 #undef Self
 
     struct LoadInfo {
-        int32_t loadedImageId;
+        ImageLoaderHandle loadedImageId;
         int32_t numDecodedBytes    = 0U;
         int32_t width              = 0;
         int32_t height             = 0;
@@ -46,14 +48,14 @@ public:
     auto Load(std::string_view const filepath, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
     auto Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo>;
 
-    auto ImageData(int32_t loadedImageId) const -> CpuView<uint8_t const>;
+    auto ImageData(ImageLoaderHandle loadedImageId) const -> CpuView<uint8_t const>;
     auto LatestError() const -> std::string_view { return latestError_; };
 
 private:
     constexpr static int32_t MAX_LOADED_IMAGES = 32;
-    std::unordered_map<int32_t, CpuView<uint8_t>> loadedImages_{};
-    std::vector<uint8_t> temporaryBuffer_{};
-    int32_t nextImageId_          = 0;
+    std::unordered_map<ImageLoaderHandle, CpuView<uint8_t>> loadedImages_ = {};
+    std::vector<uint8_t> temporaryBuffer_ = {};
+    ImageLoaderHandle nextImageId_          = 0;
     std::string_view latestError_ = {};
 };
 

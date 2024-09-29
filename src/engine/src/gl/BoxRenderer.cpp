@@ -138,30 +138,29 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
              .offset          = offsetof(Vertex, innerMarker)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
-        {.name  = "ATTRIB_INNER_MARKER_LOCATION",
-         .value = ATTRIB_INNER_MARKER_LOCATION,
-         .type  = gl::shader::Define::INT32},
-        {.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
+    using gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
+        Define{.name  = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type  = Define::INT32},
+        Define{.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
-        gl, "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", CpuView{defines, std::size(defines)},
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+        gl, "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", std::move(defines),
         "BoxRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
-    auto programGuard = UniformCtx{renderer.program_};
+    auto programGuard = UniformCtx{gl.GetProgram(renderer.program_)};
     programGuard.SetUniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     return renderer;
 }
 
-ENGINE_EXPORT void BoxRenderer::Render(glm::mat4 const& centerMvp, glm::vec4 color) const {
-    auto programGuard = gl::UniformCtx(program_);
+ENGINE_EXPORT void BoxRenderer::Render(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {
+    auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
     programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));
 

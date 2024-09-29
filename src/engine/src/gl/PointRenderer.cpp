@@ -98,18 +98,19 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
              .instanceDivisor = 1})
         .MakeIndexed(renderer.indexBuffer_, indexType);
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_COLOR", .value = ATTRIB_INSTANCE_COLOR_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_INSTANCE_MATRIX", .value = ATTRIB_INSTANCE_MATRIX_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
+    using Define = gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_COLOR", .value = ATTRIB_INSTANCE_COLOR_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_INSTANCE_MATRIX", .value = ATTRIB_INSTANCE_MATRIX_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
         gl, "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag",
-        CpuView{defines, std::size(defines)}, "PointRenderer");
+        std::move(defines), "PointRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
@@ -118,12 +119,12 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
     return renderer;
 }
 
-ENGINE_EXPORT void PointRenderer::Render(glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
+ENGINE_EXPORT void PointRenderer::Render(GlContext const& gl, glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0 || firstInstance >= lastInstance_) {
         // XLOGW("Limit of points is <= 0 in PointRenderer");
         return;
     }
-    auto programGuard = UniformCtx{program_};
+    auto programGuard = UniformCtx{gl.GetProgram(program_)};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVaoInstanced(
         vao_, std::min(firstInstance, lastInstance_), std::min(lastInstance_ - firstInstance, numInstances));

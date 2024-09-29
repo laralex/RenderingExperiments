@@ -141,7 +141,7 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
     using gl::shader::Define;
-    std::vector<gl::shader::Define> defines = {
+    std::vector<Define> defines = {
         Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
         Define{.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = Define::INT32},
         Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
@@ -152,7 +152,7 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
         auto definesClone = defines;
         auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
             gl, "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
-            std::move(definesClone), name, true);
+            std::move(definesClone), name);
         assert(maybeProgram);
         out = std::move(*maybeProgram);
     };

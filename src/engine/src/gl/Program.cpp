@@ -7,6 +7,25 @@ namespace {
 
 constexpr bool LOG_FAILED_SHADER_CODE = true;
 
+auto LinkGraphicalProgram(GLuint program, GLuint vertexShader, GLuint fragmentShader) -> bool {
+    GLCALL(glAttachShader(program, vertexShader));
+    GLCALL(glAttachShader(program, fragmentShader));
+
+    GLCALL(glLinkProgram(program));
+    GLint isLinked;
+    GLCALL(glGetProgramiv(program, GL_LINK_STATUS, &isLinked));
+
+    GLCALL(glDetachShader(program, vertexShader));
+    GLCALL(glDetachShader(program, fragmentShader));
+
+    if (isLinked == GL_TRUE) { return true; }
+
+    static char infoLog[512];
+    GLCALL(glGetProgramInfoLog(program, 512, nullptr, infoLog));
+    XLOGE("Failed to link graphics program:\n{}", infoLog);
+    return false;
+}
+
 } // namespace
 
 namespace engine::gl {
@@ -19,23 +38,21 @@ ENGINE_EXPORT void GpuProgram::Dispose() {
     programId_.UnsafeReset();
 }
 
-ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmentShader) const -> bool {
-    GLCALL(glAttachShader(programId_, vertexShader));
-    GLCALL(glAttachShader(programId_, fragmentShader));
-
-    GLCALL(glLinkProgram(programId_));
-    GLint isLinked;
-    GLCALL(glGetProgramiv(programId_, GL_LINK_STATUS, &isLinked));
-
-    GLCALL(glDetachShader(programId_, vertexShader));
-    GLCALL(glDetachShader(programId_, fragmentShader));
-
-    if (isLinked == GL_TRUE) { return true; }
-
-    static char infoLog[512];
-    GLCALL(glGetProgramInfoLog(programId_, 512, nullptr, infoLog));
-    XLOGE("Failed to link graphics program:\n{}", infoLog);
-    return false;
+ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmentShader, bool isRecompile) const -> bool {
+    if (!isRecompile) {
+        // first compilation
+        return LinkGraphicalProgram(programId_, vertexShader, fragmentShader);
+    }
+    // attempt to hot-reload
+    // compile into temporary program, if it fails, don't recompile the existing program
+    GLuint tmpProgramId;
+    GLCALL(tmpProgramId = glCreateProgram());
+    bool ok = LinkGraphicalProgram(tmpProgramId, vertexShader, fragmentShader);
+    GLCALL(glDeleteProgram(tmpProgramId));
+    if (ok) {
+        ok = LinkGraphicalProgram(programId_, vertexShader, fragmentShader);
+    }
+    return ok;
 }
 
 ENGINE_EXPORT auto GpuProgram::Allocate(

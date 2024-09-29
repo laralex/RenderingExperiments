@@ -6,7 +6,8 @@ Now it's a playground for my simple graphical experiments - more concerned about
 
 Features:
 - shader code generation (`#include`, `#define`)
-- code can be recompiled without stopping the application (hot-reloading)
+- hot-reloading engine dynamic library, without stopping the application
+- hot-reloading OpenGL shaders, without stopping the application
 - the project is split into:
     * engine - contains the main loop, window management, rendering wrappers and utilities
     * application - instantiates an engine, provides window callbacks, provides the rendering callback, instantiates and uses engine utilities

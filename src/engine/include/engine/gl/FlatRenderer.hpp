@@ -23,10 +23,10 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] (GlContext const& gl) -> FlatRenderer;
-    void Render(FlatRenderArgs const&) const;
+    void Render(GlContext const& gl, FlatRenderArgs const&) const;
 
 private:
-    GpuProgram program_{};
+    GpuProgramHandle program_{};
     GpuBuffer ubo_{};
     GLint uboLocation_{-1};
 };

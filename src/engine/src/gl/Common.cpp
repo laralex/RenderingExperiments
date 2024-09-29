@@ -51,7 +51,13 @@ ENGINE_EXPORT auto RelinkProgram(
     GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, GpuProgram const& oldProgram, bool logCode) -> bool {
     auto [vertexShader, fragmentShader] = AllocateGraphicalShaders(vertexShaderCode, fragmentShaderCode, logCode);
     // TODO: also fail if any shader didn't compile
-    bool ok = oldProgram.LinkGraphical(vertexShader, fragmentShader);
+    if (vertexShader <= 0 || fragmentShader <= 0) {
+        GLCALL(glDeleteShader(vertexShader));
+        GLCALL(glDeleteShader(fragmentShader));
+        return false;
+    }
+    constexpr bool isRecompile = true;
+    bool ok = oldProgram.LinkGraphical(vertexShader, fragmentShader, isRecompile);
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
     return ok;

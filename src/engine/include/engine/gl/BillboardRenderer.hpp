@@ -28,11 +28,11 @@ public:
     // If not given, a plain texture is rendered bound to texture slot
     // BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION
     static auto Allocate [[nodiscard]] (GlContext const& gl, GLuint fragmentShader = GL_NONE) -> BillboardRenderer;
-    void Render(BillboardRenderArgs const& args) const;
+    void Render(GlContext const& gl, BillboardRenderArgs const& args) const;
 
 private:
-    GpuProgram customVaoProgram_{};
-    GpuProgram quadVaoProgram_{};
+    GpuProgramHandle customVaoProgram_{};
+    GpuProgramHandle quadVaoProgram_{};
     GpuBuffer ubo_{};
     GLint uboLocation_{-1};
 

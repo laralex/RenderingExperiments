@@ -168,20 +168,21 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
              .offset          = offsetof(Vertex, isNear)})
         .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    gl::shader::Define const defines[] = {
-        {.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = gl::shader::Define::INT32},
-        {.name = "UBO_FRUSTUM", .value = UBO_BINDING, .type = gl::shader::Define::INT32},
-        {.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = gl::shader::Define::INT32},
+    using Define = gl::shader::Define;
+    std::vector<Define> defines = {
+        Define{.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = Define::INT32},
+        Define{.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = Define::INT32},
+        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
+        Define{.name = "UBO_FRUSTUM", .value = UBO_BINDING, .type = Define::INT32},
+        Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
     };
 
-    auto maybeProgram = gl::LinkProgramFromFiles(
+    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
         gl, "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag",
-        CpuView{defines, std::size(defines)}, "FrustumRenderer");
+        std::move(defines), "FrustumRenderer");
     assert(maybeProgram);
     renderer.program_     = std::move(*maybeProgram);
-    renderer.uboLocation_ = UniformCtx::GetUboLocation(renderer.program_, "Ubo");
+    renderer.uboLocation_ = UniformCtx::GetUboLocation(gl.GetProgram(renderer.program_), "Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
         gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FrustumRenderer UBO");
@@ -189,9 +190,9 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
     return renderer;
 }
 
-ENGINE_EXPORT void FrustumRenderer::Render(
+ENGINE_EXPORT void FrustumRenderer::Render(GlContext const& gl,
     glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
-    auto programGuard = gl::UniformCtx(program_);
+    auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
         .nearFarThickness   = {frustum.near, frustum.far, thickness*2.0f, 0.0},

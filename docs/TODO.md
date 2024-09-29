@@ -4,7 +4,7 @@
 * ssbo manager (store/restore via glBindBufferBase, + GL_UNIFORM_BUFFER)
 * compute shaders
 * imgui
-* hot reload shaders
+* dispose unused programs (can't pass gl context into destructors)
 * hot reload dll
 * text rendering
 * libktx

@@ -21,13 +21,13 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] (GlContext const& gl) -> BoxRenderer;
-    void Render(glm::mat4 const& centerMvp, glm::vec4 color) const;
+    void Render(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const;
 
 private:
     Vao vao_;
     GpuBuffer attributeBuffer_;
     GpuBuffer indexBuffer_;
-    GpuProgram program_;
+    GpuProgramHandle program_;
 };
 
 } // namespace engine::gl

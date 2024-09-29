@@ -1,4 +1,5 @@
 #include "engine/platform/FileChangeNotifier.hpp"
+#include "engine/platform/Filesystem.hpp"
 #include "engine/platform/posix/FileChangeNotifier.hpp"
 
 #include <memory>
@@ -24,7 +25,7 @@ const std::unordered_map<int, char const*> POSIX_ERRORS = {
     {ENOMEM, "ENOMEM"},
 };
 
-auto NoPosixError [[nodiscard]]() -> bool {
+void NoPosixError() {
     bool noError = errno == 0;
     auto findErr = POSIX_ERRORS.find(errno);
     errno = 0;
@@ -32,7 +33,6 @@ auto NoPosixError [[nodiscard]]() -> bool {
         XLOGE("POSIX errno {}", findErr->second);
     }
     assert(noError);
-    return noError;
 }
 
 } // namespace anonymous
@@ -86,27 +86,23 @@ auto FileChangeNotifier::PollChanges() noexcept -> bool {
     return bytesWritten > 0;
 }
 
-auto FileChangeNotifier::SubscribeWatcher(std::weak_ptr<IFileWatcher> watcher, std::string_view anyFilepath) -> bool {
+auto FileChangeNotifier::SubscribeWatcher(std::weak_ptr<IFileWatcher> watcher, std::string_view filepath) -> bool {
     assert(IsInitialized());
 
     std::error_code err;
-    auto filepath = std::filesystem::path{
-        std::begin(anyFilepath), std::end(anyFilepath), std::filesystem::path::generic_format};
-    filepath = std::filesystem::weakly_canonical(filepath, err);
-    if (err) {
-        return false;
-    }
+    auto absFilepath = AbsolutePath(filepath, err);
+    if (err) { return false; }
 
     std::lock_guard const lock(fileWatchersMutex_);
-    auto find = filename2descriptor_.find(filepath);
+    auto find = filename2descriptor_.find(absFilepath);
     if (find == filename2descriptor_.cend()) {
         // start watching new file
-        int watchDescriptor = inotify_add_watch(inotifyDescriptor_, filepath.c_str(), IN_MODIFY);
+        int watchDescriptor = inotify_add_watch(inotifyDescriptor_, absFilepath.c_str(), IN_MODIFY);
         NoPosixError();
-        filename2descriptor_.emplace(filepath, watchDescriptor);
+        filename2descriptor_.emplace(absFilepath, watchDescriptor);
         descriptor2watchers_.emplace(watchDescriptor, WatchedFile{
             .watchers = std::vector{std::move(watcher)},
-            .filepath = std::move(filepath),
+            .filepath = std::move(absFilepath),
         });
     } else {
         // find first expired watcher
@@ -157,14 +153,11 @@ auto FileChangeNotifier::UnsubscribeFile(std::string_view filepath) -> bool {
     assert(IsInitialized());
 
     std::error_code err;
-    auto relpath = std::filesystem::path{std::begin(filepath), std::end(filepath), std::filesystem::path::generic_format};
-    auto fullpath = std::filesystem::weakly_canonical(relpath, err);
-    if (err) {
-        return false;
-    }
+    auto absFilepath = AbsolutePath(filepath, err);
+    if (err) { return false; }
 
     std::lock_guard const lock(fileWatchersMutex_);
-    auto find = filename2descriptor_.find(fullpath);
+    auto find = filename2descriptor_.find(absFilepath);
     if (find != filename2descriptor_.cend()) {
         CloseWatchDescriptor(find->second);
         descriptor2watchers_.erase(find->second);
