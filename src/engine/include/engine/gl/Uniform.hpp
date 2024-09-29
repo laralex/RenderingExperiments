@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/GpuProgram.hpp"
 
 namespace engine::gl {
 

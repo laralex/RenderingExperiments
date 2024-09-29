@@ -1,21 +1,21 @@
 #pragma once
 
 #include "engine/Assets.hpp"
+#include "engine/EngineLoop.hpp"
 #include "engine/FirstPersonLocomotion.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Context.hpp"
-#include "engine/gl/GpuMesh.hpp"
 #include "engine/gl/FlatRenderer.hpp"
 #include "engine/gl/Framebuffer.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/GpuMesh.hpp"
+#include "engine/gl/GpuProgram.hpp"
+#include "engine/gl/GpuProgramOwner.hpp"
 #include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/SamplersCache.hpp"
 #include "engine/gl/Texture.hpp"
 #include "engine/gl/TextureUnits.hpp"
-#include "engine/gl/ProgramOwner.hpp"
 #include "engine/platform/FileChangeNotifier.hpp"
-#include "engine/EngineLoop.hpp"
 #include "engine/platform/IFileWatcher.hpp"
 #include "engine/platform/posix/FileChangeNotifier.hpp"
 
@@ -39,46 +39,46 @@ enum class AppDebugMode {
 };
 
 struct Application final {
-    ~Application() { XLOG("Disposing application"); }
-    engine::FirstPersonLocomotion cameraMovement{};
-    engine::FirstPersonLocomotion debugCameraMovement{};
+    ~Application();
+    engine::FirstPersonLocomotion cameraMovement      = engine::FirstPersonLocomotion{};
+    engine::FirstPersonLocomotion debugCameraMovement = engine::FirstPersonLocomotion{};
     // glm::vec3 cameraEulerRotation{0.0f, 0.0f, 0.0f};
-    glm::vec4 keyboardWasdPressed{0.0f};
-    float keyboardShiftPressed{0.0f};
-    float keyboardAltPressed{0.0f};
-    bool controlDebugCamera{false};
-    bool controlDebugCameraSwitched{false};
-    engine::gl::GlContext gl{};
-    engine::gl::GpuMesh boxMesh{};
-    engine::gl::GpuMesh sphereMesh{};
-    engine::gl::GpuMesh sphereMesh2{};
-    engine::gl::GpuMesh planeMesh{};
-    engine::gl::GpuProgramHandle program{};
-    engine::gl::Texture texture{};
-    engine::gl::GpuBuffer uboSamplerTiling{};
-    UboDataSamplerTiling uboDataSamplerTiling{};
-    engine::gl::Framebuffer outputFramebuffer{};
-    engine::gl::Texture outputColor{};
-    engine::gl::Texture outputDepth{};
-    engine::gl::Texture backbufferColor{};
-    engine::gl::Texture backbufferDepth{};
-    engine::gl::Renderbuffer renderbuffer{};
-    engine::gl::CommonRenderers commonRenderers{};
-    engine::gl::FlatRenderer flatRenderer{};
-    engine::gl::SamplersCache::CacheKey samplerNearestWrap{};
-    engine::LineRendererInput debugLines{};
-    engine::PointRendererInput debugPoints{};
-    engine::ImageLoader imageLoader{};
-    AppDebugMode debugMode{AppDebugMode::NONE};
+    glm::vec4 keyboardWasdPressed                          = glm::vec4{0.0f};
+    float keyboardShiftPressed                             = 0.0f;
+    float keyboardAltPressed                               = 0.0f;
+    bool controlDebugCamera                                = false;
+    bool controlDebugCameraSwitched                        = false;
+    engine::gl::GlContext gl                               = engine::gl::GlContext{};
+    engine::gl::GpuMesh boxMesh                            = engine::gl::GpuMesh{};
+    engine::gl::GpuMesh sphereMesh                         = engine::gl::GpuMesh{};
+    engine::gl::GpuMesh sphereMesh2                        = engine::gl::GpuMesh{};
+    engine::gl::GpuMesh planeMesh                          = engine::gl::GpuMesh{};
+    engine::gl::GpuProgramHandle program                   = engine::gl::GpuProgramHandle{};
+    engine::gl::Texture texture                            = engine::gl::Texture{};
+    engine::gl::GpuBuffer uboSamplerTiling                 = engine::gl::GpuBuffer{};
+    UboDataSamplerTiling uboDataSamplerTiling              = {};
+    engine::gl::Framebuffer outputFramebuffer              = engine::gl::Framebuffer{};
+    engine::gl::Texture outputColor                        = engine::gl::Texture{};
+    engine::gl::Texture outputDepth                        = engine::gl::Texture{};
+    engine::gl::Texture backbufferColor                    = engine::gl::Texture{};
+    engine::gl::Texture backbufferDepth                    = engine::gl::Texture{};
+    engine::gl::Renderbuffer renderbuffer                  = engine::gl::Renderbuffer{};
+    engine::gl::CommonRenderers commonRenderers            = engine::gl::CommonRenderers{};
+    engine::gl::FlatRenderer flatRenderer                  = engine::gl::FlatRenderer{};
+    engine::gl::SamplersCache::CacheKey samplerNearestWrap = {};
+    engine::LineRendererInput debugLines                   = engine::LineRendererInput{};
+    engine::PointRendererInput debugPoints                 = engine::PointRendererInput{};
+    engine::ImageLoader imageLoader                        = engine::ImageLoader{};
+    AppDebugMode debugMode                                 = AppDebugMode::NONE;
 
-    engine::platform::FileChangeNotifier fileNotifier{};
-    bool isInitialized = false;
+    engine::platform::FileChangeNotifier fileNotifier = engine::platform::FileChangeNotifier{};
+    bool isInitialized                                = false;
 };
 
 struct ApplicationState {
-    engine::EngineHandle engine;
-    std::shared_ptr<engine::EnginePersistentData> engineData;
-    std::unique_ptr<Application> app;
+    engine::EngineHandle engine                              = engine::EngineHandle{};
+    std::shared_ptr<engine::EnginePersistentData> engineData = {};
+    std::unique_ptr<Application> app                         = {};
 };
 
 } // namespace app

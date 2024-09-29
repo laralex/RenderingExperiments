@@ -29,7 +29,6 @@ struct EnginePersistentData {
 
     moodycamel::ConcurrentQueue<UserAction> actionQueues[static_cast<size_t>(UserActionType::NUM_TYPES)];
     bool isInitialized = false;
-
 };
 
 struct EngineCtx {
@@ -49,7 +48,7 @@ struct EngineCtx {
 
 namespace {
 
-using ActionQueue = moodycamel::ConcurrentQueue<engine::UserAction>;
+using ActionQueue            = moodycamel::ConcurrentQueue<engine::UserAction>;
 constexpr size_t MAX_ENGINES = 16U;
 
 ENGINE_STATIC int64_t g_numEngineInstances = 0;
@@ -98,7 +97,8 @@ void InitializeWindow(GLFWwindow* window) {
     glfwSetTime(0.0);
 }
 
-auto CreateWindow [[nodiscard]] (int width, int height, std::string_view name, GLFWwindow* oldWindow = nullptr) -> GLFWwindow* {
+auto CreateWindow [[nodiscard]] (int width, int height, std::string_view name, GLFWwindow* oldWindow = nullptr)
+-> GLFWwindow* {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -136,7 +136,7 @@ auto CreateWindow [[nodiscard]] (int width, int height, std::string_view name, G
     return window;
 }
 
-auto InitializeEngineData [[nodiscard]](engine::EnginePersistentData& out) -> engine::EngineResult {
+auto InitializeEngineData [[nodiscard]] (engine::EnginePersistentData& out) -> engine::EngineResult {
     XLOGW("InitializeEngineData");
     glfwSetErrorCallback(GlfwErrorCallback);
 
@@ -170,7 +170,7 @@ auto UpdateEngineLoop [[nodiscard]] (std::vector<engine::RenderCtx>& frameHistor
     return renderCtx;
 }
 
-auto GetEngineQueue[[nodiscard]](engine::EngineHandle engine, engine::UserActionType type) -> ActionQueue& {
+auto GetEngineQueue [[nodiscard]] (engine::EngineHandle engine, engine::UserActionType type) -> ActionQueue& {
     assert(engine != nullptr && engine->persistent.get() && "Invalid engine for GetEngineQueue");
     assert(
         static_cast<size_t>(type) < std::size(engine->persistent->actionQueues) && "Invalid queue for GetEngineQueue");
@@ -182,16 +182,12 @@ void ExecuteQueue(engine::EngineHandle engine, ActionQueue& queue) {
     engine::UserAction destAction;
     while (queue.try_dequeue(destAction)) {
         destAction.callback(appData);
-        if (std::size(destAction.label) > 0) {
-            XLOG("ExecuteQueue done: {}", destAction.label);
-        }
+        if (std::size(destAction.label) > 0) { XLOG("ExecuteQueue done: {}", destAction.label); }
     }
 }
 
-auto InitializeCommonResources [[nodiscard]]() -> bool {
-    if (engine::DEBUG_BUILD) {
-        spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v");
-    }
+auto InitializeCommonResources [[nodiscard]] () -> bool {
+    if (engine::DEBUG_BUILD) { spdlog::set_pattern("[Δt=%8i us] [tid=%t] %^[%L]%$ %v"); }
     XLOGW("glfwInit()");
     if (!glfwInit()) {
         XLOGE("Failed to initialize GLFW");
@@ -200,7 +196,7 @@ auto InitializeCommonResources [[nodiscard]]() -> bool {
     return true;
 }
 
-auto DestroyCommonResources [[nodiscard]]() -> bool {
+auto DestroyCommonResources [[nodiscard]] () -> bool {
     XLOGW("glfwTerminate()");
     glfwTerminate();
     return true;
@@ -231,7 +227,8 @@ ENGINE_EXPORT auto ColdStartEngine(engine::EngineHandle engine) -> engine::Engin
     return InitializeEngineData(*engine->persistent);
 }
 
-ENGINE_EXPORT auto HotStartEngine(engine::EngineHandle engine, std::shared_ptr<engine::EnginePersistentData> data) -> engine::EngineResult {
+ENGINE_EXPORT auto HotStartEngine(engine::EngineHandle engine, std::shared_ptr<engine::EnginePersistentData> data)
+    -> engine::EngineResult {
     if (engine == engine::ENGINE_HANDLE_NULL) { return engine::EngineResult::ERROR_ENGINE_NULL; }
     engine->persistent = data;
     // NOTE: I suppose, resettings the callbacks is not necessary for hot start
@@ -290,7 +287,8 @@ ENGINE_EXPORT auto GetWindowContext(engine::EngineHandle engine) -> engine::Wind
     return engine->persistent->windowCtx;
 }
 
-ENGINE_EXPORT auto SetRenderCallback(engine::EngineHandle engine, engine::RenderCallback newCallback) -> engine::RenderCallback {
+ENGINE_EXPORT auto SetRenderCallback(engine::EngineHandle engine, engine::RenderCallback newCallback)
+    -> engine::RenderCallback {
     if (engine == engine::ENGINE_HANDLE_NULL) [[unlikely]] {
         // TODO: error reporting
         return nullptr;

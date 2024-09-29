@@ -1,15 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
 #include <optional>
 #include <string_view>
-#include <functional>
-#include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
@@ -22,12 +22,12 @@
 // #include "engine/CommonInterfaces.hpp"
 #include "engine/gl/Common.hpp"
 
+#include "engine/Log.hpp"
 #include "engine/gl/Capabilities.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/Debug.hpp"
 #include "engine/gl/Extensions.hpp"
-#include "engine/gl/ProgramOwner.hpp"
-#include "engine/Log.hpp"
+#include "engine/gl/GpuProgramOwner.hpp"
 
 struct GLFWwindow;
 
@@ -39,8 +39,7 @@ constexpr bool DEBUG_BUILD = true;
 constexpr bool DEBUG_BUILD = false;
 #endif // XDEBUG
 
-template<typename T>
-constexpr uint32_t Bits(T value) { return static_cast<uint32_t>(value); }
+template <typename T> constexpr uint32_t Bits(T value) { return static_cast<uint32_t>(value); }
 
 enum class ColorCode : int32_t {
     RED = 0,

@@ -31,12 +31,14 @@ ENGINE_EXPORT FramebufferDrawCtx::~FramebufferDrawCtx() noexcept {
 
 ENGINE_EXPORT void FramebufferDrawCtx::GuardAnother(GLuint useFramebuffer, bool bindAsDraw) noexcept {
     // safe, because FramebufferDrawCtx doesn't own any resources, no leaking
-    contextFramebuffer_.UnsafeAssign(GlHandle{useFramebuffer});
+    contextFramebuffer_.UnsafeAssign(useFramebuffer);
     framebufferTarget_ = bindAsDraw ? GL_DRAW_FRAMEBUFFER : GL_READ_FRAMEBUFFER;
     GLCALL(glBindFramebuffer(framebufferTarget_, contextFramebuffer_));
 }
 
-ENGINE_EXPORT Framebuffer::Framebuffer() noexcept { std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE); }
+ENGINE_EXPORT Framebuffer::Framebuffer() noexcept {
+    std::fill(std::begin(drawBuffers_), std::end(drawBuffers_), GL_NONE);
+}
 
 ENGINE_EXPORT void Framebuffer::Dispose() {
     if (fbId_ == GL_NONE) { return; }
@@ -95,7 +97,8 @@ ENGINE_EXPORT auto FramebufferDrawCtx::ClearStencil(GLint value) const -> Frameb
     return *this;
 }
 
-ENGINE_EXPORT auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const -> FramebufferDrawCtx const& {
+ENGINE_EXPORT auto FramebufferDrawCtx::ClearDepthStencil(GLfloat depth, GLint stencil) const
+    -> FramebufferDrawCtx const& {
     GLCALL(glClearBufferfi(GL_DEPTH_STENCIL, 0, depth, stencil));
     return *this;
 }

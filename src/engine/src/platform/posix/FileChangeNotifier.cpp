@@ -2,79 +2,61 @@
 #include "engine/platform/Filesystem.hpp"
 #include "engine/platform/posix/FileChangeNotifier.hpp"
 
+#include <errno.h>
+#include <fcntl.h>
 #include <memory>
 #include <sys/inotify.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 
 namespace {
 
 const std::unordered_map<int, char const*> POSIX_ERRORS = {
-    {EACCES, "EACCES"},
-    {EBADF, "EBADF"},
-    {EEXIST, "EEXIST"},
-    {EFAULT, "EFAULT"},
-    {ENAMETOOLONG, "ENAMETOOLONG"},
-    {ENOENT, "ENOENT"},
-    {ENOSPC, "ENOSPC"},
-    {ENOTDIR, "ENOTDIR"},
-    {EINVAL, "EINVAL"},
-    {EMFILE, "EMFILE"},
+    {EACCES, "EACCES"}, {EBADF, "EBADF"},   {EEXIST, "EEXIST"},   {EFAULT, "EFAULT"}, {ENAMETOOLONG, "ENAMETOOLONG"},
+    {ENOENT, "ENOENT"}, {ENOSPC, "ENOSPC"}, {ENOTDIR, "ENOTDIR"}, {EINVAL, "EINVAL"}, {EMFILE, "EMFILE"},
     {ENOMEM, "ENOMEM"},
 };
 
 void NoPosixError() {
     bool noError = errno == 0;
     auto findErr = POSIX_ERRORS.find(errno);
-    errno = 0;
-    if (findErr != POSIX_ERRORS.cend()) {
-        XLOGE("POSIX errno {}", findErr->second);
-    }
+    errno        = 0;
+    if (findErr != POSIX_ERRORS.cend()) { XLOGE("POSIX errno {}", findErr->second); }
     assert(noError);
 }
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::platform {
 
 auto FileChangeNotifier::Initialize() noexcept -> bool {
-    errno = 0;
+    errno              = 0;
     inotifyDescriptor_ = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
     NoPosixError();
-    if (inotifyDescriptor_ >= 0) {
-        return true;
-    }
+    if (inotifyDescriptor_ >= 0) { return true; }
     XLOGE("Failed to init FileChangeNotifier. inotify_init");
     return false;
 }
 
-auto FileChangeNotifier::IsInitialized() const noexcept -> bool {
-    return inotifyDescriptor_ >= 0;
-}
+auto FileChangeNotifier::IsInitialized() const noexcept -> bool { return inotifyDescriptor_ >= 0; }
 
 auto FileChangeNotifier::PollChanges() noexcept -> bool {
     assert(IsInitialized());
 
     int bytesWritten = read(inotifyDescriptor_, eventBuffer_, std::size(eventBuffer_));
-    if (bytesWritten <= 0) {
-        return false;
-    }
+    if (bytesWritten <= 0) { return false; }
 
     int i = 0;
     std::lock_guard const lock(fileWatchersMutex_);
     while (i < bytesWritten) {
         inotify_event* event = reinterpret_cast<inotify_event*>(&eventBuffer_[i]);
         i += sizeof(inotify_event) + event->len;
-        //if (event->len == 0) { continue; }
+        // if (event->len == 0) { continue; }
         bool isDirectory = (event->mask & IN_ISDIR) != 0;
         if ((Bits(event->mask) & (Bits(IN_MODIFY) | Bits(IN_CLOSE_WRITE))) == 0) { continue; }
         auto const findWatchers = descriptor2watchers_.find(event->wd);
-        auto changedPath = findWatchers->second.filepath;
-        if (event->len > 0) {
-            changedPath /= std::string_view{event->name, event->len};
-        }
+        auto changedPath        = findWatchers->second.filepath;
+        if (event->len > 0) { changedPath /= std::string_view{event->name, event->len}; }
         auto changedPathStr = std::string(std::move(changedPath));
         XLOG("FileChangeNotifier detected change: {}", changedPathStr.c_str());
         for (auto& watcher : findWatchers->second.watchers) {
@@ -100,14 +82,17 @@ auto FileChangeNotifier::SubscribeWatcher(std::weak_ptr<IFileWatcher> watcher, s
         int watchDescriptor = inotify_add_watch(inotifyDescriptor_, absFilepath.c_str(), IN_MODIFY);
         NoPosixError();
         filename2descriptor_.emplace(absFilepath, watchDescriptor);
-        descriptor2watchers_.emplace(watchDescriptor, WatchedFile{
-            .watchers = std::vector{std::move(watcher)},
-            .filepath = std::move(absFilepath),
-        });
+        descriptor2watchers_.emplace(
+            watchDescriptor,
+            WatchedFile{
+                .watchers = std::vector{std::move(watcher)},
+                .filepath = std::move(absFilepath),
+            });
     } else {
         // find first expired watcher
         auto& watchers = descriptor2watchers_[find->second].watchers;
-        auto findExpired = std::find_if(std::begin(watchers), std::end(watchers), [](auto const& w) { return w.expired(); });
+        auto findExpired =
+            std::find_if(std::begin(watchers), std::end(watchers), [](auto const& w) { return w.expired(); });
         if (findExpired != std::end(watchers)) {
             // replace
             findExpired->swap(watcher);
@@ -133,8 +118,10 @@ void FileChangeNotifier::UnsubscribeWatcher(IFileWatcher const& deleteWatcher) {
         }
         if (it->second.watchers.size() == 0) {
             CloseWatchDescriptor(it->first);
-            auto findFilename = std::find_if(std::begin(filename2descriptor_), std::end(filename2descriptor_),
-                           [=](auto&& p) { return p.second == it->first; });
+            auto findFilename =
+                std::find_if(std::begin(filename2descriptor_), std::end(filename2descriptor_), [=](auto&& p) {
+                    return p.second == it->first;
+                });
             descriptor2watchers_.erase(it);
             filename2descriptor_.erase(findFilename);
         }

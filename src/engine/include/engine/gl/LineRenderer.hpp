@@ -3,7 +3,8 @@
 #include "engine/LineRendererInput.hpp"
 #include "engine/Precompiled.hpp"
 #include "engine/gl/Buffer.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/IGlDisposable.hpp"
+#include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Vao.hpp"
 #include <glm/mat4x4.hpp>
 
@@ -11,12 +12,12 @@
 
 namespace engine::gl {
 
-class LineRenderer final {
+class LineRenderer final : public IGlDisposable {
 
 public:
 #define Self LineRenderer
     explicit Self() noexcept     = default;
-    ~Self() noexcept             = default;
+    ~Self() override             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -26,11 +27,12 @@ public:
     static auto Allocate [[nodiscard]] (GlContext const& gl, size_t maxLines) -> LineRenderer;
     void Fill(std::vector<LineRendererInput::Line> const& lines, size_t numLines, size_t numLinesOffset) const;
     void Render(GlContext const& gl, glm::mat4 const& camera) const;
+    void Dispose(GlContext const& gl) override;
 
 private:
-    Vao vao_{};
-    GpuBuffer attributeBuffer_{};
-    GpuProgramHandle program_{};
+    Vao vao_ = Vao{};
+    GpuBuffer attributeBuffer_ = GpuBuffer{};
+    GpuProgramHandle program_ = GpuProgramHandle{};
 };
 
 } // namespace engine::gl

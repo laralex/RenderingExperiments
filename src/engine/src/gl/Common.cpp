@@ -1,6 +1,6 @@
 #include "engine/Assets.hpp"
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Vao.hpp"
 
@@ -15,14 +15,16 @@ void LogShaderCode(std::string_view vertexShaderCode, std::string_view fragmentS
     }
 }
 
-auto AllocateGraphicalShaders [[nodiscard]](std::string_view vertexShaderCode, std::string_view fragmentShaderCode, bool logCode) -> std::pair<GLuint, GLuint> {
+auto AllocateGraphicalShaders
+    [[nodiscard]] (std::string_view vertexShaderCode, std::string_view fragmentShaderCode, bool logCode)
+    -> std::pair<GLuint, GLuint> {
     LogShaderCode(vertexShaderCode, fragmentShaderCode, logCode);
     GLuint vertexShader   = engine::gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
     GLuint fragmentShader = engine::gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
     return {vertexShader, fragmentShader};
 }
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl {
 
@@ -31,7 +33,7 @@ ENGINE_EXPORT auto LinkProgram(
     bool logCode) -> std::optional<GpuProgram> {
 
     auto [vertexShader, fragmentShader] = AllocateGraphicalShaders(vertexShaderCode, fragmentShaderCode, logCode);
-    auto maybeProgram = GpuProgram::Allocate(gl, vertexShader, fragmentShader, name);
+    auto maybeProgram                   = GpuProgram::Allocate(gl, vertexShader, fragmentShader, name);
 
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
@@ -48,7 +50,8 @@ ENGINE_EXPORT auto LinkProgramFromFiles(
 }
 
 ENGINE_EXPORT auto RelinkProgram(
-    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, GpuProgram const& oldProgram, bool logCode) -> bool {
+    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
+    GpuProgram const& oldProgram, bool logCode) -> bool {
     auto [vertexShader, fragmentShader] = AllocateGraphicalShaders(vertexShaderCode, fragmentShaderCode, logCode);
     // TODO: also fail if any shader didn't compile
     if (vertexShader <= 0 || fragmentShader <= 0) {
@@ -57,7 +60,7 @@ ENGINE_EXPORT auto RelinkProgram(
         return false;
     }
     constexpr bool isRecompile = true;
-    bool ok = oldProgram.LinkGraphical(vertexShader, fragmentShader, isRecompile);
+    bool ok                    = oldProgram.LinkGraphical(vertexShader, fragmentShader, isRecompile);
     GLCALL(glDeleteShader(vertexShader));
     GLCALL(glDeleteShader(fragmentShader));
     return ok;

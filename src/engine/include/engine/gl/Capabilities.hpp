@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glad/gl.h>
-#include <string_view>
 #include <string>
+#include <string_view>
 
 namespace engine::gl {
 

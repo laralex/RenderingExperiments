@@ -1,5 +1,5 @@
-#include "engine/Assets.hpp"
 #include "engine/gl/Shader.hpp"
+#include "engine/Assets.hpp"
 
 #include "engine_private/Prelude.hpp"
 

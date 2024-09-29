@@ -47,7 +47,7 @@ ENGINE_EXPORT auto GpuBuffer::Allocate(
     GLCALL(glBindBuffer(targetType, 0));
 
     gpuBuffer.targetType_ = targetType;
-    gpuBuffer.accessMask_      = access;
+    gpuBuffer.accessMask_ = access;
     gpuBuffer.sizeBytes_  = data.NumElements();
 
     if (!name.empty()) {

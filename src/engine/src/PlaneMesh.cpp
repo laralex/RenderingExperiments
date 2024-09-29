@@ -16,7 +16,8 @@ constexpr engine::PlaneMesh::Vertex SEGMENT_DATA[] = {
 namespace engine {
 
 // based on https://stackoverflow.com/a/5920190/8564999
-ENGINE_EXPORT auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwiseTriangles) -> PlaneMesh {
+ENGINE_EXPORT auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwiseTriangles)
+    -> PlaneMesh {
     constexpr int32_t NUM_SEGMENT_VERTS = 4;
     // numSegments += 1;
     PlaneMesh mesh;

@@ -33,8 +33,8 @@ auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&&
         engine::CpuMemory<void const>{info.vertexPositions.data(), numVertices * sizeof(info.vertexPositions[0])},
         info.vertexPositionsLabel);
     auto attributes = GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, {},
-        engine::CpuMemory<void const>{info.vertexData, numVertices * info.vertexDataStride}, info.vertexDataLabel);
+        gl, GL_ARRAY_BUFFER, {}, engine::CpuMemory<void const>{info.vertexData, numVertices * info.vertexDataStride},
+        info.vertexDataLabel);
     auto indexBuffer = GpuBuffer::Allocate(
         gl, GL_ELEMENT_ARRAY_BUFFER, {},
         engine::CpuMemory<void const>{info.indices.data(), std::size(info.indices) * sizeof(info.indices[0])},
@@ -89,7 +89,8 @@ auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&&
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+ENGINE_EXPORT auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+    -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint8_t>{
@@ -108,8 +109,8 @@ ENGINE_EXPORT auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, 
         });
 }
 
-ENGINE_EXPORT auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
-    -> GpuMesh {
+ENGINE_EXPORT auto AllocateIcosphereMesh(
+    GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint16_t>{
@@ -128,8 +129,8 @@ ENGINE_EXPORT auto AllocateIcosphereMesh(GlContext const& gl, IcosphereMesh cons
         });
 }
 
-ENGINE_EXPORT auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
-    -> GpuMesh {
+ENGINE_EXPORT auto AllocateUvSphereMesh(
+    GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint16_t>{
@@ -148,7 +149,8 @@ ENGINE_EXPORT auto AllocateUvSphereMesh(GlContext const& gl, UvSphereMesh const&
         });
 }
 
-ENGINE_EXPORT auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+ENGINE_EXPORT auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+    -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint16_t>{

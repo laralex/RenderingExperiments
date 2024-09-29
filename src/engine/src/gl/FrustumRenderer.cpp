@@ -145,30 +145,28 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
 
     FrustumRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, {}, CpuMemory<void const>{vertexData, sizeof(vertexData)},
-        "FrustumRenderer Vertices");
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<void const>{vertexData, sizeof(vertexData)}, "FrustumRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<void const>{indices, sizeof(indices)},
-        "FrustumRenderer Indices");
+        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<void const>{indices, sizeof(indices)}, "FrustumRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "FrustumRenderer");
-    std::ignore = gl::VaoMutableCtx{renderer.vao_}
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,
-             .valuesPerVertex = 4,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, isLeftRightBottomTop)})
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_OTHER_WEIGHTS_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, isNear)})
-        .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
+    std::ignore   = gl::VaoMutableCtx{renderer.vao_}
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_FRUSTUM_WEIGHTS_LOCATION,
+                           .valuesPerVertex = 4,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(Vertex),
+                           .offset          = offsetof(Vertex, isLeftRightBottomTop)})
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_OTHER_WEIGHTS_LOCATION,
+                           .valuesPerVertex = 3,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(Vertex),
+                           .offset          = offsetof(Vertex, isNear)})
+                      .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    using Define = gl::shader::Define;
+    using Define                = gl::shader::Define;
     std::vector<Define> defines = {
         Define{.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = Define::INT32},
         Define{.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = Define::INT32},
@@ -178,24 +176,29 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-        gl, "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag",
-        std::move(defines), "FrustumRenderer");
+        gl, "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag", std::move(defines),
+        "FrustumRenderer");
     assert(maybeProgram);
     renderer.program_     = std::move(*maybeProgram);
     renderer.uboLocation_ = UniformCtx::GetUboLocation(gl.GetProgram(renderer.program_), "Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
-        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FrustumRenderer UBO");
+        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)},
+        "FrustumRenderer UBO");
 
     return renderer;
 }
 
-ENGINE_EXPORT void FrustumRenderer::Render(GlContext const& gl,
-    glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
+ENGINE_EXPORT void FrustumRenderer::Dispose(GlContext const& gl) {
+    gl.Programs()->DisposeProgram(std::move(program_));
+}
+
+ENGINE_EXPORT void FrustumRenderer::Render(
+    GlContext const& gl, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
-        .nearFarThickness   = {frustum.near, frustum.far, thickness*2.0f, 0.0},
+        .nearFarThickness   = {frustum.near, frustum.far, thickness * 2.0f, 0.0},
     };
     ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));

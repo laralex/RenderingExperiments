@@ -117,28 +117,26 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, {}, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)},
-        "AxesRenderer Vertices");
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<GLvoid const>{vertexData, sizeof(vertexData)}, "AxesRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<GLvoid const>{indices, sizeof(indices)},
-        "AxesRenderer Indices");
+        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<GLvoid const>{indices, sizeof(indices)}, "AxesRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "AxesRenderer");
-    std::ignore = gl::VaoMutableCtx{renderer.vao_}
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_POSITION_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, position)})
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_COLOR_LOCATION,
-             .valuesPerVertex = 1,
-             .datatype        = GL_UNSIGNED_INT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, colorIdx)})
-        .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
+    std::ignore   = gl::VaoMutableCtx{renderer.vao_}
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_POSITION_LOCATION,
+                           .valuesPerVertex = 3,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(Vertex),
+                           .offset          = offsetof(Vertex, position)})
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_COLOR_LOCATION,
+                           .valuesPerVertex = 1,
+                           .datatype        = GL_UNSIGNED_INT,
+                           .stride          = sizeof(Vertex),
+                           .offset          = offsetof(Vertex, colorIdx)})
+                      .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
     using gl::shader::Define;
     std::vector<Define> defines = {
@@ -151,8 +149,8 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     auto makeProgram = [&](GpuProgramHandle& out, std::string_view name) {
         auto definesClone = defines;
         auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-            gl, "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag",
-            std::move(definesClone), name);
+            gl, "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag", std::move(definesClone),
+            name);
         assert(maybeProgram);
         out = std::move(*maybeProgram);
     };
@@ -164,10 +162,16 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
     return renderer;
 }
 
+ENGINE_EXPORT void AxesRenderer::Dispose(GlContext const& gl) {
+    auto programs = gl.Programs();
+    programs->DisposeProgram(std::move(customizedProgram_));
+    programs->DisposeProgram(std::move(defaultProgram_));
+}
+
 ENGINE_EXPORT void AxesRenderer::Render(GlContext const& gl, glm::mat4 const& mvp, float scale) const {
-    bool isCustom       = scale != 1.0f;
-    auto const programHandle = isCustom ? customizedProgram_ : defaultProgram_;
-    auto const& program = gl.GetProgram(programHandle);
+    bool isCustom            = scale != 1.0f;
+    auto const& programHandle = isCustom ? customizedProgram_ : defaultProgram_;
+    auto const& program      = gl.GetProgram(programHandle);
 
     auto programGuard = gl::UniformCtx{program};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));

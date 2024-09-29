@@ -19,15 +19,15 @@ constexpr int32_t POINTS_FIRST_EXTERNAL        = 64;
 auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgramHandle {
     using namespace engine;
 
-    using Define = gl::shader::Define;
+    using Define                = gl::shader::Define;
     std::vector<Define> defines = {
         Define{.name = "UNIFORM_TEXTURE", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = Define::INT32},
         Define{.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = Define::INT32},
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-        gl, "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag",
-        std::move(defines), "Blit");
+        gl, "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag", std::move(defines),
+        "Blit");
     assert(maybeProgram);
     gl::GpuProgramHandle blitProgram = std::move(*maybeProgram);
 
@@ -42,22 +42,36 @@ auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgramH
 
 namespace engine::gl {
 
+ENGINE_EXPORT void CommonRenderers::Dispose(GlContext const& gl) {
+    for (auto toDispose : toBeDisposed_) {
+        toDispose->Dispose(gl);
+    }
+    toBeDisposed_.clear();
+    gl.Programs()->DisposeProgram(std::move(blitProgram_));
+}
+
 ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
     if (isInitialized_) { return; }
     XLOG("CommonRenderers::Initialize");
     axesRenderer_      = AxesRenderer::Allocate(gl);
+    toBeDisposed_.push_back(&axesRenderer_);
     boxRenderer_       = BoxRenderer::Allocate(gl);
+    toBeDisposed_.push_back(&boxRenderer_);
     frustumRenderer_   = FrustumRenderer::Allocate(gl);
+    toBeDisposed_.push_back(&frustumRenderer_);
     billboardRenderer_ = BillboardRenderer::Allocate(gl);
+    toBeDisposed_.push_back(&billboardRenderer_);
 
     lineRenderer_  = LineRenderer::Allocate(gl, MAX_LINES);
+    toBeDisposed_.push_back(&lineRenderer_);
     pointRenderer_ = PointRenderer::Allocate(gl, MAX_POINTS);
+    toBeDisposed_.push_back(&pointRenderer_);
 
     datalessTriangleVao_ = Vao::Allocate(gl, "Dataless Triangle VAO");
-    std::ignore = VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
+    std::ignore          = VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
 
     datalessQuadVao_ = Vao::Allocate(gl, "Dataless Quad VAO");
-    std::ignore = VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
+    std::ignore      = VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
 
     isInitialized_ = true;
     blitProgram_   = AllocateBlitter(gl);
@@ -94,7 +108,8 @@ ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
          .size       = stubColorTexture_.Size()});
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale, ColorCode color) {
+ENGINE_EXPORT void CommonRenderers::RenderAxes(
+    GlContext const& gl, glm::mat4 const& mvp, float scale, ColorCode color) {
     assert(IsInitialized() && "Bad call to RenderAxes, CommonRenderers isn't initialized");
     axesRenderer_.Render(gl, mvp, scale);
     debugPoints_.PushPoint(glm::scale(mvp, glm::vec3{scale * 0.1f}), color);
@@ -110,8 +125,8 @@ ENGINE_EXPORT void CommonRenderers::RenderBox(GlContext const& gl, glm::mat4 con
     boxRenderer_.Render(gl, centerMvp, color);
 }
 
-ENGINE_EXPORT void CommonRenderers::RenderFrustum(GlContext const& gl,
-    glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
+ENGINE_EXPORT void CommonRenderers::RenderFrustum(
+    GlContext const& gl, glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     assert(IsInitialized() && "Bad call to RenderFrustum, CommonRenderers isn't initialized");
     frustumRenderer_.Render(gl, centerMvp, frustum, color, thickness);
 }
@@ -183,7 +198,8 @@ ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm
     RenderFulscreenTriangle(gl);
 }
 
-ENGINE_EXPORT auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler) -> SamplersCache::CacheKey {
+ENGINE_EXPORT auto CommonRenderers::CacheSampler(std::string_view name, GpuSampler&& sampler)
+    -> SamplersCache::CacheKey {
     return samplersCache_.Store(name, std::move(sampler));
 }
 

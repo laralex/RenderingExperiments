@@ -57,7 +57,8 @@ ENGINE_EXPORT auto GpuSampler::WithLinearMagnify(bool filterLinear) && -> GpuSam
     return std::move(*this);
 }
 
-ENGINE_EXPORT auto GpuSampler::SetMinificationFilter(bool minifyLinear, bool useMips, bool mipsLinear) && -> GpuSampler&& {
+ENGINE_EXPORT auto GpuSampler::SetMinificationFilter(
+    bool minifyLinear, bool useMips, bool mipsLinear) && -> GpuSampler&& {
     if (useMips) {
         if (minifyLinear) {
             minificationFilter_ = mipsLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;

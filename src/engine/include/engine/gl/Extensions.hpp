@@ -1,7 +1,7 @@
 #pragma once
 
-#include <glad/gl.h>
 #include <cassert>
+#include <glad/gl.h>
 #include <unordered_set>
 
 namespace engine {

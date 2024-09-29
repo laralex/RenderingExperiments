@@ -55,7 +55,8 @@ ENGINE_EXPORT auto ImageLoader::ImageData(int32_t loadedImageId) const -> CpuVie
     return find->second;
 }
 
-ENGINE_EXPORT auto ImageLoader::Load(std::string_view const filepath, int32_t numDesiredChannels) -> std::optional<LoadInfo> {
+ENGINE_EXPORT auto ImageLoader::Load(std::string_view const filepath, int32_t numDesiredChannels)
+    -> std::optional<LoadInfo> {
     auto numBytes = LoadBinaryFile(filepath, [&](size_t filesize) {
         temporaryBuffer_.resize(filesize);
         return CpuMemory{temporaryBuffer_.data(), filesize};
@@ -63,7 +64,8 @@ ENGINE_EXPORT auto ImageLoader::Load(std::string_view const filepath, int32_t nu
     return Load(CpuMemory{temporaryBuffer_.data(), numBytes}, numDesiredChannels);
 }
 
-ENGINE_EXPORT auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels) -> std::optional<LoadInfo> {
+ENGINE_EXPORT auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_t numDesiredChannels)
+    -> std::optional<LoadInfo> {
     LoadInfo result{};
     if (int ok = stbi_info_from_memory(
             encodedImageData.data, encodedImageData.NumElements(), &result.width, &result.height,
@@ -103,7 +105,8 @@ ENGINE_EXPORT auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args) -> std::optional<Texture> {
+ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args)
+-> std::optional<Texture> {
     auto cpuImageInfo = args.loader.Load(args.filepath, args.numChannels);
     if (!cpuImageInfo) {
         XLOGE("Failed to load texture: {}", args.loader.LatestError());
@@ -129,8 +132,8 @@ ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureAr
 
 namespace engine::gl::shader {
 
-ENGINE_EXPORT auto LoadShaderCode(std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines)
-    -> std::string {
+ENGINE_EXPORT auto LoadShaderCode(
+    std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines) -> std::string {
     std::string code          = LoadTextFile(filepath);
     static bool isInitialized = false;
     static IncludeRegistry includeCommon{};

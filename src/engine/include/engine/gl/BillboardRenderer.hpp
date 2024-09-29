@@ -2,7 +2,9 @@
 
 #include "engine/Precompiled.hpp"
 #include "engine/gl/Buffer.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/Context.hpp"
+#include "engine/gl/IGlDisposable.hpp"
+#include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Vao.hpp"
 #include <glm/mat4x4.hpp>
@@ -11,12 +13,12 @@ namespace engine::gl {
 
 struct BillboardRenderArgs;
 
-class BillboardRenderer final {
+class BillboardRenderer final : public IGlDisposable {
 
 public:
 #define Self BillboardRenderer
     explicit Self() noexcept     = default;
-    ~Self() noexcept             = default;
+    ~Self() override             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -29,12 +31,13 @@ public:
     // BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION
     static auto Allocate [[nodiscard]] (GlContext const& gl, GLuint fragmentShader = GL_NONE) -> BillboardRenderer;
     void Render(GlContext const& gl, BillboardRenderArgs const& args) const;
+    void Dispose(GlContext const& gl) override;
 
 private:
-    GpuProgramHandle customVaoProgram_{};
-    GpuProgramHandle quadVaoProgram_{};
-    GpuBuffer ubo_{};
-    GLint uboLocation_{-1};
+    GpuProgramHandle customVaoProgram_ = GpuProgramHandle{};
+    GpuProgramHandle quadVaoProgram_ = GpuProgramHandle{};
+    GpuBuffer ubo_ = GpuBuffer{};
+    GLint uboLocation_ = -1;
 
     static GLint constexpr DEFAULT_UNIFORM_TEXTURE_LOCATION = 0;
 };

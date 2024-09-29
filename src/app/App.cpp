@@ -8,7 +8,7 @@
 #include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
-#include "engine/gl/ProgramOwner.hpp"
+#include "engine/gl/GpuProgramOwner.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -28,6 +28,13 @@ constexpr GLint UNIFORM_TEXTURE_LOCATION   = 0;
 constexpr GLint UNIFORM_TEXTURE_BINDING    = 0;
 constexpr GLint UNIFORM_MVP_LOCATION       = 10;
 constexpr GLint UBO_SAMPLER_TILING_BINDING = 4;
+
+Application::~Application() {
+    XLOG("Disposing application");
+    this->commonRenderers.Dispose(this->gl);
+    this->flatRenderer.Dispose(this->gl);
+    this->gl.Programs()->DisposeProgram(std::move(this->program));
+}
 
 static void ConfigureApplication(
     engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, std::unique_ptr<Application>& app) {
@@ -57,7 +64,8 @@ static void ConfigureApplication(
         Define{.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = Define::INT32},
     };
 
-    auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program");
+    auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(
+        app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program");
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
 
@@ -131,8 +139,8 @@ static void ConfigureApplication(
 
     app->texture          = std::move(*maybeTexture);
     app->uboSamplerTiling = gl::GpuBuffer::Allocate(
-        app->gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)},
-        "SamplerTiling UBO");
+        app->gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE,
+        CpuMemory<GLvoid const>{nullptr, sizeof(UboDataSamplerTiling)}, "SamplerTiling UBO");
     app->uboDataSamplerTiling.albedoIdx = 42;
     gl::SamplerTiling albedoTiling{glm::vec2{0.25f}, glm::vec2{0.0f}};
     app->uboDataSamplerTiling.uvScaleOffsets[app->uboDataSamplerTiling.albedoIdx] = albedoTiling.Packed();
@@ -146,11 +154,11 @@ static void ConfigureApplication(
     // app->renderbuffer      = gl::Renderbuffer::Allocate2D(maxScreenSize, GL_DEPTH24_STENCIL8, 0, "Test
     // renderbuffer");
     app->outputFramebuffer = gl::Framebuffer::Allocate(app->gl, "Main Pass FBO");
-    std::ignore = gl::FramebufferEditCtx{app->outputFramebuffer}
-        .AttachTexture(app->gl, GL_COLOR_ATTACHMENT0, app->outputColor)
-        .AttachTexture(app->gl, GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth)
-        // .AttachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer)
-        .CommitDrawbuffers();
+    std::ignore            = gl::FramebufferEditCtx{app->outputFramebuffer}
+                      .AttachTexture(app->gl, GL_COLOR_ATTACHMENT0, app->outputColor)
+                      .AttachTexture(app->gl, GL_DEPTH_STENCIL_ATTACHMENT, app->outputDepth)
+                      // .AttachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, app->renderbuffer)
+                      .CommitDrawbuffers();
 
     app->flatRenderer = gl::FlatRenderer::Allocate(app->gl);
 
@@ -178,9 +186,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->isInitialized = true;
     }
 
-    if (ctx.frameIdx % 250 == 0) {
-        XLOG("{} FPS, {} ms, {} frame", ctx.prevFPS, ctx.prevFrametimeMs, ctx.frameIdx);
-    }
+    if (ctx.frameIdx % 250 == 0) { XLOG("{} FPS, {} ms, {} frame", ctx.prevFPS, ctx.prevFrametimeMs, ctx.frameIdx); }
 
     glm::ivec2 renderSize = windowCtx.WindowSize();
     // glm::ivec2 renderSize = glm::vec2{windowCtx.WindowSize()} * (glm::sin(ctx.timeSec) * 0.7f + 1.0f);
@@ -323,31 +329,35 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         GLCALL(glDepthFunc(GL_LEQUAL));
 
         glm::vec3 lightColor{0.2f};
-        app->flatRenderer.Render(app->gl, gl::FlatRenderArgs{
-            .lightWorldPosition        = lightPosition,
-            .lightColor                = lightColor,
-            .eyeWorldPosition          = cameraMovement.Position(),
-            .materialColor             = glm::vec3{0.3, 1.0, 0.1},
-            .materialSpecularIntensity = 1.0f,
-            .primitive                 = GL_TRIANGLES,
-            .vaoWithNormal             = mesh.Vao(),
-            .mvp                       = mvp,
-            .modelToWorld              = model,
-        });
+        app->flatRenderer.Render(
+            app->gl,
+            gl::FlatRenderArgs{
+                .lightWorldPosition        = lightPosition,
+                .lightColor                = lightColor,
+                .eyeWorldPosition          = cameraMovement.Position(),
+                .materialColor             = glm::vec3{0.3, 1.0, 0.1},
+                .materialSpecularIntensity = 1.0f,
+                .primitive                 = GL_TRIANGLES,
+                .vaoWithNormal             = mesh.Vao(),
+                .mvp                       = mvp,
+                .modelToWorld              = model,
+            });
 
         model = glm::scale(glm::mat4{1.0f}, glm::vec3{15.0f});
         mvp   = camera * model;
-        app->flatRenderer.Render(app->gl, gl::FlatRenderArgs{
-            .lightWorldPosition = lightPosition,
-            .lightColor         = lightColor,
-            .eyeWorldPosition   = cameraMovement.Position(),
-            // .materialColor             = glm::vec3{1.0f, 1.0f, 1.0f},
-            .materialSpecularIntensity = 1.0f,
-            .primitive                 = GL_TRIANGLES,
-            .vaoWithNormal             = app->boxMesh.Vao(),
-            .mvp                       = mvp,
-            .modelToWorld              = model,
-        });
+        app->flatRenderer.Render(
+            app->gl,
+            gl::FlatRenderArgs{
+                .lightWorldPosition = lightPosition,
+                .lightColor         = lightColor,
+                .eyeWorldPosition   = cameraMovement.Position(),
+                // .materialColor             = glm::vec3{1.0f, 1.0f, 1.0f},
+                .materialSpecularIntensity = 1.0f,
+                .primitive                 = GL_TRIANGLES,
+                .vaoWithNormal             = app->boxMesh.Vao(),
+                .mvp                       = mvp,
+                .modelToWorld              = model,
+            });
     }
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -378,14 +388,16 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
                 .pixelsPerUnitY = 0.001f * static_cast<float>(screenSize.y),
                 .pixelsHeight   = static_cast<float>(screenSize.y),
                 .aspectRatio    = aspectRatio};
-            app->commonRenderers.RenderBillboard(app->gl, gl::BillboardRenderArgs{
-                app->commonRenderers.VaoDatalessQuad(),
-                GL_TRIANGLE_STRIP,
-                screen,
-                mvp,
-                billboardSize,
-                billboardPivotOffset,
-            });
+            app->commonRenderers.RenderBillboard(
+                app->gl,
+                gl::BillboardRenderArgs{
+                    app->commonRenderers.VaoDatalessQuad(),
+                    GL_TRIANGLE_STRIP,
+                    screen,
+                    mvp,
+                    billboardSize,
+                    billboardPivotOffset,
+                });
         }
 
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.5f, ColorCode::WHITE);
@@ -428,9 +440,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     app->gl.TextureUnits().RestoreState();
     if (ctx.frameIdx % 100 == 0) {
         bool filesChanged = app->fileNotifier.PollChanges();
-        if (filesChanged) {
-            app->gl.Programs()->HotReloadPrograms(app->gl);
-        }
+        if (filesChanged) { app->gl.Programs()->HotReloadPrograms(app->gl); }
     }
 }
 
@@ -439,16 +449,16 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     GLFWwindow* window = windowCtx.Window();
     using KeyModFlags  = engine::WindowCtx::KeyModFlags;
     auto& app          = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
+    std::ignore        = windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_A, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore        = windowCtx.SetKeyboardCallback(GLFW_KEY_A, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.y += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_S, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore        = windowCtx.SetKeyboardCallback(GLFW_KEY_S, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.z += static_cast<float>(pressed) - static_cast<float>(released);
     });
-    std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_D, [&](bool pressed, bool released, KeyModFlags) {
+    std::ignore        = windowCtx.SetKeyboardCallback(GLFW_KEY_D, [&](bool pressed, bool released, KeyModFlags) {
         app->keyboardWasdPressed.w += static_cast<float>(pressed) - static_cast<float>(released);
     });
 
@@ -470,32 +480,33 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
     });
 
     std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_E, [&](bool pressed, bool released, KeyModFlags) {
-        engine::QueueForNextFrame(engine, engine::UserAction{
-            .type = engine::UserActionType::WINDOW,
-            .callback = [=](void*) { glfwSetWindowShouldClose(window, true); },
-            .label = "glfwSetWindowShouldClose",
-        });
+        engine::QueueForNextFrame(
+            engine,
+            engine::UserAction{
+                .type     = engine::UserActionType::WINDOW,
+                .callback = [=](void*) { glfwSetWindowShouldClose(window, true); },
+                .label    = "glfwSetWindowShouldClose",
+            });
     });
 
     std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_F, [&](bool pressed, bool released, KeyModFlags) {
-        engine::QueueForNextFrame(engine, engine::UserAction{
-            .type = engine::UserActionType::WINDOW,
-            .callback = [=](void*) {
-                static bool setToFullscreen = true;
-                if (!pressed) { return; }
+        engine::QueueForNextFrame(
+            engine, engine::UserAction{.type = engine::UserActionType::WINDOW, .callback = [=](void*) {
+                                           static bool setToFullscreen = true;
+                                           if (!pressed) { return; }
 
-                GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
-                const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-                if (setToFullscreen) {
-                    glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-                } else {
-                    // TODO: avoid hardcoding resolution
-                    glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
-                }
-                XLOG("Fullscreen mode: {}", setToFullscreen);
-                setToFullscreen = !setToFullscreen;
-            }
-        });
+                                           GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+                                           const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                                           if (setToFullscreen) {
+                                               glfwSetWindowMonitor(
+                                                   window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+                                           } else {
+                                               // TODO: avoid hardcoding resolution
+                                               glfwSetWindowMonitor(window, nullptr, 0, 0, 800, 600, mode->refreshRate);
+                                           }
+                                           XLOG("Fullscreen mode: {}", setToFullscreen);
+                                           setToFullscreen = !setToFullscreen;
+                                       }});
     });
 
     std::ignore = windowCtx.SetKeyboardCallback(GLFW_KEY_P, [&](bool pressed, bool released, KeyModFlags) {
@@ -512,12 +523,13 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
         setToWireframe = !setToWireframe;
     });
 
-    std::ignore = windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released, KeyModFlags) {
-        if (released) {
-            auto mousePosition = windowCtx.MousePosition();
-            XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);
-        }
-    });
+    std::ignore =
+        windowCtx.SetMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, [&](bool pressed, bool released, KeyModFlags) {
+            if (released) {
+                auto mousePosition = windowCtx.MousePosition();
+                XLOG("LMB {} pos: {},{}", windowCtx.IsMouseInsideWindow(), mousePosition.x, mousePosition.y);
+            }
+        });
 }
 
 auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
@@ -536,10 +548,11 @@ auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> 
     destination.app = std::make_unique<Application>();
     engine::SetApplicationData(destination.engine, &destination.app);
 
-    engine::QueueForNextFrame(destination.engine, engine::UserAction{
-        .type = engine::UserActionType::RENDER,
-        .callback = [](void* applicationData) { GLCALL(glEnable(GL_FRAMEBUFFER_SRGB)); }
-    });
+    engine::QueueForNextFrame(
+        destination.engine,
+        engine::UserAction{.type = engine::UserActionType::RENDER, .callback = [](void* applicationData) {
+                               GLCALL(glEnable(GL_FRAMEBUFFER_SRGB));
+                           }});
 
     std::ignore = engine::SetRenderCallback(destination.engine, app::Render);
 
@@ -568,7 +581,7 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
             XLOGW("HotReload::load allocating ApplicationState");
             ctx->userdata = new ApplicationState{};
         }
-        state = reinterpret_cast<ApplicationState*>(ctx->userdata);
+        state         = reinterpret_cast<ApplicationState*>(ctx->userdata);
         state->engine = engine::CreateEngine();
 
         if (state->engineData) {
@@ -579,9 +592,7 @@ CR_EXPORT auto cr_main(cr_plugin* ctx, cr_op operation) -> int {
             result = engine::ColdStartEngine(state->engine);
         }
 
-        if (result != engine::EngineResult::SUCCESS) {
-            return static_cast<int>(result);
-        }
+        if (result != engine::EngineResult::SUCCESS) { return static_cast<int>(result); }
 
         result = state->engineData ? HotStartApplication(*state) : ColdStartApplication(*state);
         return static_cast<int>(result);

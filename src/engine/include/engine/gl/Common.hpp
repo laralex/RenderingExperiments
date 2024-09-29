@@ -5,6 +5,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "engine/gl/Context.hpp"
+#include "engine/gl/IGlDisposable.hpp"
 
 namespace engine {
 template <typename T> struct CpuView;
@@ -45,7 +46,9 @@ public:
 #define Self GlHandle
     explicit Self(GLuint id)
         : id_(id) { }
-    ~Self() noexcept             = default;
+    ~Self() noexcept {
+        assert(id_ == GL_NONE && "OpenGL resource leaked");
+    }
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&& other)
@@ -69,7 +72,7 @@ public:
 
     // NOTE: don't implement as operator=, because it opens holes
     // with overwriting of GL object handles and leaking resources
-    void UnsafeAssign(GlHandle const& other) { id_ = other.id_; }
+    void UnsafeAssign(GLuint newId) { id_ = newId; }
     GLuint const* Ptr() const { return &id_; }
     GLuint* Ptr() { return &id_; }
     operator GLuint() const { return id_; }

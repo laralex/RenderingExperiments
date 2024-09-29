@@ -52,11 +52,11 @@ public:
     auto LatestError() const -> std::string_view { return latestError_; };
 
 private:
-    constexpr static int32_t MAX_LOADED_IMAGES = 32;
+    constexpr static int32_t MAX_LOADED_IMAGES                            = 32;
     std::unordered_map<ImageLoaderHandle, CpuView<uint8_t>> loadedImages_ = {};
-    std::vector<uint8_t> temporaryBuffer_ = {};
-    ImageLoaderHandle nextImageId_          = 0;
-    std::string_view latestError_ = {};
+    std::vector<uint8_t> temporaryBuffer_                                 = {};
+    ImageLoaderHandle nextImageId_                                        = 0;
+    std::string_view latestError_                                         = {};
 };
 
 } // namespace engine

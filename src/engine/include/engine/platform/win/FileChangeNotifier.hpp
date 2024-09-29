@@ -8,7 +8,7 @@ namespace engine::platform {
 class FileChangeNotifier final {
 
 public:
-    #include "engine/platform/FileChangeNotifier.inc"
+#include "engine/platform/FileChangeNotifier.inc"
 
 private:
     // TODO: implement for Windows

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Shader.hpp"
 
 #include <unordered_map>
@@ -44,4 +44,4 @@ public:
     // bool isInitialized_;
 };
 
-} // namespace engine::gl
+} // namespace engine::gl::shader

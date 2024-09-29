@@ -2,7 +2,7 @@
 #include "engine/Precompiled.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/Framebuffer.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Texture.hpp"
@@ -20,9 +20,9 @@ constexpr bool ENABLE_DEBUG_GROUP_LOGS   = false;
 void GLAPIENTRY DebugOutputCallback(
     GLenum source, GLenum type, GLuint /*id*/, GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam) {
-    if constexpr(engine::DEBUG_BUILD) {
-        // NVIDIA: Buffer detailed info: Buffer object 15 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will
-        // use VIDEO memory as the source for buffer object operations.
+    if constexpr (engine::DEBUG_BUILD) {
+        // NVIDIA: Buffer detailed info: Buffer object 15 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW)
+        // will use VIDEO memory as the source for buffer object operations.
         if (source == 0x8246U) { return; }
         auto logLevel = spdlog::level::level_enum::warn;
         switch (type) {
@@ -134,7 +134,7 @@ void LogDebugLabel(
     XLOG("{} (id=0x{:08X}, name={})", message, objectId, debugLabel);
 }
 
-} // namespace anonymous
+} // namespace
 
 namespace engine::gl {
 
@@ -233,22 +233,24 @@ ENGINE_EXPORT void PopDebugGroup(bool coreCmd, bool extensionCmd) {
     }
 }
 
-ENGINE_EXPORT void DebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view label) {
+ENGINE_EXPORT void DebugLabelUnsafe(
+    GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view label) {
     GLenum objectTypeKhr = GL_NONE;
     GLenum objectTypeExt = GL_NONE;
     FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
     ::DebugLabel(gl, objectTypeKhr, objectTypeExt, object, label);
 }
 
-ENGINE_EXPORT void LogDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view message) {
+ENGINE_EXPORT void LogDebugLabelUnsafe(
+    GlContext const& gl, GLuint object, GlObjectType objectType, std::string_view message) {
     GLenum objectTypeKhr = GL_NONE;
     GLenum objectTypeExt = GL_NONE;
     FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
     ::LogDebugLabel(gl, objectTypeKhr, objectTypeExt, object, message);
 }
 
-ENGINE_EXPORT auto GetDebugLabelUnsafe(GlContext const& gl, GLuint object, GlObjectType objectType, engine::CpuMemory<char> outBuffer)
-    -> size_t {
+ENGINE_EXPORT auto GetDebugLabelUnsafe(
+    GlContext const& gl, GLuint object, GlObjectType objectType, engine::CpuMemory<char> outBuffer) -> size_t {
     GLenum objectTypeKhr = GL_NONE;
     GLenum objectTypeExt = GL_NONE;
     FillDebugLabelEnums(objectType, objectTypeKhr, objectTypeExt);
@@ -259,7 +261,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, GpuBuffer const& buffer, std:
     ::DebugLabel(gl, GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, GpuBuffer const& buffer, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, GpuBuffer const& buffer, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     return ::GetDebugLabel(gl, GL_BUFFER, GL_BUFFER_OBJECT_EXT, buffer.Id(), outBuffer);
 }
 
@@ -271,7 +274,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, Vao const& vertexArray, std::
     ::DebugLabel(gl, GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vertexArray.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Vao const& vertexArray, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Vao const& vertexArray, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     return ::GetDebugLabel(gl, GL_VERTEX_ARRAY, GL_VERTEX_ARRAY_OBJECT_EXT, vertexArray.Id(), outBuffer);
 }
 
@@ -283,7 +287,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, GpuProgram const& program, st
     ::DebugLabel(gl, GL_PROGRAM, GL_PROGRAM_OBJECT_EXT, program.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, GpuProgram const& program, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, GpuProgram const& program, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     return ::GetDebugLabel(gl, GL_PROGRAM, GL_PROGRAM_OBJECT_EXT, program.Id(), outBuffer);
 }
 
@@ -295,7 +300,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, Texture const& texture, std::
     ::DebugLabel(gl, GL_TEXTURE, GL_TEXTURE, texture.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Texture const& texture, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Texture const& texture, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     return ::GetDebugLabel(gl, GL_TEXTURE, GL_TEXTURE, texture.Id(), outBuffer);
 }
 
@@ -307,7 +313,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, Renderbuffer const& renderbuf
     ::DebugLabel(gl, GL_RENDERBUFFER, GL_RENDERBUFFER, renderbuffer.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Renderbuffer const& renderbuffer, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(
+    GlContext const& gl, Renderbuffer const& renderbuffer, engine::CpuMemory<char> outBuffer) -> size_t {
     return ::GetDebugLabel(gl, GL_RENDERBUFFER, GL_RENDERBUFFER, renderbuffer.Id(), outBuffer);
 }
 
@@ -319,7 +326,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, GpuSampler const& sampler, st
     ::DebugLabel(gl, GL_SAMPLER, GL_SAMPLER, sampler.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, GpuSampler const& sampler, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, GpuSampler const& sampler, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     return ::GetDebugLabel(gl, GL_SAMPLER, GL_SAMPLER, sampler.Id(), outBuffer);
 }
 
@@ -331,7 +339,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, Framebuffer const& fb, std::s
     ::DebugLabel(gl, GL_FRAMEBUFFER, GL_FRAMEBUFFER, fb.Id(), label);
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Framebuffer const& fb, engine::CpuMemory<char> outBuffer) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, Framebuffer const& fb, engine::CpuMemory<char> outBuffer)
+    -> size_t {
     return ::GetDebugLabel(gl, GL_FRAMEBUFFER, GL_FRAMEBUFFER, fb.Id(), outBuffer);
 }
 
@@ -345,7 +354,8 @@ ENGINE_EXPORT void DebugLabel(GlContext const& gl, void* glSyncObject, std::stri
     }
 }
 
-ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, void* glSyncObject, char* outBuffer, size_t outBufferSize) -> size_t {
+ENGINE_EXPORT auto GetDebugLabel(GlContext const& gl, void* glSyncObject, char* outBuffer, size_t outBufferSize)
+    -> size_t {
     if (gl.Extensions().Supports(GlExtensions::KHR_debug)) {
         GLsizei bytesWritten = 0;
         GLCALL(glGetObjectPtrLabel(glSyncObject, outBufferSize, &bytesWritten, outBuffer));

@@ -18,4 +18,4 @@ public:
     virtual void OnFileChanged(std::string const& path, bool isDirectory) = 0;
 };
 
-} // namespace engien::platform
+} // namespace engine::platform

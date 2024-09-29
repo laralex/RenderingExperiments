@@ -1,9 +1,7 @@
 #include "engine/platform/FileChangeNotifier.hpp"
 #include "engine/platform/Filesystem.hpp"
 
-namespace {
-
-} // namespace anonymous
+namespace { } // namespace
 
 namespace engine::platform {
 

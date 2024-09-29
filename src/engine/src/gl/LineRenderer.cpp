@@ -21,24 +21,24 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
         gl, GL_ARRAY_BUFFER, gl::GpuBuffer::CLIENT_UPDATE,
         CpuMemory<void const>{nullptr, maxLines * sizeof(LineRendererInput::Line)}, "LineRenderer Vertices");
     renderer.vao_ = gl::Vao::Allocate(gl, "LineRenderer VAO");
-    std::ignore = gl::VaoMutableCtx{renderer.vao_}
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_POSITION_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(LineRendererInput::Vertex),
-             .offset          = offsetof(LineRendererInput::Vertex, position)})
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_COLOR_LOCATION,
-             .valuesPerVertex = 1,
-             .datatype        = GL_UNSIGNED_INT,
-             .stride          = sizeof(LineRendererInput::Vertex),
-             .offset          = offsetof(LineRendererInput::Vertex, colorIdx)})
-        .MakeUnindexed(maxLines * 2);
+    std::ignore   = gl::VaoMutableCtx{renderer.vao_}
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_POSITION_LOCATION,
+                           .valuesPerVertex = 3,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(LineRendererInput::Vertex),
+                           .offset          = offsetof(LineRendererInput::Vertex, position)})
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_COLOR_LOCATION,
+                           .valuesPerVertex = 1,
+                           .datatype        = GL_UNSIGNED_INT,
+                           .stride          = sizeof(LineRendererInput::Vertex),
+                           .offset          = offsetof(LineRendererInput::Vertex, colorIdx)})
+                      .MakeUnindexed(maxLines * 2);
 
-    using Define = gl::shader::Define;
+    using Define                = gl::shader::Define;
     std::vector<Define> defines = {
         Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
         Define{.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = Define::INT32},
@@ -46,12 +46,16 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-        gl, "data/engine/shaders/lines.vert", "data/engine/shaders/color_palette.frag",
-        std::move(defines), "LineRenderer");
+        gl, "data/engine/shaders/lines.vert", "data/engine/shaders/color_palette.frag", std::move(defines),
+        "LineRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
     return renderer;
+}
+
+ENGINE_EXPORT void LineRenderer::Dispose(GlContext const& gl) {
+    gl.Programs()->DisposeProgram(std::move(program_));
 }
 
 ENGINE_EXPORT void LineRenderer::Render(GlContext const& gl, glm::mat4 const& camera) const {

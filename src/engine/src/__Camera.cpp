@@ -16,7 +16,8 @@ ENGINE_EXPORT void Camera::SetPerspective(float verticalFov, float aspect, float
     dirty_ = true;
 }
 
-ENGINE_EXPORT void Camera::SetOrtographic(float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar) {
+ENGINE_EXPORT void Camera::SetOrtographic(
+    float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar) {
     projection_ = glm::ortho(xLeft, xRight, yBottom, yTop, zNear, zFar);
     zNear_      = zNear;
     zFar_       = zFar;

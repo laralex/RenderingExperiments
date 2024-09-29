@@ -17,8 +17,8 @@ public:
 #undef Self
 
     enum Access {
-        NONE = 0x0,
-        CLIENT_READ = 0x1,
+        NONE          = 0x0,
+        CLIENT_READ   = 0x1,
         CLIENT_UPDATE = 0x2,
     };
 

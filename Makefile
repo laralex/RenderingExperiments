@@ -99,7 +99,7 @@ src_engine_ = \
 	gl/FrustumRenderer.cpp gl/Guard.cpp \
 	gl/LineRenderer.cpp \
 	gl/Extensions.cpp gl/Framebuffer.cpp \
-	gl/Program.cpp gl/ProgramOwner.cpp \
+	gl/GpuProgram.cpp gl/GpuProgramOwner.cpp \
 	gl/Renderbuffer.cpp \
 	gl/Sampler.cpp gl/SamplersCache.cpp \
 	gl/Shader.cpp gl/Texture.cpp \

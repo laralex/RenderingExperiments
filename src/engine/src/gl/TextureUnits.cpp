@@ -85,11 +85,17 @@ ENGINE_EXPORT void GlTextureUnits::BindSampler(size_t slotIdx, GLuint sampler) {
     currentSamplerBindings_[slotIdx] = sampler;
 }
 
-ENGINE_EXPORT void GlTextureUnits::Bind2D(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D, texture); }
+ENGINE_EXPORT void GlTextureUnits::Bind2D(size_t slotIdx, GLuint texture) {
+    BindTexture(slotIdx, GL_TEXTURE_2D, texture);
+}
 
-ENGINE_EXPORT void GlTextureUnits::Bind2DArray(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_2D_ARRAY, texture); }
+ENGINE_EXPORT void GlTextureUnits::Bind2DArray(size_t slotIdx, GLuint texture) {
+    BindTexture(slotIdx, GL_TEXTURE_2D_ARRAY, texture);
+}
 
-ENGINE_EXPORT void GlTextureUnits::BindCubemap(size_t slotIdx, GLuint texture) { BindTexture(slotIdx, GL_TEXTURE_CUBE_MAP, texture); }
+ENGINE_EXPORT void GlTextureUnits::BindCubemap(size_t slotIdx, GLuint texture) {
+    BindTexture(slotIdx, GL_TEXTURE_CUBE_MAP, texture);
+}
 
 ENGINE_EXPORT void GlTextureUnits::BindCubemapArray(size_t slotIdx, GLuint texture) {
     BindTexture(slotIdx, GL_TEXTURE_CUBE_MAP_ARRAY, texture);

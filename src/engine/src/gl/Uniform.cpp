@@ -38,18 +38,23 @@ ENGINE_EXPORT void UniformCtx::SetUbo(GLuint programLocation, GLuint bufferBindi
     GLCALL(glUniformBlockBinding(contextProgram_, programLocation, bufferBinding));
 }
 
-ENGINE_EXPORT void UniformCtx::SetUniformMatrix2x2(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+ENGINE_EXPORT void UniformCtx::SetUniformMatrix2x2(
+    GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix2fv(location, numMatrices, transpose, values));
 }
 
-ENGINE_EXPORT void UniformCtx::SetUniformMatrix3x3(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+ENGINE_EXPORT void UniformCtx::SetUniformMatrix3x3(
+    GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix3fv(location, numMatrices, transpose, values));
 }
 
-ENGINE_EXPORT void UniformCtx::SetUniformMatrix4x4(GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
+ENGINE_EXPORT void UniformCtx::SetUniformMatrix4x4(
+    GLint location, GLfloat const* values, GLsizei numMatrices, GLboolean transpose) {
     GLCALL(glUniformMatrix4fv(location, numMatrices, transpose, values));
 }
 
-ENGINE_EXPORT void UniformCtx::SetUniformTexture(GLint location, GLint textureSlot) { GLCALL(glUniform1i(location, textureSlot)); }
+ENGINE_EXPORT void UniformCtx::SetUniformTexture(GLint location, GLint textureSlot) {
+    GLCALL(glUniform1i(location, textureSlot));
+}
 
 } // namespace engine::gl

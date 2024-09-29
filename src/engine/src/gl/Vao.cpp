@@ -69,8 +69,8 @@ ENGINE_EXPORT auto VaoMutableCtx::MakeVertexAttribute(
     return *this;
 }
 
-ENGINE_EXPORT auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset) const
-    -> VaoMutableCtx const& {
+ENGINE_EXPORT auto VaoMutableCtx::MakeIndexed(
+    GpuBuffer const& indexBuffer, GLenum dataType, GLint indexBufferOffset) const -> VaoMutableCtx const& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.Id()));
     GLsizei bytesPerIndex = 1;
     switch (dataType) {
@@ -99,7 +99,8 @@ ENGINE_EXPORT auto VaoMutableCtx::MakeIndexed(GpuBuffer const& indexBuffer, GLen
     return *this;
 }
 
-ENGINE_EXPORT auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) const -> VaoMutableCtx const& {
+ENGINE_EXPORT auto VaoMutableCtx::MakeUnindexed(GLsizei numVertexIds, GLint firstVertexId) const
+    -> VaoMutableCtx const& {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0U));
     contextVao_.indexBuffer_         = nullptr; // TODO: set provided indexBuffer (pass it as shared_ptr)
     contextVao_.indexBufferDataType_ = GL_NONE;

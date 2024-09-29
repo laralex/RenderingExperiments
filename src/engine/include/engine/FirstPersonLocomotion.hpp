@@ -14,9 +14,11 @@ public:
     ~Self() override             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
+
 protected:
-    Self(Self&&)                 = delete;
-    Self& operator=(Self&&)      = delete;
+    Self(Self&&)            = delete;
+    Self& operator=(Self&&) = delete;
+
 public:
 #undef Self
 

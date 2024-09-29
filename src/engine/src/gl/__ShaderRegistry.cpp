@@ -1,5 +1,5 @@
-#include "engine/gl/ShaderRegistry.hpp"
 #include "engine/Assets.hpp"
+#include "engine/gl/ShaderRegistry.hpp"
 
 #include "engine_private/Prelude.hpp"
 
@@ -37,4 +37,4 @@ ENGINE_EXPORT ShaderRegistry::~ShaderRegistry() {
     fragmentShaders_.clear();
 }
 
-} // namespace engine::gl
+} // namespace engine::gl::shader

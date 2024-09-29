@@ -1,4 +1,4 @@
-#include "engine/gl/Program.hpp"
+#include "engine/gl/GpuProgram.hpp"
 
 #include "engine_private/Prelude.hpp"
 #include <optional>
@@ -38,7 +38,8 @@ ENGINE_EXPORT void GpuProgram::Dispose() {
     programId_.UnsafeReset();
 }
 
-ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmentShader, bool isRecompile) const -> bool {
+ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmentShader, bool isRecompile) const
+    -> bool {
     if (!isRecompile) {
         // first compilation
         return LinkGraphicalProgram(programId_, vertexShader, fragmentShader);
@@ -49,9 +50,7 @@ ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmen
     GLCALL(tmpProgramId = glCreateProgram());
     bool ok = LinkGraphicalProgram(tmpProgramId, vertexShader, fragmentShader);
     GLCALL(glDeleteProgram(tmpProgramId));
-    if (ok) {
-        ok = LinkGraphicalProgram(programId_, vertexShader, fragmentShader);
-    }
+    if (ok) { ok = LinkGraphicalProgram(programId_, vertexShader, fragmentShader); }
     return ok;
 }
 

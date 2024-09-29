@@ -57,48 +57,48 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
     }
 
     std::ignore = gl::VaoMutableCtx{renderer.vao_}
-        .MakeVertexAttribute(
-            renderer.meshPositionsBuffer_,
-            {.location        = ATTRIB_POSITION_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(mesh.vertexPositions[0]),
-             .offset          = 0})
-        .MakeVertexAttribute(
-            renderer.meshAttributesBuffer_,
-            {.location        = ATTRIB_UV_LOCATION,
-             .valuesPerVertex = 2,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(decltype(mesh)::Vertex),
-             .offset          = offsetof(decltype(mesh)::Vertex, uv)})
-        .MakeVertexAttribute(
-            renderer.meshAttributesBuffer_,
-            {.location        = ATTRIB_NORMAL_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(decltype(mesh)::Vertex),
-             .offset          = offsetof(decltype(mesh)::Vertex, normal)})
-        .MakeVertexAttribute(
-            renderer.instancesBuffer_,
-            {.location        = ATTRIB_INSTANCE_COLOR_LOCATION,
-             .valuesPerVertex = 1,
-             .datatype        = GL_INT,
-             .stride          = sizeof(T),
-             .offset          = offsetof(T, colorIdx),
-             .instanceDivisor = 1})
-        .MakeVertexAttribute(
-            renderer.instancesBuffer_,
-            {.location        = ATTRIB_INSTANCE_MATRIX_LOCATION,
-             .numLocations    = 4,
-             .valuesPerVertex = 4,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(T),
-             .offset          = offsetof(T, transform),
-             .offsetAdvance   = sizeof(glm::vec4),
-             .instanceDivisor = 1})
-        .MakeIndexed(renderer.indexBuffer_, indexType);
+                      .MakeVertexAttribute(
+                          renderer.meshPositionsBuffer_,
+                          {.location        = ATTRIB_POSITION_LOCATION,
+                           .valuesPerVertex = 3,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(mesh.vertexPositions[0]),
+                           .offset          = 0})
+                      .MakeVertexAttribute(
+                          renderer.meshAttributesBuffer_,
+                          {.location        = ATTRIB_UV_LOCATION,
+                           .valuesPerVertex = 2,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(decltype(mesh)::Vertex),
+                           .offset          = offsetof(decltype(mesh)::Vertex, uv)})
+                      .MakeVertexAttribute(
+                          renderer.meshAttributesBuffer_,
+                          {.location        = ATTRIB_NORMAL_LOCATION,
+                           .valuesPerVertex = 3,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(decltype(mesh)::Vertex),
+                           .offset          = offsetof(decltype(mesh)::Vertex, normal)})
+                      .MakeVertexAttribute(
+                          renderer.instancesBuffer_,
+                          {.location        = ATTRIB_INSTANCE_COLOR_LOCATION,
+                           .valuesPerVertex = 1,
+                           .datatype        = GL_INT,
+                           .stride          = sizeof(T),
+                           .offset          = offsetof(T, colorIdx),
+                           .instanceDivisor = 1})
+                      .MakeVertexAttribute(
+                          renderer.instancesBuffer_,
+                          {.location        = ATTRIB_INSTANCE_MATRIX_LOCATION,
+                           .numLocations    = 4,
+                           .valuesPerVertex = 4,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(T),
+                           .offset          = offsetof(T, transform),
+                           .offsetAdvance   = sizeof(glm::vec4),
+                           .instanceDivisor = 1})
+                      .MakeIndexed(renderer.indexBuffer_, indexType);
 
-    using Define = gl::shader::Define;
+    using Define                = gl::shader::Define;
     std::vector<Define> defines = {
         Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
         Define{.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
@@ -109,8 +109,8 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-        gl, "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag",
-        std::move(defines), "PointRenderer");
+        gl, "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag", std::move(defines),
+        "PointRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
@@ -119,7 +119,13 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
     return renderer;
 }
 
-ENGINE_EXPORT void PointRenderer::Render(GlContext const& gl, glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
+
+ENGINE_EXPORT void PointRenderer::Dispose(GlContext const& gl) {
+    gl.Programs()->DisposeProgram(std::move(program_));
+}
+
+ENGINE_EXPORT void PointRenderer::Render(
+    GlContext const& gl, glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0 || firstInstance >= lastInstance_) {
         // XLOGW("Limit of points is <= 0 in PointRenderer");
         return;

@@ -115,41 +115,38 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
 
     BoxRenderer renderer;
     renderer.attributeBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ARRAY_BUFFER, {}, CpuMemory<void const>{vertexData, sizeof(vertexData)},
-        "BoxRenderer Vertices");
+        gl, GL_ARRAY_BUFFER, {}, CpuMemory<void const>{vertexData, sizeof(vertexData)}, "BoxRenderer Vertices");
     renderer.indexBuffer_ = gl::GpuBuffer::Allocate(
-        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<void const>{indices, sizeof(indices)},
-        "BoxRenderer Indices");
+        gl, GL_ELEMENT_ARRAY_BUFFER, {}, CpuMemory<void const>{indices, sizeof(indices)}, "BoxRenderer Indices");
     renderer.vao_ = gl::Vao::Allocate(gl, "BoxRenderer");
-    std::ignore = gl::VaoMutableCtx{renderer.vao_}
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_POSITION_LOCATION,
-             .valuesPerVertex = 3,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, position)})
-        .MakeVertexAttribute(
-            renderer.attributeBuffer_,
-            {.location        = ATTRIB_INNER_MARKER_LOCATION,
-             .valuesPerVertex = 1,
-             .datatype        = GL_FLOAT,
-             .stride          = sizeof(Vertex),
-             .offset          = offsetof(Vertex, innerMarker)})
-        .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
+    std::ignore   = gl::VaoMutableCtx{renderer.vao_}
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_POSITION_LOCATION,
+                           .valuesPerVertex = 3,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(Vertex),
+                           .offset          = offsetof(Vertex, position)})
+                      .MakeVertexAttribute(
+                          renderer.attributeBuffer_,
+                          {.location        = ATTRIB_INNER_MARKER_LOCATION,
+                           .valuesPerVertex = 1,
+                           .datatype        = GL_FLOAT,
+                           .stride          = sizeof(Vertex),
+                           .offset          = offsetof(Vertex, innerMarker)})
+                      .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
     using gl::shader::Define;
     std::vector<Define> defines = {
         Define{.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
-        Define{.name  = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type  = Define::INT32},
+        Define{.name = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type = Define::INT32},
         Define{.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
         Define{.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = Define::INT32},
         Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-        gl, "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", std::move(defines),
-        "BoxRenderer");
+        gl, "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", std::move(defines), "BoxRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
@@ -157,6 +154,10 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
     programGuard.SetUniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     return renderer;
+}
+
+ENGINE_EXPORT void BoxRenderer::Dispose(GlContext const& gl) {
+    gl.Programs()->DisposeProgram(std::move(program_));
 }
 
 ENGINE_EXPORT void BoxRenderer::Render(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {

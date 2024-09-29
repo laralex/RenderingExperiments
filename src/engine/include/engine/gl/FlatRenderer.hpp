@@ -2,7 +2,9 @@
 
 #include "engine/Precompiled.hpp"
 #include "engine/gl/Buffer.hpp"
-#include "engine/gl/Program.hpp"
+#include "engine/gl/Context.hpp"
+#include "engine/gl/IGlDisposable.hpp"
+#include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Vao.hpp"
 #include <glm/mat4x4.hpp>
 
@@ -10,12 +12,12 @@ namespace engine::gl {
 
 struct FlatRenderArgs;
 
-class FlatRenderer final {
+class FlatRenderer final : IGlDisposable {
 
 public:
 #define Self FlatRenderer
     explicit Self() noexcept     = default;
-    ~Self() noexcept             = default;
+    ~Self() override             = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -24,11 +26,12 @@ public:
 
     static auto Allocate [[nodiscard]] (GlContext const& gl) -> FlatRenderer;
     void Render(GlContext const& gl, FlatRenderArgs const&) const;
+    void Dispose(GlContext const& gl) override;
 
 private:
-    GpuProgramHandle program_{};
-    GpuBuffer ubo_{};
-    GLint uboLocation_{-1};
+    GpuProgramHandle program_ = GpuProgramHandle{};
+    GpuBuffer ubo_ = GpuBuffer{};
+    GLint uboLocation_ = -1;
 };
 
 struct FlatRenderArgs {

@@ -56,7 +56,7 @@ namespace engine::gl {
 ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     FlatRenderer renderer;
 
-    using Define = gl::shader::Define;
+    using Define                = gl::shader::Define;
     std::vector<Define> defines = {
         Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
         Define{.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
@@ -67,16 +67,21 @@ ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
-        gl, "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag",
-        std::move(defines), "Lambert diffuse");
+        gl, "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag", std::move(defines),
+        "Lambert diffuse");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
-        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)}, "FlatRenderer UBO");
+        gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)},
+        "FlatRenderer UBO");
     renderer.uboLocation_ = UniformCtx::GetUboLocation(gl.GetProgram(renderer.program_), "Ubo");
 
     return renderer;
+}
+
+ENGINE_EXPORT void FlatRenderer::Dispose(GlContext const& gl) {
+    gl.Programs()->DisposeProgram(std::move(program_));
 }
 
 ENGINE_EXPORT void FlatRenderer::Render(GlContext const& gl, FlatRenderArgs const& args) const {

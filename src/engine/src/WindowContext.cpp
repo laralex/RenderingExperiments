@@ -15,7 +15,7 @@ ENGINE_EXPORT WindowCtx::WindowCtx(GLFWwindow* window)
 }
 
 ENGINE_EXPORT auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
-    auto found                 = keys_.find(keyboardKey);
+    auto found = keys_.find(keyboardKey);
     if (found == keys_.cend()) {
         keys_[keyboardKey] = callback;
         return nullptr;
@@ -26,8 +26,9 @@ ENGINE_EXPORT auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCal
     return oldCallback;
 }
 
-ENGINE_EXPORT auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback) -> ButtonCallback {
-    auto found                 = mouseButtons_.find(button);
+ENGINE_EXPORT auto WindowCtx::SetMouseButtonCallback(GlfwMouseButton button, ButtonCallback callback)
+    -> ButtonCallback {
+    auto found = mouseButtons_.find(button);
     if (found == mouseButtons_.cend()) {
         mouseButtons_[button] = callback;
         return nullptr;
