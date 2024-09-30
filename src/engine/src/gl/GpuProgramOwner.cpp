@@ -36,7 +36,7 @@ auto GpuProgramOwner::LinkProgramFromFiles(
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     std::vector<shader::Define>&& defines, std::string_view name, bool hotReload, bool logCode)
     -> std::optional<GpuProgramHandle> {
-
+    assert(false && "Rename to GpuProgramRegistry move hot-reloading to new GpuProgramHotreloader")
     std::error_code err;
     std::string vertexFullFilepath, fragmentFullFilepath;
     vertexFullFilepath = platform::AbsolutePath(vertexFilepath, err).string();
