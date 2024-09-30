@@ -5,6 +5,11 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include <memory>
 #include <queue>
 #include <vector>
@@ -22,7 +27,7 @@ struct EnginePersistentData {
 #undef Self
 
     WindowCtx windowCtx{nullptr};
-    void* applicationData{nullptr}; // user-provided external data
+    void* applicationData{nullptr}; // user-provided external data, not owned
     std::vector<RenderCtx> frameHistory{};
     int64_t frameIdx{1U};
     RenderCallback renderCallback{[](RenderCtx const&, WindowCtx const&, void*) {}};
@@ -54,46 +59,72 @@ constexpr size_t MAX_ENGINES = 16U;
 ENGINE_STATIC int64_t g_numEngineInstances = 0;
 ENGINE_STATIC std::array<std::optional<engine::EngineCtx>, MAX_ENGINES> g_engines{};
 
+// TODO: encapsulate them somewhere, e.g. window context
+ENGINE_STATIC GLFWcursorenterfun g_externalCursorEnterCallback;
+ENGINE_STATIC GLFWcursorposfun g_externalCursorPosCallback;
+ENGINE_STATIC GLFWmousebuttonfun g_externalMouseButtonCallback;
+ENGINE_STATIC GLFWkeyfun g_externalKeyCallback;
+ENGINE_STATIC GLFWframebuffersizefun g_externalFramebufferSizeCallback;
+
 // NOTE: can't use std::string_view (third party callback)
 void GlfwErrorCallback(int errCode, char const* message) { XLOGE("GLFW_ERROR({}): {}", errCode, message); }
 
 void GlfwCursorEnterCallback(GLFWwindow* window, int entered) {
+    if (g_externalCursorEnterCallback != nullptr) {
+        g_externalCursorEnterCallback(window, entered);
+    }
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     ctx->UpdateCursorEntered(entered);
 }
 
 void GlfwCursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
+    if (g_externalCursorPosCallback != nullptr) {
+        g_externalCursorPosCallback(window, xpos, ypos);
+    }
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     ctx->UpdateCursorPosition(xpos, ypos);
 }
 
 void GlfwResizeCallback(GLFWwindow* window, int width, int height) {
+    if (g_externalFramebufferSizeCallback != nullptr) {
+        g_externalFramebufferSizeCallback(window, width, height);
+    }
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     ctx->UpdateResolution(width, height);
 }
 
 void GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (g_externalMouseButtonCallback != nullptr) {
+        g_externalMouseButtonCallback(window, button, action, mods);
+    }
+    if (ImGui::GetIO().WantCaptureMouse) { return; } // don't propagate to the app
+
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     ctx->UpdateMouseButton(button, action, mods);
 }
 
 void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    XLOGW("GLFW key {} scancode {} action {} mods {}", key, scancode, action, mods);
+    XLOGD("GLFW key {} scancode {} action {} mods {}", key, scancode, action, mods);
+    if (g_externalKeyCallback != nullptr) {
+        g_externalKeyCallback(window, key, scancode, action, mods);
+    }
+    if (ImGui::GetIO().WantCaptureMouse) { return; } // don't propagate to the app
+
     auto ctx = static_cast<engine::WindowCtx*>(glfwGetWindowUserPointer(window));
     if (ctx == nullptr) { return; }
     ctx->UpdateKeyboardKey(key, action, mods);
 }
 
 void InitializeWindow(GLFWwindow* window) {
-    glfwSetFramebufferSizeCallback(window, GlfwResizeCallback);
-    glfwSetKeyCallback(window, GlfwKeyCallback);
-    glfwSetMouseButtonCallback(window, GlfwMouseButtonCallback);
-    glfwSetCursorEnterCallback(window, GlfwCursorEnterCallback);
-    glfwSetCursorPosCallback(window, GlfwCursorPositionCallback);
+    g_externalFramebufferSizeCallback = glfwSetFramebufferSizeCallback(window, GlfwResizeCallback);
+    g_externalKeyCallback = glfwSetKeyCallback(window, GlfwKeyCallback);
+    g_externalMouseButtonCallback = glfwSetMouseButtonCallback(window, GlfwMouseButtonCallback);
+    g_externalCursorEnterCallback = glfwSetCursorEnterCallback(window, GlfwCursorEnterCallback);
+    g_externalCursorPosCallback = glfwSetCursorPosCallback(window, GlfwCursorPositionCallback);
     glfwSwapInterval(1);
     glfwSetTime(0.0);
 }
@@ -146,9 +177,14 @@ auto InitializeEngineData [[nodiscard]] (engine::EnginePersistentData& out) -> e
         if (window == nullptr) { return engine::EngineResult::ERROR_WINDOW_INIT; }
         out.windowCtx = engine::WindowCtx{window};
         glfwSetWindowUserPointer(window, &out.windowCtx);
-    }
 
-    InitializeWindow(out.windowCtx.Window());
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(window, false);
+        InitializeWindow(out.windowCtx.Window());
+        ImGui_ImplGlfw_InstallCallbacks(window);
+        constexpr char const* IMGUI_GLSL_VERSION = "#version 130";
+        ImGui_ImplOpenGL3_Init(IMGUI_GLSL_VERSION);
+    }
 
     out.isInitialized = true;
     out.frameIdx      = 1U;
@@ -191,6 +227,15 @@ void ExecuteQueue(engine::EngineHandle engine, ActionQueue& queue) {
 
 auto InitializeCommonResources [[nodiscard]] () -> bool {
     engine::InitLogging();
+
+    // Setup Dear ImGui context
+    XLOGW("ImGui::CreateContext()");
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
     XLOGW("glfwInit()");
     if (!glfwInit()) {
         XLOGE("Failed to initialize GLFW");
@@ -200,6 +245,11 @@ auto InitializeCommonResources [[nodiscard]] () -> bool {
 }
 
 auto DestroyCommonResources [[nodiscard]] () -> bool {
+    XLOGW("ImGui::DestroyContext()");
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     XLOGW("glfwTerminate()");
     glfwTerminate();
     return true;
@@ -277,7 +327,26 @@ ENGINE_EXPORT auto TickEngine(engine::EngineHandle engine) -> engine::EngineResu
     ExecuteQueue(engine, renderQueue);
 
     RenderCtx& renderCtx = UpdateEngineLoop(engineData.frameHistory, engineData.frameIdx);
+
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+        ImGui_ImplGlfw_Sleep(10);
+        return EngineResult::SUCCESS;
+    }
     engineData.renderCallback(renderCtx, windowCtx, engineData.applicationData);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    bool showDemoWindow = true;
+    if (showDemoWindow) {
+        ImGui::ShowDemoWindow(&showDemoWindow);
+    }
+
+    ImGui::Render();
+    glm::ivec2 windowSize = windowCtx.WindowSize();
+    GLCALL(glViewport(0, 0, windowSize.x, windowSize.y));
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(window);
 

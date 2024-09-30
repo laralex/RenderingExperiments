@@ -13,11 +13,11 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
-#include <cr/cr.h>
+#include <cr.h>
 #pragma clang diagnostic pop
 #define ENGINE_STATIC CR_STATE
 
-#include <concurrentqueue/concurrentqueue.h>
+#include <concurrentqueue.h>
 
 // #include "engine/CommonInterfaces.hpp"
 #include "engine/gl/Common.hpp"

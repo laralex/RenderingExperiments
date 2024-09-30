@@ -14,6 +14,8 @@
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
 
+#include <imgui.h>
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 

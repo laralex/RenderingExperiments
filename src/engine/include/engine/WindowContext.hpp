@@ -10,7 +10,7 @@ class WindowCtx final {
 public:
 #define Self WindowCtx
     explicit Self(GLFWwindow* window);
-    ~Self() noexcept             = default;
+    ~Self()                      = default;
     Self(Self const&)            = delete;
     Self& operator=(Self const&) = delete;
     Self(Self&&)                 = default;
@@ -32,7 +32,7 @@ public:
     using GlfwMouseButton = int;
 
     auto IsInitialized [[nodiscard]] () const -> bool { return window_ != nullptr; }
-    auto Window [[nodiscard]] () const -> GLFWwindow* { return window_; }
+    auto Window [[nodiscard]] () const -> GLFWwindow* { return window_.get(); }
     auto WindowSize [[nodiscard]] () const -> glm::ivec2 { return windowSize_; }
 
     auto MousePosition [[nodiscard]] () const -> glm::vec2 { return mousePos_; }
@@ -53,7 +53,9 @@ public:
     void OnPollEvents();
 
 private:
-    GLFWwindow* window_{nullptr};
+    // owns the window, destroys in dtor
+    struct GlfwWindowDeleter { void operator()(GLFWwindow* w); };
+    std::unique_ptr<GLFWwindow, GlfwWindowDeleter> window_{nullptr};
     glm::ivec2 windowSize_{0, 0};
     glm::vec2 mousePosDelta_{0.0f, 0.0f};
     glm::vec2 mousePos_{0.0f, 0.0f};

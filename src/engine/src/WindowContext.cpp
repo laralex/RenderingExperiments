@@ -9,9 +9,17 @@ namespace engine {
 
 ENGINE_EXPORT WindowCtx::WindowCtx(GLFWwindow* window)
     : window_(window) {
+    XLOGW("WindowCtx::ctor");
     int w = 0, h = 0;
     if (window != nullptr) { glfwGetFramebufferSize(window, &w, &h); }
     windowSize_ = {w, h};
+}
+
+ENGINE_EXPORT void WindowCtx::GlfwWindowDeleter::operator()(GLFWwindow* window) {
+    if (window != nullptr) {
+        XLOGW("glfwDestroyWindow");
+        glfwDestroyWindow(window);
+    }
 }
 
 ENGINE_EXPORT auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {

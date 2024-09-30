@@ -1,9 +1,7 @@
 * hot reload dll - engine updates not propagated
-* integrate queue library
 * camera (projection, quaternion rotation, faster view matrix from 3 vectors)
 * text rendering
 * render utils (billboard)
-* imgui
 
 * separate render thread
 * inverted Y axis

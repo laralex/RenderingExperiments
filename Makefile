@@ -40,9 +40,13 @@ THIRD_PARTY_DEPS=\
 	${BUILD_DIR}/third_party/glfw/src/libglfw.so \
 	${BUILD_DIR}/third_party/glad/gl.o \
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
-	${BUILD_DIR}/third_party/stb/stb_image.o
+	${BUILD_DIR}/third_party/stb/stb_image.o \
+	${BUILD_DIR}/third_party/imgui/libimgui.a
 
-CC=$(if ${USE_CCACHE},./ccache,) clang++
+APP_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},,${THIRD_PARTY_DEPS})
+ENGINE_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},${THIRD_PARTY_DEPS},)
+
+CXX=$(if ${USE_CCACHE},./ccache,) clang++
 
 # NOTE: -MMD generates .d files alongside .o files (targets with all dependent headers)
 COMPILE_FLAGS += -std=c++20 \
@@ -65,14 +69,17 @@ COMPILE_FLAGS += -std=c++20 \
 #-Weverything \
 
 INCLUDE_DIR+=-I src/engine/include
+# root of 3rd party, because for imgui, cr and concurrentqueue have headers in their root
+INCLUDE_DIR+=-I third_party/imgui
+INCLUDE_DIR+=-I third_party/imgui/backends
+INCLUDE_DIR+=-I third_party/cr
+INCLUDE_DIR+=-I third_party/concurrentqueue
 INCLUDE_DIR+=-I third_party/spdlog/include
 INCLUDE_DIR+=-I third_party/glad/include
 INCLUDE_DIR+=-I third_party/glm/
 INCLUDE_DIR+=-I third_party/stb/
-# for cr and concurrentqueue
-INCLUDE_DIR+=-I third_party
 INCLUDE_DIR+=-I data
-LDFLAGS+=-pthread -ldl
+LDFLAGS+=-pthread -ldl -lGL
 CLANG_FORMAT=clang-format-17
 
 src_app_ = App.cpp Main.cpp
@@ -189,9 +196,6 @@ build_app: ${outdirs_app} ${ENGINE_LIB} ${APP_EXE}
 .PHONY: build_engine
 build_engine: ${outdirs_engine} ${ENGINE_LIB}
 
-APP_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},,${THIRD_PARTY_DEPS})
-ENGINE_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},${THIRD_PARTY_DEPS},)
-
 .PHONY: ${INSTALL_DIR}/app
 ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	$(info > Installing ${INSTALL_DIR}/app)
@@ -203,17 +207,17 @@ ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	cp ${APP_EXE} $@
 
 # linking app
-${APP_MAIN_EXE}: ${obj_app} ${APP_THIRD_PARTY_DEPS} ${ENGINE_LIB}
+${APP_MAIN_EXE}: ${obj_app} ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS}
 	$(info > Linking executable $@)
-	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
+	${CXX} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 ${APP_LIB}: ${APP_THIRD_PARTY_DEPS} ${obj_app} ${ENGINE_LIB}
 	$(info > Linking dynamic $@)
-	${CC} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
+	${CXX} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
 
-${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${APP_THIRD_PARTY_DEPS} ${ENGINE_LIB} ${APP_LIB}
+${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS} ${APP_LIB}
 	$(info > Linking executable $@)
-	${CC} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
+	${CXX} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 # linking engine library
 ${BUILD_DIR}/engine/libengine.a: ${obj_engine} ${ENGINE_THIRD_PARTY_DEPS}
@@ -222,23 +226,35 @@ ${BUILD_DIR}/engine/libengine.a: ${obj_engine} ${ENGINE_THIRD_PARTY_DEPS}
 
 ${BUILD_DIR}/engine/libengine.so: ${obj_engine} ${ENGINE_THIRD_PARTY_DEPS}
 	$(info > Linking dynamic $@)
-	${CC} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
+	${CXX} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
 
 # compiling main executable sources
 ${BUILD_DIR}/app/%.o: src/app/%.cpp
 	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
+	@$(CXX) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
 
 # compiling engine sources
 ${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},) ${THIRD_PARTY_DEPS}
 	$(info > Compiling $@)
-	@$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private $(if $(USE_PCH),-include-pch ${PRECOMPILED_HEADER},) -c $< -o $@
+	@$(CXX) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private $(if $(USE_PCH),-include-pch ${PRECOMPILED_HEADER},) -c $< -o $@
 
 ${PRECOMPILED_HEADER}: src/engine/include/engine/Precompiled.hpp
 	$(info > Precompiled header $@)
-	$(CC) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c -o $@ -xc++-header $<
+	$(CXX) ${COMPILE_FLAGS} ${INCLUDE_DIR} -c -o $@ -xc++-header $<
 
 # compiling third party
+
+imgui_dir=third_party/imgui
+imgui_obj_=imgui.o imgui_demo.o imgui_draw.o imgui_tables.o \
+	imgui_widgets.o backends/imgui_impl_glfw.o backends/imgui_impl_opengl3.o
+imgui_obj = $(addprefix ${BUILD_DIR}/${imgui_dir}/, ${imgui_obj_})
+
+${BUILD_DIR}/third_party/imgui/%.o: third_party/imgui/%.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(if ${USE_HOT_RELOADING},-fPIC,) -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
+${BUILD_DIR}/third_party/imgui/libimgui.a: $(imgui_obj)
+	@ar r $@ ${imgui_obj}
+
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)
 
@@ -250,7 +266,7 @@ ${BUILD_DIR}/third_party/glfw/src/libglfw3.a:
 
 ${BUILD_DIR}/third_party/glad/gl.o:
 	mkdir -p $(dir $@)
-	$(CC) ${COMPILE_FLAGS} -DGLAD_API_CALL_EXPORT=1 -DGLAD_API_CALL_EXPORT_BUILD=1 -I third_party/glad/include -c third_party/glad/src/gl.c -o $@
+	$(CXX) ${COMPILE_FLAGS} -DGLAD_API_CALL_EXPORT=1 -DGLAD_API_CALL_EXPORT_BUILD=1 -I third_party/glad/include -c third_party/glad/src/gl.c -o $@
 
 ${BUILD_DIR}/third_party/glm/glm/libglm.a:
 	cmake -S third_party/glm \
@@ -263,7 +279,7 @@ ${BUILD_DIR}/third_party/glm/glm/libglm.a:
 
 ${BUILD_DIR}/third_party/stb/stb_image.o:
 	mkdir -p $(dir $@)
-	$(CC) ${COMPILE_FLAGS} -I third_party/stb -c src/third_party/StbImage.cpp -o $@
+	$(CXX) ${COMPILE_FLAGS} -I third_party/stb -c src/third_party/StbImage.cpp -o $@
 
 ${outdirs_engine} ${outdirs_app} ${INSTALL_DIR}:
 	mkdir -p $@

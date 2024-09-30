@@ -20,3 +20,6 @@
 	path = third_party/concurrentqueue
 	url = https://github.com/cameron314/concurrentqueue.git
 	branch = tags/v1.0.4
+[submodule "third_party/imgui"]
+	path = third_party/imgui
+	url = https://github.com/ocornut/imgui.git

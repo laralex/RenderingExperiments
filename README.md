@@ -58,6 +58,7 @@ Now you can choose to install prerequisites automatically, or manually
 
 Internal dependencies (you don't need to do anything to install):
 * OpenGL `4.3`
+* [imgui](https://github.com/ocornut/imgui) `v1.91.2` for user interface
 * [GLFW](https://github.com/glfw/glfw) `v3.4` for cross-platform window interaction
 * [GLM](https://github.com/g-truc/glm) `v1.0.1` for math utilities
 * [GLAD](https://gen.glad.sh/) `v2.0.7` for fetching OpenGL function pointers
