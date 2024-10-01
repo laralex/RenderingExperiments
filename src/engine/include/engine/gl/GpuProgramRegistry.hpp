@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/gl/Shader.hpp"
+#include "engine/ShaderDefine.hpp"
 #include "engine/platform/FileChangeNotifier.hpp"
 #include <cstddef>
 #include <memory>
@@ -11,10 +12,10 @@ namespace engine::gl {
 class GlContext;
 class GpuProgram;
 
-class GpuProgramOwner final : public engine::platform::IFileWatcher {
+class GpuProgramRegistry final : public engine::platform::IFileWatcher {
 
 public:
-#define Self GpuProgramOwner
+#define Self GpuProgramRegistry
     Self()                       = default;
     ~Self()                      = default;
     Self(Self const&)            = delete;

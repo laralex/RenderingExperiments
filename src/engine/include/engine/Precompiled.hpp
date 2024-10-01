@@ -27,7 +27,7 @@
 #include "engine/gl/Context.hpp"
 #include "engine/gl/Debug.hpp"
 #include "engine/gl/Extensions.hpp"
-#include "engine/gl/GpuProgramOwner.hpp"
+#include "engine/gl/GpuProgramRegistry.hpp"
 
 struct GLFWwindow;
 

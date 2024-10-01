@@ -9,7 +9,7 @@
 
 namespace engine::gl {
 
-class GpuProgramOwner;
+class GpuProgramRegistry;
 class GpuProgram;
 
 class GlContext final {
@@ -30,14 +30,14 @@ public:
     auto Capabilities [[nodiscard]] () const -> GlCapabilities const& { return capabilities_; }
     auto TextureUnits [[nodiscard]] () -> GlTextureUnits& { return textureUnits_; }
     auto GetProgram [[nodiscard]] (GpuProgramHandle const& handle) const -> GpuProgram const&;
-    auto Programs [[nodiscard]] () const -> std::shared_ptr<GpuProgramOwner> { return programOwner_; }
+    auto Programs [[nodiscard]] () const -> std::shared_ptr<GpuProgramRegistry> { return programOwner_; }
 
 private:
     bool isInitialized_{false};
     GlExtensions extensions_{};
     GlCapabilities capabilities_{};
     GlTextureUnits textureUnits_{};
-    std::shared_ptr<GpuProgramOwner> programOwner_{};
+    std::shared_ptr<GpuProgramRegistry> programOwner_{};
 };
 
 } // namespace engine::gl

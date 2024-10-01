@@ -8,7 +8,7 @@
 #include "engine/UvSphereMesh.hpp"
 #include "engine/gl/Buffer.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
-#include "engine/gl/GpuProgramOwner.hpp"
+#include "engine/gl/GpuProgramRegistry.hpp"
 #include "engine/gl/Sampler.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"

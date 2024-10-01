@@ -1,4 +1,4 @@
-#include "engine/gl/GpuProgramOwner.hpp"
+#include "engine/gl/GpuProgramRegistry.hpp"
 #include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/platform/Filesystem.hpp"
@@ -15,28 +15,28 @@ auto HasEnding [[nodiscard]] (std::string_view const str, std::string_view endin
 
 namespace engine::gl {
 
-auto GpuProgramOwner::ViewProgram(GpuProgramHandle const& handle) const -> GpuProgram const& {
+auto GpuProgramRegistry::ViewProgram(GpuProgramHandle const& handle) const -> GpuProgram const& {
     auto find = programs_.find(handle.Inner());
     assert(find != std::cend(programs_));
     return *find->second.program.get();
 }
 
-auto GpuProgramOwner::ProvideProgram(GpuProgramHandle const& handle) const -> std::weak_ptr<GpuProgram> {
+auto GpuProgramRegistry::ProvideProgram(GpuProgramHandle const& handle) const -> std::weak_ptr<GpuProgram> {
     auto find = programs_.find(handle.Inner());
     if (find == std::cend(programs_)) { return {}; }
     return find->second.program;
 }
 
-void GpuProgramOwner::DisposeProgram(GpuProgramHandle && handle) {
+void GpuProgramRegistry::DisposeProgram(GpuProgramHandle && handle) {
     [[maybe_unused]] auto isDeleted = programs_.erase(handle) > 0;
     handle.UnsafeReset();
 }
 
-auto GpuProgramOwner::LinkProgramFromFiles(
+auto GpuProgramRegistry::LinkProgramFromFiles(
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     std::vector<shader::Define>&& defines, std::string_view name, bool hotReload, bool logCode)
     -> std::optional<GpuProgramHandle> {
-    assert(false && "Rename to GpuProgramRegistry move hot-reloading to new GpuProgramHotreloader")
+    //assert(false && "Rename to GpuProgramRegistry move hot-reloading to new GpuProgramHotreloader");
     std::error_code err;
     std::string vertexFullFilepath, fragmentFullFilepath;
     vertexFullFilepath = platform::AbsolutePath(vertexFilepath, err).string();
@@ -64,8 +64,8 @@ auto GpuProgramOwner::LinkProgramFromFiles(
     return std::optional{GpuProgramHandle{freeHandle}};
 }
 
-void GpuProgramOwner::OnFileChanged(std::string const& path, bool isDirectory) {
-    XLOG("GpuProgramOwner detected change {}", path.c_str());
+void GpuProgramRegistry::OnFileChanged(std::string const& path, bool isDirectory) {
+    XLOG("GpuProgramRegistry detected change {}", path.c_str());
     bool isVert    = HasEnding(path, shader::VERTEX_FILE_EXTENSION);
     bool isFrag    = HasEnding(path, shader::FRAGMENT_FILE_EXTENSION);
     bool isCompute = HasEnding(path, shader::COMPUTE_FILE_EXTENSION);
@@ -85,19 +85,19 @@ void GpuProgramOwner::OnFileChanged(std::string const& path, bool isDirectory) {
     }
 }
 
-void GpuProgramOwner::HotReloadPrograms(GlContext const& gl) {
+void GpuProgramRegistry::HotReloadPrograms(GlContext const& gl) {
     for (auto const& handle : pendingHotReload_) {
         bool ok   = false;
         auto find = programs_.find(handle);
         if (find == std::cend(programs_)) { continue; }
         auto const& payload = find->second;
         auto programType    = payload.program->Type();
-        if (programType == GpuProgram::Type::GRAPHICAL) {
+        if (programType == GpuProgramType::GRAPHICAL) {
             ok = RelinkProgramFromFiles(
                 gl, payload.shadersFilepaths[0].c_str(), payload.shadersFilepaths[1].c_str(),
                 CpuView{payload.defines.data(), payload.defines.size()}, *payload.program.get(), false);
-        } else if (programType == GpuProgram::Type::COMPUTE) {
-            assert(false && "GpuProgramOwner::OnFileChanged not implemented for compute shaders");
+        } else if (programType == GpuProgramType::COMPUTE) {
+            assert(false && "GpuProgramRegistry::OnFileChanged not implemented for compute shaders");
         }
         if (!ok) { XLOGE("ProgramOwner failed to hot-reload program: {:08X}", payload.program->Id()); }
     }

@@ -10,7 +10,7 @@
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/GpuMesh.hpp"
 #include "engine/gl/GpuProgram.hpp"
-#include "engine/gl/GpuProgramOwner.hpp"
+#include "engine/gl/GpuProgramRegistry.hpp"
 #include "engine/gl/Renderbuffer.hpp"
 #include "engine/gl/SamplersCache.hpp"
 #include "engine/gl/Texture.hpp"

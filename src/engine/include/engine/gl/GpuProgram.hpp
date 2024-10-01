@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
+#include "engine/ShaderDefine.hpp"
 
 namespace engine::gl {
 
@@ -16,23 +17,18 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    enum Type {
-        GRAPHICAL,
-        COMPUTE,
-    };
-
     static auto Allocate
         [[nodiscard]] (GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name = {})
         -> std::optional<GpuProgram>;
     auto LinkGraphical [[nodiscard]] (GLuint vertexShader, GLuint fragmentShader, bool isRecompile = false) const
         -> bool;
     auto Id [[nodiscard]] () const -> GLuint { return programId_; }
-    auto Type [[nodiscard]] () const -> Type { return type_; }
+    auto Type [[nodiscard]] () const -> GpuProgramType { return type_; }
 
 private:
     void Dispose();
     GlHandle programId_ = GlHandle{GL_NONE};
-    enum Type type_     = Type::GRAPHICAL;
+    enum GpuProgramType type_     = GpuProgramType::GRAPHICAL;
 
     friend class UniformCtx;
 };
