@@ -56,14 +56,13 @@ static void ConfigureApplication(
             .WithLinearMinify(false)
             .WithWrap(GL_REPEAT));
 
-    using gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_UV_LOCATION", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_TEXTURE_LOCATION", .value = UNIFORM_TEXTURE_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_TEXTURE_BINDING", .value = UNIFORM_TEXTURE_BINDING, .type = Define::INT32},
-        Define{.name = "UBO_SAMPLER_TILING_BINDING", .value = UBO_SAMPLER_TILING_BINDING, .type = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("ATTRIB_POSITION_LOCATION", ATTRIB_POSITION_LOCATION),
+        ShaderDefine::I32("ATTRIB_UV_LOCATION", ATTRIB_UV_LOCATION),
+        ShaderDefine::I32("UNIFORM_MVP_LOCATION", UNIFORM_MVP_LOCATION),
+        ShaderDefine::I32("UNIFORM_TEXTURE_LOCATION", UNIFORM_TEXTURE_LOCATION),
+        ShaderDefine::I32("UNIFORM_TEXTURE_BINDING", UNIFORM_TEXTURE_BINDING),
+        ShaderDefine::I32("UBO_SAMPLER_TILING_BINDING", UBO_SAMPLER_TILING_BINDING),
     };
 
     auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(

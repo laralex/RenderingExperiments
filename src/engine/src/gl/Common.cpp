@@ -43,7 +43,7 @@ ENGINE_EXPORT auto LinkProgram(
 
 ENGINE_EXPORT auto LinkProgramFromFiles(
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<shader::Define const> defines, std::string_view name, bool logCode) -> std::optional<GpuProgram> {
+    CpuView<ShaderDefine const> defines, std::string_view name, bool logCode) -> std::optional<GpuProgram> {
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
     std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);
     return LinkProgram(gl, vertexShaderCode, fragmentShaderCode, name, logCode);
@@ -68,7 +68,7 @@ ENGINE_EXPORT auto RelinkProgram(
 
 ENGINE_EXPORT auto RelinkProgramFromFiles(
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<shader::Define const> defines, GpuProgram const& oldProgram, bool logCode) -> bool {
+    CpuView<ShaderDefine const> defines, GpuProgram const& oldProgram, bool logCode) -> bool {
     std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
     std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);
     return RelinkProgram(gl, vertexShaderCode, fragmentShaderCode, oldProgram, logCode);

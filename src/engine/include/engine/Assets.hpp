@@ -70,7 +70,7 @@ enum class ShaderType {
     COMPUTE,
 };
 auto LoadShaderCode
-    [[nodiscard]] (std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines)
+    [[nodiscard]] (std::string_view const filepath, ShaderType type, CpuView<ShaderDefine const> defines)
     -> std::string;
 } // namespace shader
 

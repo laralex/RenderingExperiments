@@ -38,11 +38,10 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
                            .offset          = offsetof(LineRendererInput::Vertex, colorIdx)})
                       .MakeUnindexed(maxLines * 2);
 
-    using Define                = gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("ATTRIB_POSITION", ATTRIB_POSITION_LOCATION),
+        ShaderDefine::I32("ATTRIB_COLOR", ATTRIB_COLOR_LOCATION),
+        ShaderDefine::I32("UNIFORM_MVP", UNIFORM_MVP_LOCATION),
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(

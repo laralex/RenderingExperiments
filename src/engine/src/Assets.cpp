@@ -133,7 +133,7 @@ ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureAr
 namespace engine::gl::shader {
 
 ENGINE_EXPORT auto LoadShaderCode(
-    std::string_view const filepath, ShaderType type, CpuView<shader::Define const> defines) -> std::string {
+    std::string_view const filepath, ShaderType type, CpuView<ShaderDefine const> defines) -> std::string {
     std::string code          = LoadTextFile(filepath);
     static bool isInitialized = false;
     static IncludeRegistry includeCommon{};

@@ -138,12 +138,11 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
                            .offset          = offsetof(Vertex, colorIdx)})
                       .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    using gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_COLOR", .value = ATTRIB_COLOR_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_SCALE", .value = UNIFORM_SCALE_LOCATION, .type = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("ATTRIB_POSITION", ATTRIB_POSITION_LOCATION),
+        ShaderDefine::I32("ATTRIB_COLOR", ATTRIB_COLOR_LOCATION),
+        ShaderDefine::I32("UNIFORM_MVP", UNIFORM_MVP_LOCATION),
+        ShaderDefine::I32("UNIFORM_SCALE", UNIFORM_SCALE_LOCATION),
     };
 
     auto makeProgram = [&](GpuProgramHandle& out, std::string_view name) {

@@ -180,7 +180,7 @@ ENGINE_EXPORT auto ParseParts(std::string_view code) -> ShaderParsing {
 }
 
 ENGINE_EXPORT auto GenerateCode
-    [[nodiscard]] (std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<Define const> defines)
+    [[nodiscard]] (std::string_view originalCode, IncludeRegistry const& includeRegistry, CpuView<ShaderDefine const> defines)
     -> std::string {
     auto parsing = shader::ParseParts(originalCode);
     std::stringstream ss;
@@ -196,26 +196,26 @@ ENGINE_EXPORT auto GenerateCode
     return ss.str();
 }
 
-ENGINE_EXPORT void InjectDefines(std::stringstream& destination, CpuView<shader::Define const> defines) {
+ENGINE_EXPORT void InjectDefines(std::stringstream& destination, CpuView<ShaderDefine const> defines) {
     if constexpr (engine::XDEBUG_BUILD) { destination << "#define DEBUG 1\n"; }
     size_t numDefines = defines.NumElements();
     for (size_t i = 0; i < numDefines; ++i) {
-        shader::Define const& define = *defines[i];
+        ShaderDefine const& define = *defines[i];
         destination << "#define" << ' ' << define.name << ' ';
         switch (define.type) {
-        case shader::Define::INT32:
+        case ShaderDefine::INT32:
             destination << define.value.i32;
             break;
-        case shader::Define::UINT32:
+        case ShaderDefine::UINT32:
             destination << define.value.ui32;
             break;
-        case shader::Define::FLOAT32:
+        case ShaderDefine::FLOAT32:
             destination << define.value.f32;
             break;
-        case shader::Define::FLOAT64:
+        case ShaderDefine::FLOAT64:
             destination << define.value.f64;
             break;
-        case shader::Define::BOOLEAN8:
+        case ShaderDefine::BOOLEAN8:
             destination << define.value.b8;
             break;
         }
@@ -223,7 +223,7 @@ ENGINE_EXPORT void InjectDefines(std::stringstream& destination, CpuView<shader:
     }
 }
 
-ENGINE_EXPORT auto InjectDefines(std::string_view code, CpuView<shader::Define const> defines) -> std::string {
+ENGINE_EXPORT auto InjectDefines(std::string_view code, CpuView<ShaderDefine const> defines) -> std::string {
     std::stringstream ss;
     auto versionEnd = code.find('\n') + 1;
     ss << code.substr(0U, versionEnd);

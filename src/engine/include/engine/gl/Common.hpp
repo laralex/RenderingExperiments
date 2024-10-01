@@ -6,6 +6,7 @@
 
 #include "engine/gl/Context.hpp"
 #include "engine/gl/IGlDisposable.hpp"
+#include "engine/ShaderDefine.hpp"
 
 namespace engine {
 template <typename T> struct CpuView;
@@ -25,7 +26,7 @@ auto LinkProgram [[nodiscard]] (
     std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
 auto LinkProgramFromFiles [[nodiscard]] (
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<shader::Define const> defines, std::string_view name = {}, bool logCode = false)
+    CpuView<ShaderDefine const> defines, std::string_view name = {}, bool logCode = false)
 -> std::optional<GpuProgram>;
 
 auto RelinkProgram [[nodiscard]] (
@@ -33,7 +34,7 @@ auto RelinkProgram [[nodiscard]] (
     GpuProgram const& oldProgram, bool logCode) -> bool;
 auto RelinkProgramFromFiles [[nodiscard]] (
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<shader::Define const> defines, GpuProgram const& oldProgram, bool logCode) -> bool;
+    CpuView<ShaderDefine const> defines, GpuProgram const& oldProgram, bool logCode) -> bool;
 
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
 void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);

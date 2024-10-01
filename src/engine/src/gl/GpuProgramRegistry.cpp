@@ -34,7 +34,7 @@ void GpuProgramRegistry::DisposeProgram(GpuProgramHandle && handle) {
 
 auto GpuProgramRegistry::LinkProgramFromFiles(
     GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    std::vector<shader::Define>&& defines, std::string_view name, bool hotReload, bool logCode)
+    std::vector<ShaderDefine>&& defines, std::string_view name, bool hotReload, bool logCode)
     -> std::optional<GpuProgramHandle> {
     //assert(false && "Rename to GpuProgramRegistry move hot-reloading to new GpuProgramHotreloader");
     std::error_code err;

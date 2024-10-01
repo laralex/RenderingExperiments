@@ -56,14 +56,13 @@ namespace engine::gl {
 ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     FlatRenderer renderer;
 
-    using Define                = gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "ATTRIB_POSITION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_UV", .value = ATTRIB_UV_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_NORMAL", .value = ATTRIB_NORMAL_LOCATION, .type = Define::INT32},
-        Define{.name = "UBO_BINDING", .value = UBO_BINDING, .type = Define::INT32},
-        Define{.name = "USE_SPECULAR", .value = true, .type = Define::BOOLEAN8},
-        Define{.name = "USE_PHONG", .value = false, .type = Define::BOOLEAN8},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("ATTRIB_POSITION", ATTRIB_POSITION_LOCATION),
+        ShaderDefine::I32("ATTRIB_UV", ATTRIB_UV_LOCATION),
+        ShaderDefine::I32("ATTRIB_NORMAL", ATTRIB_NORMAL_LOCATION),
+        ShaderDefine::I32("UBO_BINDING", UBO_BINDING),
+        ShaderDefine::B8("USE_SPECULAR", true),
+        ShaderDefine::B8("USE_PHONG", false),
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(

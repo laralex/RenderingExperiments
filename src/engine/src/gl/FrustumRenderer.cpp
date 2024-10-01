@@ -166,13 +166,12 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
                            .offset          = offsetof(Vertex, isNear)})
                       .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    using Define                = gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "ATTRIB_FRUSTUM_WEIGHTS", .value = ATTRIB_FRUSTUM_WEIGHTS_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_OTHER_WEIGHTS", .value = ATTRIB_OTHER_WEIGHTS_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_MVP", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
-        Define{.name = "UBO_FRUSTUM", .value = UBO_BINDING, .type = Define::INT32},
-        Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("ATTRIB_FRUSTUM_WEIGHTS", ATTRIB_FRUSTUM_WEIGHTS_LOCATION),
+        ShaderDefine::I32("ATTRIB_OTHER_WEIGHTS", ATTRIB_OTHER_WEIGHTS_LOCATION),
+        ShaderDefine::I32("UNIFORM_MVP", UNIFORM_MVP_LOCATION),
+        ShaderDefine::I32("UBO_FRUSTUM", UBO_BINDING),
+        ShaderDefine::I32("UNIFORM_COLOR_LOCATION", UNIFORM_COLOR_LOCATION),
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(

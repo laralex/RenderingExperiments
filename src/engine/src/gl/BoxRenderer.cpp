@@ -1,6 +1,7 @@
 
 #include "engine/gl/BoxRenderer.hpp"
 #include "engine/Assets.hpp"
+#include "engine/ShaderDefine.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -136,13 +137,12 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
                            .offset          = offsetof(Vertex, innerMarker)})
                       .MakeIndexed(renderer.indexBuffer_, GL_UNSIGNED_BYTE);
 
-    using gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "ATTRIB_POSITION_LOCATION", .value = ATTRIB_POSITION_LOCATION, .type = Define::INT32},
-        Define{.name = "ATTRIB_INNER_MARKER_LOCATION", .value = ATTRIB_INNER_MARKER_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_MVP_LOCATION", .value = UNIFORM_MVP_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_THICKNESS_LOCATION", .value = UNIFORM_THICKNESS_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("ATTRIB_POSITION_LOCATION", ATTRIB_POSITION_LOCATION),
+        ShaderDefine::I32("ATTRIB_INNER_MARKER_LOCATION", ATTRIB_INNER_MARKER_LOCATION),
+        ShaderDefine::I32("UNIFORM_MVP_LOCATION", UNIFORM_MVP_LOCATION),
+        ShaderDefine::I32("UNIFORM_THICKNESS_LOCATION", UNIFORM_THICKNESS_LOCATION),
+        ShaderDefine::I32("UNIFORM_COLOR_LOCATION", UNIFORM_COLOR_LOCATION),
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(

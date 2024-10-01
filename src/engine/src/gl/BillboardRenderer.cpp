@@ -22,14 +22,9 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragm
     constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
     BillboardRenderer renderer;
 
-    using Define                = gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "UBO_BINDING", .value = UBO_CONTEXT_BINDING, .type = Define::INT32},
-        // Define{.name = "UNIFORM_COLOR_LOCATION", .value = UNIFORM_COLOR_LOCATION, .type = Define::INT32},
-        Define{
-            .name  = "UNIFORM_TEXTURE_LOCATION",
-            .value = BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION,
-            .type  = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("UBO_BINDING", UBO_CONTEXT_BINDING),
+        ShaderDefine::I32("UNIFORM_TEXTURE_LOCATION", DEFAULT_UNIFORM_TEXTURE_LOCATION),
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(

@@ -29,7 +29,7 @@ public:
         bool hotReload                                = false;
         constexpr static size_t MAX_NUM_SHADERS       = 4; // typically 2 for vertex-fragment pair, 1 for compute
         std::string shadersFilepaths[MAX_NUM_SHADERS] = {};
-        std::vector<shader::Define> defines           = {};
+        std::vector<ShaderDefine> defines           = {};
     };
 
     auto ViewProgram [[nodiscard]] (GpuProgramHandle const& handle) const -> GpuProgram const&;
@@ -49,7 +49,7 @@ public:
 
     auto LinkProgramFromFiles [[nodiscard]] (
         GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-        std::vector<shader::Define>&& defines, std::string_view name, bool hotReload = true, bool logCode = false)
+        std::vector<ShaderDefine>&& defines, std::string_view name, bool hotReload = true, bool logCode = false)
     -> std::optional<GpuProgramHandle>;
 
     void HotReloadPrograms(GlContext const& gl);

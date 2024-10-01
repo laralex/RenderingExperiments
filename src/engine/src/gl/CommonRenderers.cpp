@@ -19,10 +19,9 @@ constexpr int32_t POINTS_FIRST_EXTERNAL        = 64;
 auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgramHandle {
     using namespace engine;
 
-    using Define                = gl::shader::Define;
-    std::vector<Define> defines = {
-        Define{.name = "UNIFORM_TEXTURE", .value = BLIT_UNIFORM_TEXTURE_LOCATION, .type = Define::INT32},
-        Define{.name = "UNIFORM_UV_SCALE", .value = BLIT_UNIFORM_UV_SCALE_LOCATION, .type = Define::INT32},
+    std::vector<ShaderDefine> defines = {
+        ShaderDefine::I32("UNIFORM_TEXTURE", BLIT_UNIFORM_TEXTURE_LOCATION),
+        ShaderDefine::I32("UNIFORM_UV_SCALE", BLIT_UNIFORM_UV_SCALE_LOCATION),
     };
 
     auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
