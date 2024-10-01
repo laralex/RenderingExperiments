@@ -16,7 +16,7 @@ constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragmentShader) -> BillboardRenderer {
+ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext& gl, GLuint fragmentShader) -> BillboardRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
     constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
@@ -27,12 +27,12 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragm
         ShaderDefine::I32("UNIFORM_TEXTURE_LOCATION", DEFAULT_UNIFORM_TEXTURE_LOCATION),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         gl, "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag", std::move(defines),
         "BillboardRenderer - Quad");
     assert(maybeProgram);
     renderer.quadVaoProgram_ = std::move(*maybeProgram);
-    auto programGuard        = UniformCtx{gl.GetProgram(renderer.quadVaoProgram_)};
+    auto programGuard        = UniformCtx{*renderer.quadVaoProgram_};
     // programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, 1.0f, 0.42f, 1.0f, 1.0f);
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
@@ -44,13 +44,10 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext const& gl, GLuint fragm
     return renderer;
 }
 
-ENGINE_EXPORT void BillboardRenderer::Dispose(GlContext const& gl) {
-    gl.Programs()->DisposeProgram(std::move(quadVaoProgram_));
-}
+ENGINE_EXPORT void BillboardRenderer::Dispose(GlContext const& gl) { }
 
 ENGINE_EXPORT void BillboardRenderer::Render(GlContext const& gl, BillboardRenderArgs const& args) const {
-    GpuProgram const& program = gl.GetProgram(quadVaoProgram_);
-    auto programGuard         = gl::UniformCtx(program);
+    auto programGuard         = gl::UniformCtx(*quadVaoProgram_);
 
     ubo_.Fill(CpuMemory<GLvoid const>{&args.shaderArgs, sizeof(args.shaderArgs)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));

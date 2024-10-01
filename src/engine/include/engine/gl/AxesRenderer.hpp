@@ -21,7 +21,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (GlContext const& gl) -> AxesRenderer;
+    static auto Allocate [[nodiscard]] (GlContext& gl) -> AxesRenderer;
     void Render(GlContext const& gl, glm::mat4 const& mvp, float scale = 1.0f) const;
     void Dispose(GlContext const& gl) override;
 
@@ -29,8 +29,8 @@ private:
     Vao vao_                            = Vao{};
     GpuBuffer attributeBuffer_          = GpuBuffer{};
     GpuBuffer indexBuffer_              = GpuBuffer{};
-    GpuProgramHandle customizedProgram_ = GpuProgramHandle{};
-    GpuProgramHandle defaultProgram_    = GpuProgramHandle{};
+    std::shared_ptr<GpuProgram> customizedProgram_ = {};
+    std::shared_ptr<GpuProgram> defaultProgram_    = {};
 };
 
 } // namespace engine::gl

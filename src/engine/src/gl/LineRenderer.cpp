@@ -12,7 +12,7 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) -> LineRenderer {
+ENGINE_EXPORT auto LineRenderer::Allocate(GlContext& gl, size_t maxLines) -> LineRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
 
@@ -44,7 +44,7 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
         ShaderDefine::I32("UNIFORM_MVP", UNIFORM_MVP_LOCATION),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         gl, "data/engine/shaders/lines.vert", "data/engine/shaders/color_palette.frag", std::move(defines),
         "LineRenderer");
     assert(maybeProgram);
@@ -54,11 +54,11 @@ ENGINE_EXPORT auto LineRenderer::Allocate(GlContext const& gl, size_t maxLines) 
 }
 
 ENGINE_EXPORT void LineRenderer::Dispose(GlContext const& gl) {
-    gl.Programs()->DisposeProgram(std::move(program_));
+
 }
 
 ENGINE_EXPORT void LineRenderer::Render(GlContext const& gl, glm::mat4 const& camera) const {
-    auto programGuard = UniformCtx{gl.GetProgram(program_)};
+    auto programGuard = UniformCtx{*program_};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVao(vao_, GL_LINES);
 }

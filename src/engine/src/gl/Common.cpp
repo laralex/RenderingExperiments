@@ -29,7 +29,7 @@ auto AllocateGraphicalShaders
 namespace engine::gl {
 
 ENGINE_EXPORT auto LinkProgram(
-    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name,
+    GlContext& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name,
     bool logCode) -> std::optional<GpuProgram> {
 
     auto [vertexShader, fragmentShader] = AllocateGraphicalShaders(vertexShaderCode, fragmentShaderCode, logCode);
@@ -42,11 +42,17 @@ ENGINE_EXPORT auto LinkProgram(
 }
 
 ENGINE_EXPORT auto LinkProgramFromFiles(
-    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<ShaderDefine const> defines, std::string_view name, bool logCode) -> std::optional<GpuProgram> {
-    std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
-    std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);
-    return LinkProgram(gl, vertexShaderCode, fragmentShaderCode, name, logCode);
+    GlContext& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
+    std::vector<ShaderDefine>&& defines, std::string_view name, bool logCode) -> std::optional<std::shared_ptr<GpuProgram>> {
+    auto definesView = CpuView{defines.data(), std::size(defines)};
+    std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, definesView);
+    std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, definesView);
+    auto maybeProgram = LinkProgram(gl, vertexShaderCode, fragmentShaderCode, name, logCode);
+    if (!maybeProgram) { return std::nullopt; }
+
+    auto program = std::make_shared<GpuProgram>(std::move(*maybeProgram));
+    gl.Programs()->RegisterProgram(program, vertexFilepath, fragmentFilepath, std::move(defines));
+    return std::optional{program};
 }
 
 ENGINE_EXPORT auto RelinkProgram(

@@ -35,7 +35,6 @@ Application::~Application() {
     XLOG("Disposing application");
     this->commonRenderers.Dispose(this->gl);
     this->flatRenderer.Dispose(this->gl);
-    this->gl.Programs()->DisposeProgram(std::move(this->program));
 }
 
 static void ConfigureApplication(
@@ -45,7 +44,7 @@ static void ConfigureApplication(
     app->gl.Initialize();
     gl::InitializeDebug(app->gl);
     assert(app->fileNotifier.Initialize());
-    auto shaderWatcher = app->gl.Programs();
+    std::shared_ptr<engine::gl::GpuProgramRegistry> shaderWatcher = app->gl.Programs();
     // assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, "data/app/shaders"));
 
     app->commonRenderers.Initialize(app->gl);
@@ -65,7 +64,7 @@ static void ConfigureApplication(
         ShaderDefine::I32("UBO_SAMPLER_TILING_BINDING", UBO_SAMPLER_TILING_BINDING),
     };
 
-    auto maybeProgram = app->gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         app->gl, "data/app/shaders/triangle.vert", "data/app/shaders/texture.frag", std::move(defines), "Test program");
     assert(maybeProgram);
     app->program = std::move(*maybeProgram);
@@ -273,7 +272,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.4f, ColorCode::CYAN);
 
         constexpr GLint TEXTURE_SLOT = 0;
-        auto programGuard            = gl::UniformCtx(app->gl.GetProgram(app->program));
+        auto programGuard            = gl::UniformCtx(*app->program);
         programGuard.SetUniformTexture(UNIFORM_TEXTURE_LOCATION, TEXTURE_SLOT);
         programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
         GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_SAMPLER_TILING_BINDING, app->uboSamplerTiling.Id()));

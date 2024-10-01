@@ -53,7 +53,7 @@ struct Application final {
     engine::gl::GpuMesh sphereMesh                         = engine::gl::GpuMesh{};
     engine::gl::GpuMesh sphereMesh2                        = engine::gl::GpuMesh{};
     engine::gl::GpuMesh planeMesh                          = engine::gl::GpuMesh{};
-    engine::gl::GpuProgramHandle program                   = engine::gl::GpuProgramHandle{};
+    std::shared_ptr<engine::gl::GpuProgram> program        = {};
     engine::gl::Texture texture                            = engine::gl::Texture{};
     engine::gl::GpuBuffer uboSamplerTiling                 = engine::gl::GpuBuffer{};
     UboDataSamplerTiling uboDataSamplerTiling              = {};

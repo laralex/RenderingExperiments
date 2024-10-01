@@ -83,7 +83,7 @@ private:
 
     Vao datalessTriangleVao_ = Vao{};
     Vao datalessQuadVao_ = Vao{};
-    GpuProgramHandle blitProgram_ = GpuProgramHandle{};
+    std::shared_ptr<GpuProgram> blitProgram_ = {};
     SamplersCache::CacheKey samplerNearest_ = {};
     SamplersCache::CacheKey samplerLinear_ = {};
     SamplersCache::CacheKey samplerLinearRepeat_ = {};

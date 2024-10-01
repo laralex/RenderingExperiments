@@ -16,7 +16,7 @@ constexpr GLint UNIFORM_MVP_LOCATION = 0;
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints) -> PointRenderer {
+ENGINE_EXPORT auto PointRenderer::Allocate(GlContext& gl, size_t maxPoints) -> PointRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION        = 0;
     constexpr GLint ATTRIB_UV_LOCATION              = 1;
     constexpr GLint ATTRIB_NORMAL_LOCATION          = 2;
@@ -107,7 +107,7 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
         ShaderDefine::I32("UNIFORM_MVP", UNIFORM_MVP_LOCATION),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         gl, "data/engine/shaders/instanced_simple.vert", "data/engine/shaders/color_palette.frag", std::move(defines),
         "PointRenderer");
     assert(maybeProgram);
@@ -120,7 +120,7 @@ ENGINE_EXPORT auto PointRenderer::Allocate(GlContext const& gl, size_t maxPoints
 
 
 ENGINE_EXPORT void PointRenderer::Dispose(GlContext const& gl) {
-    gl.Programs()->DisposeProgram(std::move(program_));
+
 }
 
 ENGINE_EXPORT void PointRenderer::Render(
@@ -129,7 +129,7 @@ ENGINE_EXPORT void PointRenderer::Render(
         // XLOGW("Limit of points is <= 0 in PointRenderer");
         return;
     }
-    auto programGuard = UniformCtx{gl.GetProgram(program_)};
+    auto programGuard = UniformCtx{*program_};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVaoInstanced(
         vao_, std::min(firstInstance, lastInstance_), std::min(lastInstance_ - firstInstance, numInstances));

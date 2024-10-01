@@ -4,7 +4,7 @@
 #include "engine/gl/Capabilities.hpp"
 #include "engine/gl/Extensions.hpp"
 #include "engine/gl/TextureUnits.hpp"
-#include "engine/gl/GpuProgramHandle.hpp"
+#include "engine/gl/GpuProgramRegistry.hpp"
 #include <memory>
 
 namespace engine::gl {
@@ -29,15 +29,15 @@ public:
     auto Extensions [[nodiscard]] () const -> GlExtensions const& { return extensions_; }
     auto Capabilities [[nodiscard]] () const -> GlCapabilities const& { return capabilities_; }
     auto TextureUnits [[nodiscard]] () -> GlTextureUnits& { return textureUnits_; }
-    auto GetProgram [[nodiscard]] (GpuProgramHandle const& handle) const -> GpuProgram const&;
-    auto Programs [[nodiscard]] () const -> std::shared_ptr<GpuProgramRegistry> { return programOwner_; }
+    auto Programs [[nodiscard]] () const -> std::shared_ptr<GpuProgramRegistry> { return programsRegistry_; }
 
 private:
     bool isInitialized_{false};
     GlExtensions extensions_{};
     GlCapabilities capabilities_{};
     GlTextureUnits textureUnits_{};
-    std::shared_ptr<GpuProgramRegistry> programOwner_{};
+    // NOTE: it's a shared ptr, because it's given by a weak ptr into filesystem watcher
+    std::shared_ptr<GpuProgramRegistry> programsRegistry_{};
 };
 
 } // namespace engine::gl

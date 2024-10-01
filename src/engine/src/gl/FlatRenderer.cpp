@@ -53,7 +53,7 @@ constexpr GLint UBO_BINDING = 5; // global for GL
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
+ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext& gl) -> FlatRenderer {
     FlatRenderer renderer;
 
     std::vector<ShaderDefine> defines = {
@@ -65,7 +65,7 @@ ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
         ShaderDefine::B8("USE_PHONG", false),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         gl, "data/engine/shaders/blinn_phong.vert", "data/engine/shaders/blinn_phong.frag", std::move(defines),
         "Lambert diffuse");
     assert(maybeProgram);
@@ -74,14 +74,12 @@ ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext const& gl) -> FlatRenderer {
     renderer.ubo_ = gl::GpuBuffer::Allocate(
         gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)},
         "FlatRenderer UBO");
-    renderer.uboLocation_ = UniformCtx::GetUboLocation(gl.GetProgram(renderer.program_), "Ubo");
+    renderer.uboLocation_ = UniformCtx::GetUboLocation(*renderer.program_, "Ubo");
 
     return renderer;
 }
 
-ENGINE_EXPORT void FlatRenderer::Dispose(GlContext const& gl) {
-    gl.Programs()->DisposeProgram(std::move(program_));
-}
+ENGINE_EXPORT void FlatRenderer::Dispose(GlContext const& gl) { }
 
 ENGINE_EXPORT void FlatRenderer::Render(GlContext const& gl, FlatRenderArgs const& args) const {
     glm::mat3x4 normalToWorld = glm::transpose(glm::inverse(args.modelToWorld));
@@ -111,7 +109,7 @@ ENGINE_EXPORT void FlatRenderer::Render(GlContext const& gl, FlatRenderArgs cons
     ubo_.Fill(CpuMemory<GLvoid const>{&data, sizeof(data)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_BINDING, ubo_.Id()));
 
-    auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
+    auto programGuard = gl::UniformCtx(*program_);
     RenderVao(args.vaoWithNormal, args.primitive);
 }
 

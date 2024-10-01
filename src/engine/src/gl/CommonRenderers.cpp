@@ -16,7 +16,7 @@ constexpr GLint BLIT_UNIFORM_UV_SCALE_LOCATION = 1;
 constexpr GLint BLIT_TEXTURE_SLOT              = 0; // TODO: 1 and above slots don't work
 constexpr int32_t POINTS_FIRST_EXTERNAL        = 64;
 
-auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgramHandle {
+auto AllocateBlitter [[nodiscard]](engine::gl::GlContext& gl) -> std::shared_ptr<engine::gl::GpuProgram> {
     using namespace engine;
 
     std::vector<ShaderDefine> defines = {
@@ -24,13 +24,13 @@ auto AllocateBlitter(engine::gl::GlContext const& gl) -> engine::gl::GpuProgramH
         ShaderDefine::I32("UNIFORM_UV_SCALE", BLIT_UNIFORM_UV_SCALE_LOCATION),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = engine::gl::LinkProgramFromFiles(
         gl, "data/engine/shaders/triangle_fullscreen.vert", "data/engine/shaders/blit.frag", std::move(defines),
         "Blit");
     assert(maybeProgram);
-    gl::GpuProgramHandle blitProgram = std::move(*maybeProgram);
+    auto blitProgram = std::move(*maybeProgram);
 
-    auto programGuard = gl::UniformCtx(gl.GetProgram(blitProgram));
+    auto programGuard = gl::UniformCtx(*blitProgram);
     programGuard.SetUniformTexture(BLIT_UNIFORM_TEXTURE_LOCATION, BLIT_TEXTURE_SLOT);
     programGuard.SetUniformValue2(BLIT_UNIFORM_UV_SCALE_LOCATION, 1.0f, 1.0f);
 
@@ -46,7 +46,6 @@ ENGINE_EXPORT void CommonRenderers::Dispose(GlContext const& gl) {
         toDispose->Dispose(gl);
     }
     toBeDisposed_.clear();
-    gl.Programs()->DisposeProgram(std::move(blitProgram_));
 }
 
 ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
@@ -184,7 +183,7 @@ ENGINE_EXPORT void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererIn
 
 ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {
     assert(IsInitialized() && "Bad call to Blit2D, CommonRenderers isn't initialized");
-    auto programGuard = gl::UniformCtx(gl.GetProgram(blitProgram_));
+    auto programGuard = gl::UniformCtx(*blitProgram_);
     programGuard.SetUniformValue2(BLIT_UNIFORM_UV_SCALE_LOCATION, uvScale.x, uvScale.y);
     gl.TextureUnits().Bind2D(BLIT_TEXTURE_SLOT, srcTexture);
     // auto depthGuard = gl::GlGuardDepth(false);

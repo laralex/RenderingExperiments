@@ -110,7 +110,7 @@ constexpr GLint UNIFORM_COLOR_LOCATION     = 2;
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
+ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext& gl) -> BoxRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
     constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
 
@@ -145,23 +145,21 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext const& gl) -> BoxRenderer {
         ShaderDefine::I32("UNIFORM_COLOR_LOCATION", UNIFORM_COLOR_LOCATION),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         gl, "data/engine/shaders/box.vert", "data/engine/shaders/constant.frag", std::move(defines), "BoxRenderer");
     assert(maybeProgram);
     renderer.program_ = std::move(*maybeProgram);
 
-    auto programGuard = UniformCtx{gl.GetProgram(renderer.program_)};
+    auto programGuard = UniformCtx{*renderer.program_};
     programGuard.SetUniformValue1(UNIFORM_THICKNESS_LOCATION, THICKNESS);
 
     return renderer;
 }
 
-ENGINE_EXPORT void BoxRenderer::Dispose(GlContext const& gl) {
-    gl.Programs()->DisposeProgram(std::move(program_));
-}
+ENGINE_EXPORT void BoxRenderer::Dispose(GlContext const& gl) { }
 
 ENGINE_EXPORT void BoxRenderer::Render(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {
-    auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
+    auto programGuard = gl::UniformCtx(*program_);
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
     programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));
 

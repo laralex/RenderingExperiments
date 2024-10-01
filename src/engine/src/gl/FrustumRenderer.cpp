@@ -139,7 +139,7 @@ constexpr uint8_t indices[] = {
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRenderer {
+ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext& gl) -> FrustumRenderer {
     constexpr GLint ATTRIB_FRUSTUM_WEIGHTS_LOCATION = 0;
     constexpr GLint ATTRIB_OTHER_WEIGHTS_LOCATION   = 1;
 
@@ -174,12 +174,12 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
         ShaderDefine::I32("UNIFORM_COLOR_LOCATION", UNIFORM_COLOR_LOCATION),
     };
 
-    auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+    auto maybeProgram = LinkProgramFromFiles(
         gl, "data/engine/shaders/frustum.vert", "data/engine/shaders/constant.frag", std::move(defines),
         "FrustumRenderer");
     assert(maybeProgram);
     renderer.program_     = std::move(*maybeProgram);
-    renderer.uboLocation_ = UniformCtx::GetUboLocation(gl.GetProgram(renderer.program_), "Ubo");
+    renderer.uboLocation_ = UniformCtx::GetUboLocation(*renderer.program_, "Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
         gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE, CpuMemory<void const>{nullptr, sizeof(UboData)},
@@ -189,12 +189,12 @@ ENGINE_EXPORT auto FrustumRenderer::Allocate(GlContext const& gl) -> FrustumRend
 }
 
 ENGINE_EXPORT void FrustumRenderer::Dispose(GlContext const& gl) {
-    gl.Programs()->DisposeProgram(std::move(program_));
+
 }
 
 ENGINE_EXPORT void FrustumRenderer::Render(
     GlContext const& gl, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
-    auto programGuard = gl::UniformCtx(gl.GetProgram(program_));
+    auto programGuard = gl::UniformCtx(*program_);
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
         .nearFarThickness   = {frustum.near, frustum.far, thickness * 2.0f, 0.0},

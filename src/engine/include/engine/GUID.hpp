@@ -3,19 +3,19 @@
 #include "engine/Log.hpp"
 #include <cstdint>
 
-namespace engine::gl {
-    class GpuProgramHandle final {
+namespace engine {
+    class GUID final {
 
 public:
     using InnerType = int32_t;
 
-#define Self GpuProgramHandle
+#define Self GUID
     explicit Self() : inner_(0) {}
     explicit Self(InnerType id)
         : inner_(id) { }
     ~Self() noexcept {
         if (inner_ != 0) {
-            XLOGW("GpuProgramHandle leaked: 0x{:08X}", inner_); 
+            XLOGW("GUID leaked: 0x{:08X}", inner_);
         }
         inner_ = 0;
     };
@@ -27,7 +27,7 @@ public:
     }
     Self& operator=(Self&& other) {
         if (this == &other) { return *this; }
-        if (inner_ != 0) { XLOGW("GpuProgramHandle leaked: 0x{:08X}", inner_); }
+        if (inner_ != 0) { XLOGW("GUID leaked: 0x{:08X}", inner_); }
         inner_ = other.inner_;
         other.UnsafeReset();
         return *this;
@@ -41,6 +41,6 @@ private:
     InnerType inner_;
 };
 
-const GpuProgramHandle NULL_GPU_PROGRAM_HANDLE = GpuProgramHandle{0};
+const GUID NULL_GUID = GUID{0};
 
 }

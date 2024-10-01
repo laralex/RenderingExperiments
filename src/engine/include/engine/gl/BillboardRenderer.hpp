@@ -29,13 +29,13 @@ public:
     // in vec2 v_Uv;
     // If not given, a plain texture is rendered bound to texture slot
     // BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION
-    static auto Allocate [[nodiscard]] (GlContext const& gl, GLuint fragmentShader = GL_NONE) -> BillboardRenderer;
+    static auto Allocate [[nodiscard]] (GlContext& gl, GLuint fragmentShader = GL_NONE) -> BillboardRenderer;
     void Render(GlContext const& gl, BillboardRenderArgs const& args) const;
     void Dispose(GlContext const& gl) override;
 
 private:
-    GpuProgramHandle customVaoProgram_ = GpuProgramHandle{};
-    GpuProgramHandle quadVaoProgram_ = GpuProgramHandle{};
+    std::shared_ptr<GpuProgram> customVaoProgram_ = {};
+    std::shared_ptr<GpuProgram> quadVaoProgram_ = {};
     GpuBuffer ubo_ = GpuBuffer{};
     GLint uboLocation_ = -1;
 

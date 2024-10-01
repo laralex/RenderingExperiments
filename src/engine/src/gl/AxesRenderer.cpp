@@ -112,7 +112,7 @@ constexpr GLint UNIFORM_SCALE_LOCATION = 1;
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
+ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext& gl) -> AxesRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION = 0;
     constexpr GLint ATTRIB_COLOR_LOCATION    = 1;
     AxesRenderer renderer;
@@ -145,9 +145,9 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
         ShaderDefine::I32("UNIFORM_SCALE", UNIFORM_SCALE_LOCATION),
     };
 
-    auto makeProgram = [&](GpuProgramHandle& out, std::string_view name) {
+    auto makeProgram = [&](std::shared_ptr<GpuProgram>& out, std::string_view name) {
         auto definesClone = defines;
-        auto maybeProgram = gl.Programs()->LinkProgramFromFiles(
+        auto maybeProgram = gl::LinkProgramFromFiles(
             gl, "data/engine/shaders/axes.vert", "data/engine/shaders/color_palette.frag", std::move(definesClone),
             name);
         assert(maybeProgram);
@@ -156,21 +156,18 @@ ENGINE_EXPORT auto AxesRenderer::Allocate(GlContext const& gl) -> AxesRenderer {
 
     makeProgram(renderer.customizedProgram_, "AxesRenderer");
     makeProgram(renderer.defaultProgram_, "AxesRenderer/Default");
-    gl::UniformCtx{gl.GetProgram(renderer.defaultProgram_)}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
+    gl::UniformCtx{*renderer.defaultProgram_}.SetUniformValue3(UNIFORM_SCALE_LOCATION, 1.0f, 1.0f, 1.0f);
 
     return renderer;
 }
 
 ENGINE_EXPORT void AxesRenderer::Dispose(GlContext const& gl) {
-    auto programs = gl.Programs();
-    programs->DisposeProgram(std::move(customizedProgram_));
-    programs->DisposeProgram(std::move(defaultProgram_));
+
 }
 
 ENGINE_EXPORT void AxesRenderer::Render(GlContext const& gl, glm::mat4 const& mvp, float scale) const {
     bool isCustom            = scale != 1.0f;
-    auto const& programHandle = isCustom ? customizedProgram_ : defaultProgram_;
-    auto const& program      = gl.GetProgram(programHandle);
+    auto const& program = isCustom ? *customizedProgram_ : *defaultProgram_;
 
     auto programGuard = gl::UniformCtx{program};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));

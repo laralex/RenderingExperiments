@@ -20,7 +20,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (GlContext const& gl) -> BoxRenderer;
+    static auto Allocate [[nodiscard]] (GlContext& gl) -> BoxRenderer;
     void Render(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const;
     void Dispose(GlContext const& gl) override;
 
@@ -28,7 +28,7 @@ private:
     Vao vao_;
     GpuBuffer attributeBuffer_;
     GpuBuffer indexBuffer_;
-    GpuProgramHandle program_ = GpuProgramHandle{};
+    std::shared_ptr<GpuProgram> program_ = {};
 };
 
 } // namespace engine::gl

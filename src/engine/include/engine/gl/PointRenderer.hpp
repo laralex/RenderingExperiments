@@ -23,7 +23,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (GlContext const& gl, size_t maxPoints) -> PointRenderer;
+    static auto Allocate [[nodiscard]] (GlContext& gl, size_t maxPoints) -> PointRenderer;
     void Fill(std::vector<PointRendererInput::Point> const&, int32_t numPoints, int32_t numPointsOffset);
     void LimitInstances(int32_t numInstances);
     void Render(
@@ -37,7 +37,7 @@ private:
     GpuBuffer meshAttributesBuffer_ = GpuBuffer{};
     GpuBuffer instancesBuffer_ = GpuBuffer{};
     GpuBuffer indexBuffer_ = GpuBuffer{};
-    GpuProgramHandle program_ = GpuProgramHandle{};
+    std::shared_ptr<GpuProgram> program_ = {};
     GLsizei lastInstance_ = 0;
 };
 

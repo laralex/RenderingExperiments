@@ -22,12 +22,12 @@ struct GpuProgram;
 struct Vao;
 
 auto LinkProgram [[nodiscard]] (
-    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
+    GlContext& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
     std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
-auto LinkProgramFromFiles [[nodiscard]] (
-    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<ShaderDefine const> defines, std::string_view name = {}, bool logCode = false)
--> std::optional<GpuProgram>;
+auto LinkProgramFromFiles [[nodiscard]](
+    GlContext& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
+    std::vector<ShaderDefine>&& defines, std::string_view name, bool logCode = false)
+-> std::optional<std::shared_ptr<GpuProgram>>;
 
 auto RelinkProgram [[nodiscard]] (
     GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,

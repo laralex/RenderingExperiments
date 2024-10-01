@@ -24,12 +24,12 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    static auto Allocate [[nodiscard]] (GlContext const& gl) -> FlatRenderer;
+    static auto Allocate [[nodiscard]] (GlContext& gl) -> FlatRenderer;
     void Render(GlContext const& gl, FlatRenderArgs const&) const;
     void Dispose(GlContext const& gl) override;
 
 private:
-    GpuProgramHandle program_ = GpuProgramHandle{};
+    std::shared_ptr<GpuProgram> program_ = {};
     GpuBuffer ubo_ = GpuBuffer{};
     GLint uboLocation_ = -1;
 };
