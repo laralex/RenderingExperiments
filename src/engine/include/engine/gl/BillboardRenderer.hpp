@@ -43,18 +43,21 @@ private:
 };
 
 struct BillboardRenderArgs final {
+    struct alignas(16) Pack final {
+        glm::vec3 localPivotOffset;
+        float widthDivHeight;
+    };
     struct ShaderArgs final {
         alignas(16) glm::mat4 pivotMvp{1.0f};
-        alignas(16) glm::vec3 localPivotOffset{0.0f};
-        alignas(16) glm::vec2 localSizeAndAspect{1.0f};
-        ScreenShaderArgs screenArgs;
+        alignas(16) Pack pack = {};
+        alignas(16) glm::vec2 localSize{1.0f};
     };
 
     // VAO must provide positions/uv
     BillboardRenderArgs(
-        Vao const& vao, GLenum primitive, ScreenShaderArgs screen, glm::mat4 pivotMvp,
+        Vao const& vao, GLenum primitive, float screenWidthDivHeight, glm::mat4 pivotMvp,
         glm::vec2 localSize = glm::vec2{1.0f, 1.0f}, glm::vec3 localPivotOffset = glm::vec3{0.0f})
-        : shaderArgs({pivotMvp, localPivotOffset, localSize, screen})
+        : shaderArgs({pivotMvp, {localPivotOffset, screenWidthDivHeight}, localSize})
         , vao(vao)
         , drawPrimitive(primitive) { }
 

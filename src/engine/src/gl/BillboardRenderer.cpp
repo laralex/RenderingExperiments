@@ -33,7 +33,6 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext& gl, GLuint fragmentSha
     assert(maybeProgram);
     renderer.quadVaoProgram_ = std::move(*maybeProgram);
     auto programGuard        = UniformCtx{*renderer.quadVaoProgram_};
-    // programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, 1.0f, 0.42f, 1.0f, 1.0f);
     renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(

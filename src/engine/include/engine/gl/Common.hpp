@@ -88,7 +88,7 @@ private:
 struct alignas(16) ScreenShaderArgs final {
     float pixelsPerUnitX;
     float pixelsPerUnitY;
-    float pixelsHeight;
+    float pixelsWidth;
     float aspectRatio;
 };
 
