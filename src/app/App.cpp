@@ -257,7 +257,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         glm::mat4 model = glm::mat4(1.0f);
         // model           = glm::rotate(model, rotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
         // model = glm::scale(model, glm::vec3(1.0f, 1.0f, 0.001f));
-        model = glm::translate(model, glm::vec3(3.0f, 3.0f, 0.0f));
+        // model = glm::translate(model, glm::vec3(3.0f, 3.0f, 0.0f));
 
         auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Main pass");
 

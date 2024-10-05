@@ -19,7 +19,7 @@ namespace engine {
 ENGINE_EXPORT auto PlaneMesh::Generate(glm::ivec2 numSegments, glm::vec2 uvScale, bool clockwiseTriangles)
     -> PlaneMesh {
     constexpr int32_t NUM_SEGMENT_VERTS = 4;
-    // numSegments += 1;
+    numSegments += 1;
     PlaneMesh mesh;
     mesh.vertexPositions.resize(numSegments.x * numSegments.y);
     mesh.vertexData.resize(numSegments.x * numSegments.y);

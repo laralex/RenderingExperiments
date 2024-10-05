@@ -16,17 +16,21 @@ layout(std140, binding = UBO_BINDING) uniform Ubo {
 
 const float WORLD_UNITS_PER_CELL = 1.0;
 const float PIXELS_PER_WORLD_UNIT = 3.0;
+const float THICKNESS_MULTIPLIER = 2.0;
 
 float LodAlpha(in vec2 worldPos) {
-    vec2 scaledGradient = fwidth(worldPos);
+    vec2 scaledGradient = THICKNESS_MULTIPLIER*fwidth(worldPos);
     vec2 grid = mod(worldPos, WORLD_UNITS_PER_CELL) / scaledGradient;
-    grid = 1.0 - clamp(grid, 0.0, 1.0);
+    grid = clamp(grid, 0.0, 1.0);
+    grid = abs(grid * 2.0 - vec2(1.0)); // antialias
+    grid = 1.0 - grid;
     return max(grid.x, grid.y);
 }
 
 void main() {
     vec2 pixelDensity = fwidth(v_WorldPos.xy) * PIXELS_PER_WORLD_UNIT;
-    float falloff = 1.0 - log(pixelDensity.x + pixelDensity.y);
+    // float falloff = 1.0-max(0.0, log(pixelDensity.x + pixelDensity.y));
+    float falloff = 1.0-log(pixelDensity.x + pixelDensity.y);
 
     float lod2alpha = falloff * LodAlpha(v_WorldPos.xy*0.04);
     float lod1alpha = falloff * LodAlpha(v_WorldPos.xy*0.2) * (1.0-lod2alpha);
@@ -39,4 +43,3 @@ void main() {
     out_FragColor = color;
     // out_FragColor = vec4(lod1alpha, 0.0, 0.0, 1.0);
 }
-

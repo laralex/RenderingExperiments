@@ -2,7 +2,6 @@
 * camera (projection, quaternion rotation, faster view matrix from 3 vectors)
 * text rendering
 * render utils (billboard)
-* render grid
 
 * separate render thread
 * inverted Y axis
@@ -10,5 +9,3 @@
 * compute shaders
 * libktx
 * fastgltf
-* shader error tells wrong #line
-* move install folder, will it find shaders?
