@@ -33,6 +33,4 @@ private:
     friend class UniformCtx;
 };
 
-auto CompileShader [[nodiscard]] (GLenum shaderType, std::string_view code) -> GLuint;
-
 } // namespace engine::gl

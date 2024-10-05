@@ -5,8 +5,6 @@
 
 namespace {
 
-constexpr bool LOG_FAILED_SHADER_CODE = true;
-
 auto LinkGraphicalProgram(GLuint program, GLuint vertexShader, GLuint fragmentShader) -> bool {
     GLCALL(glAttachShader(program, vertexShader));
     GLCALL(glAttachShader(program, fragmentShader));
@@ -73,32 +71,6 @@ ENGINE_EXPORT auto GpuProgram::Allocate(
         LogDebugLabel(gl, program, "GpuProgram was compiled");
     }
     return std::optional{std::move(program)};
-}
-
-ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code) -> GLuint {
-    GLenum shader;
-    GLCALL(shader = glCreateShader(shaderType));
-
-    char const* codeRaw  = code.data();
-    GLint const codeSize = code.size();
-    GLCALL(glShaderSource(shader, 1, &codeRaw, &codeSize));
-
-    GLCALL(glCompileShader(shader));
-
-    GLint isCompiled;
-    GLCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled));
-    if (isCompiled == GL_TRUE) {
-        // XLOG("Compiled shader {}", shader);
-        return shader; // success
-    }
-
-    static char infoLog[512];
-    GLCALL(glGetShaderInfoLog(shader, 512, nullptr, infoLog));
-    GLCALL(glDeleteShader(shader));
-    std::string_view typeLabel =
-        (shaderType == GL_VERTEX_SHADER ? "vertex" : (shaderType == GL_FRAGMENT_SHADER ? "fragment" : "compute"));
-    XLOGE("Failed to compile {} shader:\n{}\n{}", typeLabel, LOG_FAILED_SHADER_CODE ? code : "", infoLog);
-    return GL_NONE;
 }
 
 } // namespace engine::gl

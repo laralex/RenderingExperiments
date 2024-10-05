@@ -11,12 +11,12 @@
 
 namespace engine::gl {
 
-struct BillboardRenderArgs;
+struct GrassRenderArgs;
 
-class BillboardRenderer final : public IGlDisposable {
+class GrassRenderer final : public IGlDisposable {
 
 public:
-#define Self BillboardRenderer
+#define Self GrassRenderer
     explicit Self() noexcept     = default;
     ~Self() override             = default;
     Self(Self const&)            = delete;
@@ -27,10 +27,8 @@ public:
 
     // FragmentShader inputs:
     // in vec2 v_Uv;
-    // If not given, a plain texture is rendered bound to texture slot
-    // BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION
-    static auto Allocate [[nodiscard]] (GlContext& gl, GLuint fragmentShader = GL_NONE) -> BillboardRenderer;
-    void Render(GlContext const& gl, BillboardRenderArgs const& args) const;
+    static auto Allocate [[nodiscard]] (GlContext& gl, GLuint fragmentShader = GL_NONE) -> GrassRenderer;
+    void Render(GlContext const& gl, GrassRenderArgs const& args) const;
     void Dispose(GlContext const& gl) override;
 
 private:
@@ -41,7 +39,7 @@ private:
     static GLint constexpr DEFAULT_UNIFORM_TEXTURE_LOCATION = 0;
 };
 
-struct BillboardRenderArgs final {
+struct GrassRenderArgs final {
     struct alignas(16) Pack final {
         glm::vec3 localPivotOffset;
         float widthDivHeight;
@@ -53,7 +51,7 @@ struct BillboardRenderArgs final {
     };
 
     // VAO must provide positions/uv
-    BillboardRenderArgs(
+    GrassRenderArgs(
         Vao const& vao, GLenum primitive, bool isCustomVao, float screenWidthDivHeight, glm::mat4 pivotMvp,
         glm::vec2 localSize = glm::vec2{1.0f, 1.0f}, glm::vec3 localPivotOffset = glm::vec3{0.0f})
         : shaderArgs({pivotMvp, {localPivotOffset, screenWidthDivHeight}, localSize})

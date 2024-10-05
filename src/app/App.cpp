@@ -386,8 +386,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             app->commonRenderers.RenderBillboard(
                 app->gl,
                 gl::BillboardRenderArgs{
-                    app->gl.VaoDatalessQuad(),
-                    GL_TRIANGLE_STRIP,
+                    app->boxMesh.Vao(),
+                    GL_TRIANGLES,
+                    true,
                     1.0f/aspectRatio,
                     mvp,
                     billboardSize,

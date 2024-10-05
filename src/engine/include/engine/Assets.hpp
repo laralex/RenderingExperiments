@@ -64,11 +64,7 @@ private:
 namespace engine::gl {
 
 namespace shader {
-enum class ShaderType {
-    VERTEX,
-    FRAGMENT,
-    COMPUTE,
-};
+
 auto LoadShaderCode
     [[nodiscard]] (std::string_view const filepath, ShaderType type, CpuView<ShaderDefine const> defines)
     -> std::string;

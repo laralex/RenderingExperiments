@@ -12,10 +12,63 @@
 #include <optional>
 #include <memory>
 #include <vector>
+#include <variant>
 
 namespace engine {
 template <typename T> struct CpuView;
 } // namespace engine
+
+namespace engine::gl::shader {
+
+enum class ShaderType : GLenum {
+    VERTEX = GL_VERTEX_SHADER,
+    FRAGMENT = GL_FRAGMENT_SHADER,
+    COMPUTE = GL_COMPUTE_SHADER,
+};
+
+inline auto ToShaderType[[nodiscard]](GLenum glShaderTypeEnum) -> ShaderType {
+    switch (glShaderTypeEnum) {
+        case GL_VERTEX_SHADER: return ShaderType::VERTEX;
+        case GL_FRAGMENT_SHADER: return ShaderType::FRAGMENT;
+        case GL_COMPUTE_SHADER: return ShaderType::COMPUTE;
+    }
+    return ShaderType::VERTEX;
+}
+
+inline auto ToShaderTypeStr[[nodiscard]](ShaderType type) -> std::string_view {
+    switch (type) {
+        case ShaderType::VERTEX: return "vertex";
+        case ShaderType::FRAGMENT: return "fragment";
+        case ShaderType::COMPUTE: return "compute";
+    }
+    return "unknown";
+}
+
+struct ShaderCreateInfo {
+    ShaderCreateInfo(std::string&& code, ShaderType shaderType)
+        : source(std::move(code))
+        , compilationStage(SourceType::CODE)
+        , shaderType(shaderType) {}
+    ShaderCreateInfo(std::string_view filepath, ShaderType shaderType)
+        : source(filepath)
+        , compilationStage(SourceType::FILEPATH)
+        , shaderType(shaderType) {}
+    ShaderCreateInfo(GLuint id, ShaderType shaderType)
+        : source(id)
+        , compilationStage(SourceType::GL_ID)
+        , shaderType(shaderType) {}
+    enum SourceType {
+        CODE,
+        FILEPATH,
+        GL_ID,
+    };
+    std::variant<std::string, std::string_view, GLuint> source;
+    SourceType compilationStage;
+    ShaderType shaderType;
+
+};
+
+} // engine::gl::shader
 
 namespace engine::gl {
 
@@ -23,6 +76,12 @@ struct GlContext;
 struct GpuProgram;
 struct Vao;
 
+auto CompileShader [[nodiscard]] (GLenum shaderType, std::string_view code, bool logFail) -> GLuint;
+void CompileShader(engine::gl::shader::ShaderCreateInfo& info, engine::CpuView<engine::ShaderDefine const> defines, bool logCode);
+
+auto LinkProgram [[nodiscard]] (
+    GlContext& gl, shader::ShaderCreateInfo vertexShader, shader::ShaderCreateInfo fragmentShader,
+    std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
 auto LinkProgram [[nodiscard]] (
     GlContext& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
     std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;

@@ -10,7 +10,7 @@
 
 namespace {
 
-constexpr GLint UBO_CONTEXT_BINDING = 0; // global for GL
+constexpr GLint UBO_CONTEXT_BINDING = 5; // global for GL
 
 } // namespace
 
@@ -18,22 +18,35 @@ namespace engine::gl {
 
 ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext& gl, GLuint fragmentShader) -> BillboardRenderer {
     constexpr GLint ATTRIB_POSITION_LOCATION     = 0;
-    constexpr GLint ATTRIB_INNER_MARKER_LOCATION = 1;
-    constexpr GLint UNIFORM_COLOR_LOCATION       = 0;
+    constexpr GLint ATTRIB_UV_LOCATION = 1;
+
     BillboardRenderer renderer;
 
-    std::vector<ShaderDefine> defines = {
-        ShaderDefine::I32("UBO_BINDING", UBO_CONTEXT_BINDING),
-        ShaderDefine::I32("UNIFORM_TEXTURE_LOCATION", DEFAULT_UNIFORM_TEXTURE_LOCATION),
-    };
+    {
+        std::vector<ShaderDefine> defines = {
+            ShaderDefine::I32("UBO_BINDING", UBO_CONTEXT_BINDING),
+            ShaderDefine::I32("UNIFORM_TEXTURE_LOCATION", DEFAULT_UNIFORM_TEXTURE_LOCATION),
+        };
+        auto maybeProgram = LinkProgramFromFiles(
+            gl, "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag", std::move(defines),
+            "BillboardRenderer - Quad");
+        assert(maybeProgram);
+        renderer.quadVaoProgram_ = std::move(*maybeProgram);
+    }
 
-    auto maybeProgram = LinkProgramFromFiles(
-        gl, "data/engine/shaders/billboard_quad.vert", "data/engine/shaders/uv.frag", std::move(defines),
-        "BillboardRenderer - Quad");
-    assert(maybeProgram);
-    renderer.quadVaoProgram_ = std::move(*maybeProgram);
-    auto programGuard        = UniformCtx{*renderer.quadVaoProgram_};
-    renderer.uboLocation_ = programGuard.GetUboLocation("Ubo");
+    {
+        std::vector<ShaderDefine> defines = {
+            ShaderDefine::I32("UBO_BINDING", UBO_CONTEXT_BINDING),
+            ShaderDefine::I32("UNIFORM_TEXTURE_LOCATION", DEFAULT_UNIFORM_TEXTURE_LOCATION),
+            ShaderDefine::I32("ATTRIB_POSITION", ATTRIB_POSITION_LOCATION),
+            ShaderDefine::I32("ATTRIB_UV", ATTRIB_UV_LOCATION),
+        };
+        auto maybeProgram = LinkProgramFromFiles(
+            gl, "data/engine/shaders/billboard_mesh.vert", "data/engine/shaders/uv.frag", std::move(defines),
+            "BillboardRenderer - CustomVao");
+        assert(maybeProgram);
+        renderer.customVaoProgram_ = std::move(*maybeProgram);
+    }
 
     renderer.ubo_ = gl::GpuBuffer::Allocate(
         gl, GL_UNIFORM_BUFFER, gl::GpuBuffer::CLIENT_UPDATE,
@@ -46,7 +59,8 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext& gl, GLuint fragmentSha
 ENGINE_EXPORT void BillboardRenderer::Dispose(GlContext const& gl) { }
 
 ENGINE_EXPORT void BillboardRenderer::Render(GlContext const& gl, BillboardRenderArgs const& args) const {
-    auto programGuard         = gl::UniformCtx(*quadVaoProgram_);
+    auto const& program = args.isCustomVao ? customVaoProgram_ : quadVaoProgram_;
+    auto programGuard         = gl::UniformCtx(*program);
 
     ubo_.Fill(CpuMemory<GLvoid const>{&args.shaderArgs, sizeof(args.shaderArgs)});
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));

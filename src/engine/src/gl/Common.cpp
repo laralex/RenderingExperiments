@@ -1,3 +1,4 @@
+#include "engine/gl/Common.hpp"
 #include "engine/Assets.hpp"
 #include "engine/Precompiled.hpp"
 #include "engine/gl/GpuProgram.hpp"
@@ -8,25 +9,74 @@
 
 namespace {
 
-void LogShaderCode(std::string_view vertexShaderCode, std::string_view fragmentShaderCode, bool doLog) {
+void LogShaderCode(std::string_view msg, std::string_view vertexShaderCode, engine::gl::shader::ShaderType type, bool doLog) {
+    using engine::gl::shader::ShaderType;
     if (doLog) {
-        XLOG("Compiling shader type=vertex\n{}", vertexShaderCode);
-        XLOG("Compiling shader type=fragment\n{}", fragmentShaderCode);
+        XLOG("{} type={}\n{}", msg, engine::gl::shader::ToShaderTypeStr(type), vertexShaderCode);
     }
 }
 
 auto AllocateGraphicalShaders
     [[nodiscard]] (std::string_view vertexShaderCode, std::string_view fragmentShaderCode, bool logCode)
     -> std::pair<GLuint, GLuint> {
-    LogShaderCode(vertexShaderCode, fragmentShaderCode, logCode);
-    GLuint vertexShader   = engine::gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode);
-    GLuint fragmentShader = engine::gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode);
+    LogShaderCode("Compiling shader", vertexShaderCode, engine::gl::shader::ShaderType::VERTEX, logCode);
+    LogShaderCode("Compiling shader", fragmentShaderCode, engine::gl::shader::ShaderType::FRAGMENT, logCode);
+    GLuint vertexShader   = engine::gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode, logCode);
+    GLuint fragmentShader = engine::gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode, logCode);
     return {vertexShader, fragmentShader};
 }
 
 } // namespace
 
 namespace engine::gl {
+
+ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code, bool logFail) -> GLuint {
+    GLenum shader;
+    GLCALL(shader = glCreateShader(shaderType));
+
+    char const* codeRaw  = code.data();
+    GLint const codeSize = code.size();
+    GLCALL(glShaderSource(shader, 1, &codeRaw, &codeSize));
+
+    GLCALL(glCompileShader(shader));
+
+    GLint isCompiled;
+    GLCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled));
+    if (isCompiled == GL_TRUE) {
+        // XLOG("Compiled shader {}", shader);
+        return shader; // success
+    }
+
+    static char infoLog[512];
+    GLCALL(glGetShaderInfoLog(shader, 512, nullptr, infoLog));
+    GLCALL(glDeleteShader(shader));
+    LogShaderCode("Failed to compile shader", code, shader::ToShaderType(shaderType), logFail);
+    return GL_NONE;
+}
+
+ENGINE_EXPORT void CompileShader(shader::ShaderCreateInfo& info, CpuView<ShaderDefine const> defines, bool logCode) {
+    using shader::ShaderCreateInfo;
+    GLuint shader_id = GL_NONE;
+    switch (info.compilationStage) {
+        case ShaderCreateInfo::FILEPATH:
+            info.compilationStage = ShaderCreateInfo::CODE;
+            info.source = LoadShaderCode(std::get<std::string_view>(info.source), info.shaderType, defines);
+            LogShaderCode("Compiling shader", std::get<std::string>(info.source), info.shaderType, logCode);
+            CompileShader(info, defines, logCode);
+            break;
+        case ShaderCreateInfo::CODE:
+            shader_id = CompileShader(static_cast<GLenum>(info.shaderType), std::get<std::string>(info.source), logCode);
+            assert(shader_id > 0);
+            info.compilationStage = ShaderCreateInfo::GL_ID;
+            info.source = shader_id;
+            break;
+        case ShaderCreateInfo::GL_ID:
+            return;
+        default:
+            return;
+    }
+}
+
 
 ENGINE_EXPORT auto LinkProgram(
     GlContext& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name,
@@ -45,9 +95,11 @@ ENGINE_EXPORT auto LinkProgramFromFiles(
     GlContext& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     std::vector<ShaderDefine>&& defines, std::string_view name, bool logCode) -> std::optional<std::shared_ptr<GpuProgram>> {
     auto definesView = CpuView{defines.data(), std::size(defines)};
-    std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, definesView);
-    std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, definesView);
-    auto maybeProgram = LinkProgram(gl, vertexShaderCode, fragmentShaderCode, name, logCode);
+    auto vert = shader::ShaderCreateInfo(vertexFilepath, shader::ShaderType::VERTEX);
+    auto frag = shader::ShaderCreateInfo(fragmentFilepath, shader::ShaderType::FRAGMENT);
+    CompileShader(vert, definesView, logCode);
+    CompileShader(frag, definesView, logCode);
+    auto maybeProgram = GpuProgram::Allocate(gl, std::get<GLuint>(vert.source), std::get<GLuint>(frag.source), name);
     if (!maybeProgram) { return std::nullopt; }
 
     auto program = std::make_shared<GpuProgram>(std::move(*maybeProgram));
