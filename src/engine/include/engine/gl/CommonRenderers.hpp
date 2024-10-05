@@ -4,6 +4,7 @@
 #include "engine/gl/BillboardRenderer.hpp"
 #include "engine/gl/BoxRenderer.hpp"
 #include "engine/gl/Context.hpp"
+#include "engine/gl/EditorGridRenderer.hpp"
 #include "engine/gl/FrustumRenderer.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 #include "engine/gl/LineRenderer.hpp"
@@ -46,12 +47,11 @@ public:
     void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&);
     void RenderPoints(GlContext const& gl, glm::mat4 const& camera) const;
     void FlushPointsToGpu(std::vector<PointRendererInput::Point> const&);
+    void RenderEditorGrid(GlContext const& gl, glm::vec3 cameraWorldPosition, glm::mat4 const& camera) const;
 
     void RenderFulscreenTriangle(GlContext const& gl) const;
     void Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale = glm::vec2{1.0f}) const;
 
-    auto VaoDatalessTriangle [[nodiscard]] () const -> Vao const& { return datalessTriangleVao_; }
-    auto VaoDatalessQuad [[nodiscard]] () const -> Vao const& { return datalessQuadVao_; }
     auto TextureStubColor [[nodiscard]] () const -> Texture const& { return stubColorTexture_; }
     auto SamplerNearest [[nodiscard]] () const -> GpuSampler const& {
         return samplersCache_.GetSampler(samplerNearest_);
@@ -69,6 +69,7 @@ private:
     BoxRenderer boxRenderer_ = BoxRenderer{};
     FrustumRenderer frustumRenderer_ = FrustumRenderer{};
     BillboardRenderer billboardRenderer_ = BillboardRenderer{};
+    EditorGridRenderer editorGridRenderer_ = EditorGridRenderer{};
 
     constexpr static size_t MAX_LINES = 10'000;
     LineRenderer lineRenderer_ = LineRenderer{};
@@ -81,8 +82,6 @@ private:
     int32_t pointsLimitExternal_ = 0;
     PointRendererInput debugPoints_ = PointRendererInput{MAX_POINTS};
 
-    Vao datalessTriangleVao_ = Vao{};
-    Vao datalessQuadVao_ = Vao{};
     std::shared_ptr<GpuProgram> blitProgram_ = {};
     SamplersCache::CacheKey samplerNearest_ = {};
     SamplersCache::CacheKey samplerLinear_ = {};

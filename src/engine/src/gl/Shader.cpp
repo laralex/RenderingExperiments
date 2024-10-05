@@ -41,7 +41,6 @@ auto WriteShaderParsing(
         case ShaderParsing::PartType::INCLUDE_KEY:
             // TODO: conversion std::string_view to std::string
             // !! EXTRA ALLOCATIONS
-            originalLine += 1;
             ++includeCount;
             auto find = registry.find(std::string{begin->text});
             if (find == registry.end()) {
@@ -55,10 +54,10 @@ auto WriteShaderParsing(
                 XLOGW("Empty shader include text of: {}", begin->text);
                 break;
             }
-            if (expandedInclude.isMultiline) { destination << "// included: " << begin->text << '\n'; }
             if (expandedInclude.isMultiline && isFirstInclude) {
                 destination << "#line " << includeCount * INCLUDE_LINE_NUMBER_BASE << '\n';
             }
+            if (expandedInclude.isMultiline) { destination << "// included: " << begin->text << '\n'; }
             destination << expandedInclude.text;
             if (expandedInclude.isMultiline && isFirstInclude) {
                 destination << '\n' << "#line " << originalLine << '\n';

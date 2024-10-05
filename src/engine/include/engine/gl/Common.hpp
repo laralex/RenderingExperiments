@@ -1,23 +1,25 @@
 #pragma once
 
-#include <cassert>
+
+#include "engine/ShaderDefine.hpp"
+#include "engine/CpuView.hpp"
+
 #include <glad/gl.h>
 #include <glm/mat4x4.hpp>
 
-#include "engine/gl/Context.hpp"
-#include "engine/gl/IGlDisposable.hpp"
-#include "engine/ShaderDefine.hpp"
+#include <cassert>
+#include <string_view>
+#include <optional>
+#include <memory>
+#include <vector>
 
 namespace engine {
 template <typename T> struct CpuView;
 } // namespace engine
 
-namespace engine::gl::shader {
-struct Define;
-} // namespace engine::gl::shader
-
 namespace engine::gl {
 
+struct GlContext;
 struct GpuProgram;
 struct Vao;
 

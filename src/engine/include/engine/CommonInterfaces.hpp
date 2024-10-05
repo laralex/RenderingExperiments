@@ -24,8 +24,7 @@ public:
     virtual ~Self()        = default;
     virtual void Dispose() = 0;
 
-protected:
-protected:
+private:
     Self(Self const&)            = default;
     Self& operator=(Self const&) = default;
     Self(Self&&)                 = default;

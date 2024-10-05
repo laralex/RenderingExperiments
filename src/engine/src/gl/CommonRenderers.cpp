@@ -1,5 +1,6 @@
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/Assets.hpp"
+#include "engine/gl/EditorGridRenderer.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Guard.hpp"
 #include "engine/gl/Shader.hpp"
@@ -59,17 +60,13 @@ ENGINE_EXPORT void CommonRenderers::Initialize(GlContext& gl) {
     toBeDisposed_.push_back(&frustumRenderer_);
     billboardRenderer_ = BillboardRenderer::Allocate(gl);
     toBeDisposed_.push_back(&billboardRenderer_);
+    editorGridRenderer_ = EditorGridRenderer::Allocate(gl);
+    toBeDisposed_.push_back(&editorGridRenderer_);
 
     lineRenderer_  = LineRenderer::Allocate(gl, MAX_LINES);
     toBeDisposed_.push_back(&lineRenderer_);
     pointRenderer_ = PointRenderer::Allocate(gl, MAX_POINTS);
     toBeDisposed_.push_back(&pointRenderer_);
-
-    datalessTriangleVao_ = Vao::Allocate(gl, "Dataless Triangle VAO");
-    std::ignore          = VaoMutableCtx{datalessTriangleVao_}.MakeUnindexed(3);
-
-    datalessQuadVao_ = Vao::Allocate(gl, "Dataless Quad VAO");
-    std::ignore      = VaoMutableCtx{datalessQuadVao_}.MakeUnindexed(4);
 
     isInitialized_ = true;
     blitProgram_   = AllocateBlitter(gl);
@@ -131,7 +128,7 @@ ENGINE_EXPORT void CommonRenderers::RenderFrustum(
 
 ENGINE_EXPORT void CommonRenderers::RenderFulscreenTriangle(GlContext const& gl) const {
     assert(IsInitialized() && "Bad call to RenderFulscreenTriangle, CommonRenderers isn't initialized");
-    RenderVao(datalessTriangleVao_);
+    RenderVao(gl.VaoDatalessTriangle());
 }
 
 ENGINE_EXPORT void CommonRenderers::RenderBillboard(GlContext const& gl, BillboardRenderArgs const& args) const {
@@ -179,6 +176,17 @@ ENGINE_EXPORT void CommonRenderers::FlushPointsToGpu(std::vector<PointRendererIn
         pointRenderer_.Fill(points, std::size(points), POINTS_FIRST_EXTERNAL);
         pointsLimitExternal_ = POINTS_FIRST_EXTERNAL + std::size(points);
     }
+}
+
+ENGINE_EXPORT void CommonRenderers::RenderEditorGrid(GlContext const& gl, glm::vec3 cameraWorldPosition, glm::mat4 const& camera) const {
+    assert(IsInitialized() && "Bad call to RenderEditorGrid, CommonRenderers isn't initialized");
+    auto args = EditorGridRenderer::RenderArgs {
+        .thickColor = glm::vec4(0.15, 0.15, 0.15, 0.0),
+        .thinColor = glm::vec4(0.2, 0.2, 0.2, 0.0),
+        .cameraWorldPosition = cameraWorldPosition,
+        .viewProjection = camera,
+    };
+    editorGridRenderer_.Render(gl, args);
 }
 
 ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {

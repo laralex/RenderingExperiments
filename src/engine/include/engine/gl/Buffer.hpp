@@ -1,8 +1,13 @@
 #pragma once
 
-#include "engine/Precompiled.hpp"
+// #include "engine/Precompiled.hpp"
+#include "engine/gl/Common.hpp"
+#include "engine/CpuView.hpp"
+#include <glad/gl.h>
 
 namespace engine::gl {
+
+class GlContext;
 
 class GpuBuffer final {
 
@@ -16,7 +21,7 @@ public:
     Self& operator=(Self&&)      = default;
 #undef Self
 
-    enum Access {
+    enum Access : uint32_t {
         NONE          = 0x0,
         CLIENT_READ   = 0x1,
         CLIENT_UPDATE = 0x2,

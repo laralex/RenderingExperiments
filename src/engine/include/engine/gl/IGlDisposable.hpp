@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/gl/Context.hpp"
+
 namespace engine::gl {
 
 struct IGlDisposable {

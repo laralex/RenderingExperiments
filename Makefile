@@ -104,7 +104,8 @@ src_engine_ = \
 	gl/Context.cpp \
 	gl/Common.cpp gl/CommonRenderers.cpp \
 	gl/PointRenderer.cpp \
-	gl/Debug.cpp gl/FlatRenderer.cpp \
+	gl/Debug.cpp gl/EditorGridRenderer.cpp \
+	gl/FlatRenderer.cpp \
 	gl/FrustumRenderer.cpp gl/Guard.cpp \
 	gl/LineRenderer.cpp \
 	gl/Extensions.cpp gl/Framebuffer.cpp \
@@ -234,7 +235,7 @@ ${BUILD_DIR}/app/%.o: src/app/%.cpp
 	@$(CXX) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/app/include -c $< -o $@
 
 # compiling engine sources
-${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},) ${THIRD_PARTY_DEPS}
+${BUILD_DIR}/engine/%.o: src/engine/%.cpp $(if $(USE_PCH),${PRECOMPILED_HEADER},)
 	$(info > Compiling $@)
 	@$(CXX) ${COMPILE_FLAGS} ${INCLUDE_DIR} -I src/engine/include_private $(if $(USE_PCH),-include-pch ${PRECOMPILED_HEADER},) -c $< -o $@
 
@@ -251,9 +252,12 @@ imgui_obj = $(addprefix ${BUILD_DIR}/${imgui_dir}/, ${imgui_obj_})
 
 ${BUILD_DIR}/third_party/imgui/%.o: third_party/imgui/%.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(if ${USE_HOT_RELOADING},-fPIC,) -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
+	$(CXX) -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
+# ${BUILD_DIR}/third_party/imgui/ImguiExport.o: src/third_party/ImguiExport.cpp
+# 	$(CXX) ${COMPILE_FLAGS} -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
+
 ${BUILD_DIR}/third_party/imgui/libimgui.a: $(imgui_obj)
-	@ar r $@ ${imgui_obj}
+	ar r $@ ${imgui_obj}
 
 ${BUILD_DIR}/third_party/spdlog/libspdlog.a:
 	cmake $(if ${USE_HOT_RELOADING},-D CMAKE_CXX_FLAGS="-fPIC",) -S third_party/spdlog -B $(dir $@) && cmake --build $(dir $@)

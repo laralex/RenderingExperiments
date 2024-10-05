@@ -3,8 +3,6 @@
 #include "engine/Precompiled.hpp"
 #include "engine/gl/Buffer.hpp"
 
-#include <memory>
-
 namespace engine::gl {
 
 class Vao final {

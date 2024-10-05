@@ -391,7 +391,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
             app->commonRenderers.RenderBillboard(
                 app->gl,
                 gl::BillboardRenderArgs{
-                    app->commonRenderers.VaoDatalessQuad(),
+                    app->gl.VaoDatalessQuad(),
                     GL_TRIANGLE_STRIP,
                     screen,
                     mvp,
@@ -402,7 +402,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.5f, ColorCode::WHITE);
 
-        gl::RenderVao(app->commonRenderers.VaoDatalessQuad(), GL_POINTS);
+        gl::RenderVao(app->gl.VaoDatalessQuad(), GL_POINTS);
+
+        app->commonRenderers.RenderEditorGrid(app->gl, cameraMovement.Position(), camera);
     }
 
     fbGuard.GuardAnother(0U);
