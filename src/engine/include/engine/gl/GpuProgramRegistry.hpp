@@ -36,7 +36,7 @@ public:
         std::vector<ShaderDefine>&& defines);
     void UnregisterProgram(GpuProgram const& program);
 
-    void HotReloadPrograms(GlContext const& gl);
+    void HotReloadPrograms(GlContext& gl);
 
     using FilepathsToWatch = std::unordered_set<std::string>;
     auto FilepathsToWatchBegin [[nodiscard]] () const -> FilepathsToWatch::const_iterator {

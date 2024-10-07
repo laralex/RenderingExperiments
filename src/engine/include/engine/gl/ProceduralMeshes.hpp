@@ -14,16 +14,16 @@ struct PlaneMesh;
 
 namespace engine::gl {
 
-auto AllocateBoxMesh [[nodiscard]] (GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+auto AllocateBoxMesh [[nodiscard]] (GlContext& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
 -> GpuMesh;
 
 auto AllocateIcosphereMesh
-    [[nodiscard]] (GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
+    [[nodiscard]] (GlContext& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
 
 auto AllocateUvSphereMesh
-    [[nodiscard]] (GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
+    [[nodiscard]] (GlContext& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh;
 
-auto AllocatePlaneMesh [[nodiscard]] (GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+auto AllocatePlaneMesh [[nodiscard]] (GlContext& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
 -> GpuMesh;
 
 } // namespace engine::gl

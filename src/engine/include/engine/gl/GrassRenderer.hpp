@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 #include "engine/gl/GpuProgram.hpp"
@@ -28,7 +28,7 @@ public:
     // FragmentShader inputs:
     // in vec2 v_Uv;
     static auto Allocate [[nodiscard]] (GlContext& gl, GLuint fragmentShader = GL_NONE) -> GrassRenderer;
-    void Render(GlContext const& gl, GrassRenderArgs const& args) const;
+    void Render(GlContext& gl, GrassRenderArgs const& args) const;
     void Dispose(GlContext const& gl) override;
 
 private:

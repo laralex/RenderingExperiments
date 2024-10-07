@@ -53,7 +53,7 @@ ENGINE_EXPORT auto GpuProgram::LinkGraphical(GLuint vertexShader, GLuint fragmen
 }
 
 ENGINE_EXPORT auto GpuProgram::Allocate(
-    GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name)
+    GlContext& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name)
     -> std::optional<GpuProgram> {
     auto program = GpuProgram();
     GLuint programId;

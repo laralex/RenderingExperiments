@@ -26,7 +26,7 @@ template <typename IndexT> struct AllocateMeshInfo {
 };
 
 template <typename IndexT>
-auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
+auto AllocateMesh [[nodiscard]] (GlContext& gl, AllocateMeshInfo<IndexT>&& info) -> GpuMesh {
     size_t numVertices = std::size(info.vertexPositions);
     auto positions     = GpuBuffer::Allocate(
         gl, GL_ARRAY_BUFFER, {},
@@ -89,7 +89,7 @@ auto AllocateMesh [[nodiscard]] (GlContext const& gl, AllocateMeshInfo<IndexT>&&
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+ENGINE_EXPORT auto AllocateBoxMesh(GlContext& gl, BoxMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
     -> GpuMesh {
     return AllocateMesh(
         gl,
@@ -110,7 +110,7 @@ ENGINE_EXPORT auto AllocateBoxMesh(GlContext const& gl, BoxMesh const& cpuMesh, 
 }
 
 ENGINE_EXPORT auto AllocateIcosphereMesh(
-    GlContext const& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+    GlContext& gl, IcosphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint16_t>{
@@ -130,7 +130,7 @@ ENGINE_EXPORT auto AllocateIcosphereMesh(
 }
 
 ENGINE_EXPORT auto AllocateUvSphereMesh(
-    GlContext const& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
+    GlContext& gl, UvSphereMesh const& cpuMesh, GpuMesh::AttributesLayout layout) -> GpuMesh {
     return AllocateMesh(
         gl,
         AllocateMeshInfo<uint16_t>{
@@ -149,7 +149,7 @@ ENGINE_EXPORT auto AllocateUvSphereMesh(
         });
 }
 
-ENGINE_EXPORT auto AllocatePlaneMesh(GlContext const& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
+ENGINE_EXPORT auto AllocatePlaneMesh(GlContext& gl, PlaneMesh const& cpuMesh, GpuMesh::AttributesLayout layout)
     -> GpuMesh {
     return AllocateMesh(
         gl,

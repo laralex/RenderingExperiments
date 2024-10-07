@@ -86,7 +86,7 @@ void GpuProgramRegistry::OnFileChanged(std::string const& path, bool isDirectory
     }
 }
 
-void GpuProgramRegistry::HotReloadPrograms(GlContext const& gl) {
+void GpuProgramRegistry::HotReloadPrograms(GlContext& gl) {
     for (size_t idx : pendingHotReload_) {
         bool ok   = false;
         auto const& payload = programs_[idx];

@@ -48,7 +48,7 @@ ENGINE_EXPORT void Framebuffer::Dispose() {
     fbId_.UnsafeReset();
 }
 
-ENGINE_EXPORT auto Framebuffer::Allocate(GlContext const& gl, std::string_view name) -> Framebuffer {
+ENGINE_EXPORT auto Framebuffer::Allocate(GlContext& gl, std::string_view name) -> Framebuffer {
     Framebuffer fb{};
     GLCALL(glGenFramebuffers(1, fb.fbId_.Ptr()));
     fb.BindRead();
@@ -132,7 +132,7 @@ ENGINE_EXPORT FramebufferEditCtx::FramebufferEditCtx(Framebuffer& useFramebuffer
     , fb_{useFramebuffer} { }
 
 ENGINE_EXPORT auto FramebufferEditCtx::AttachTexture(
-    GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
+    GlContext& gl, GLenum attachment, Texture const& tex, GLint texLevel, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     assert(
         attachment >= GL_COLOR_ATTACHMENT0 && attachment <= GL_COLOR_ATTACHMENT31 || attachment == GL_DEPTH_ATTACHMENT
@@ -169,7 +169,7 @@ ENGINE_EXPORT auto FramebufferEditCtx::AttachTexture(
 }
 
 ENGINE_EXPORT auto FramebufferEditCtx::AttachRenderbuffer(
-    GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
+    GlContext& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex) const
     -> FramebufferEditCtx const& {
     GLCALL(glFramebufferRenderbuffer(ctx_.BoundTarget(), attachment, rb.RenderbufferSlotTarget(), rb.Id()));
     int32_t const drawBuffer     = attachment - GL_COLOR_ATTACHMENT0;

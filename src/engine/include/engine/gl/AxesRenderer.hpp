@@ -2,7 +2,7 @@
 
 #include "engine/FirstPersonLocomotion.hpp"
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Vao.hpp"
 #include <glm/mat4x4.hpp>
@@ -22,7 +22,7 @@ public:
 #undef Self
 
     static auto Allocate [[nodiscard]] (GlContext& gl) -> AxesRenderer;
-    void Render(GlContext const& gl, glm::mat4 const& mvp, float scale = 1.0f) const;
+    void Render(GlContext& gl, glm::mat4 const& mvp, float scale = 1.0f) const;
     void Dispose(GlContext const& gl) override;
 
 private:

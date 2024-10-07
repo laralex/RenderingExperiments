@@ -32,7 +32,7 @@ ENGINE_EXPORT void Vao::Dispose() {
     vaoId_.UnsafeReset();
 }
 
-ENGINE_EXPORT auto Vao::Allocate(GlContext const& gl, std::string_view name) -> Vao {
+ENGINE_EXPORT auto Vao::Allocate(GlContext& gl, std::string_view name) -> Vao {
     Vao vao{};
     GLCALL(glGenVertexArrays(1, vao.vaoId_.Ptr()));
     GLCALL(glBindVertexArray(vao.vaoId_));

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Sampler.hpp"
+#include "engine/gl/GpuSampler.hpp"
 
 #include <map>
 

@@ -1,4 +1,4 @@
-#include "engine/gl/Capabilities.hpp"
+#include "engine/gl/GlCapabilities.hpp"
 #include "engine/Precompiled.hpp"
 #include "engine_private/Prelude.hpp"
 

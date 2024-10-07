@@ -18,7 +18,7 @@ public:
 #undef Self
 
     static auto Allocate
-        [[nodiscard]] (GlContext const& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name = {})
+        [[nodiscard]] (GlContext& gl, GLuint vertexShader, GLuint fragmentShader, std::string_view name = {})
         -> std::optional<GpuProgram>;
     auto LinkGraphical [[nodiscard]] (GLuint vertexShader, GLuint fragmentShader, bool isRecompile = false) const
         -> bool;

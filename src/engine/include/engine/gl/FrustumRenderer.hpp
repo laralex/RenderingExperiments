@@ -2,7 +2,7 @@
 
 #include "engine/Precompiled.hpp"
 #include "engine/Unprojection.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 #include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Vao.hpp"
@@ -23,7 +23,7 @@ public:
 
     static auto Allocate [[nodiscard]] (GlContext& gl) -> FrustumRenderer;
     void Render(
-        GlContext const& gl, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0),
+        GlContext& gl, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color = glm::vec4(1.0),
         float thickness = 0.015f) const;
     void Dispose(GlContext const& gl) override;
 

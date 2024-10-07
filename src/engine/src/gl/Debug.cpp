@@ -1,10 +1,10 @@
 #include "engine/gl/Debug.hpp"
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Renderbuffer.hpp"
-#include "engine/gl/Sampler.hpp"
+#include "engine/gl/GpuSampler.hpp"
 #include "engine/gl/Texture.hpp"
 #include "engine/gl/Vao.hpp"
 

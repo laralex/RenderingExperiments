@@ -35,21 +35,21 @@ public:
     auto IsInitialized [[nodiscard]] () const -> bool { return isInitialized_; }
     void OnFrameEnd();
 
-    void RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale, ColorCode color);
-    void RenderAxes(GlContext const& gl, glm::mat4 const& mvp, float scale = 1.0f);
+    void RenderAxes(GlContext& gl, glm::mat4 const& mvp, float scale, ColorCode color);
+    void RenderAxes(GlContext& gl, glm::mat4 const& mvp, float scale = 1.0f);
     // static void RenderLine(glm::vec3 worldBegin, glm::vec3 worldEnd, glm::mat4 const& viewProjection);
-    void RenderBox(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
+    void RenderBox(GlContext& gl, glm::mat4 const& centerMvp, glm::vec4 color = glm::vec4{1.0f}) const;
     void RenderFrustum(
-        GlContext const& gl, glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f},
+        GlContext& gl, glm::mat4 const& centerMvp, Frustum const& frustum, glm::vec4 color = glm::vec4{1.0f},
         float thickness = 0.015f) const;
-    void RenderBillboard(GlContext const& gl, BillboardRenderArgs const& args) const;
-    void RenderLines(GlContext const& gl, glm::mat4 const& camera) const;
+    void RenderBillboard(GlContext& gl, BillboardRenderArgs const& args) const;
+    void RenderLines(GlContext& gl, glm::mat4 const& camera) const;
     void FlushLinesToGpu(std::vector<LineRendererInput::Line> const&);
-    void RenderPoints(GlContext const& gl, glm::mat4 const& camera) const;
+    void RenderPoints(GlContext& gl, glm::mat4 const& camera) const;
     void FlushPointsToGpu(std::vector<PointRendererInput::Point> const&);
-    void RenderEditorGrid(GlContext const& gl, glm::vec3 cameraWorldPosition, glm::mat4 const& camera) const;
+    void RenderEditorGrid(GlContext& gl, glm::vec3 cameraWorldPosition, glm::mat4 const& camera) const;
 
-    void RenderFulscreenTriangle(GlContext const& gl) const;
+    void RenderFulscreenTriangle(GlContext& gl) const;
     void Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale = glm::vec2{1.0f}) const;
 
     auto TextureStubColor [[nodiscard]] () const -> Texture const& { return stubColorTexture_; }

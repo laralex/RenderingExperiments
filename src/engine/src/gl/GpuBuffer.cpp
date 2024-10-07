@@ -1,7 +1,7 @@
-#include <engine/gl/Buffer.hpp>
+#include <engine/gl/GpuBuffer.hpp>
 #include <engine/gl/Debug.hpp>
 
-#include "engine/gl/Extensions.hpp"
+#include "engine/gl/GlExtensions.hpp"
 #include "engine_private/Prelude.hpp"
 
 namespace engine::gl {
@@ -15,7 +15,7 @@ ENGINE_EXPORT void GpuBuffer::Dispose() {
 }
 
 ENGINE_EXPORT auto GpuBuffer::Allocate(
-    GlContext const& gl, GLenum targetType, Access access, CpuMemory<GLvoid const> data, std::string_view name)
+    GlContext& gl, GLenum targetType, Access access, CpuMemory<GLvoid const> data, std::string_view name)
     -> GpuBuffer {
     {
         GLenum t = targetType;

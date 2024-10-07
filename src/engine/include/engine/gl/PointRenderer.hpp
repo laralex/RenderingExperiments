@@ -2,7 +2,7 @@
 
 #include "engine/PointRendererInput.hpp"
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Vao.hpp"
 #include <glm/mat4x4.hpp>
@@ -27,7 +27,7 @@ public:
     void Fill(std::vector<PointRendererInput::Point> const&, int32_t numPoints, int32_t numPointsOffset);
     void LimitInstances(int32_t numInstances);
     void Render(
-        GlContext const& gl, glm::mat4 const& camera, int32_t firstInstance = 0,
+        GlContext& gl, glm::mat4 const& camera, int32_t firstInstance = 0,
         int32_t numInstances = std::numeric_limits<int32_t>::max()) const;
     void Dispose(GlContext const& gl) override;
 

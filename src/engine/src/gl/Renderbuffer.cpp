@@ -33,7 +33,7 @@ ENGINE_EXPORT void Renderbuffer::Dispose() {
 }
 
 ENGINE_EXPORT auto Renderbuffer::Allocate2D(
-    GlContext const& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples, std::string_view name)
+    GlContext& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples, std::string_view name)
     -> Renderbuffer {
 
     Renderbuffer renderbuffer{};

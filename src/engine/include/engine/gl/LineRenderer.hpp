@@ -2,7 +2,7 @@
 
 #include "engine/LineRendererInput.hpp"
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 #include "engine/gl/GpuProgram.hpp"
 #include "engine/gl/Vao.hpp"
@@ -26,7 +26,7 @@ public:
 
     static auto Allocate [[nodiscard]] (GlContext& gl, size_t maxLines) -> LineRenderer;
     void Fill(std::vector<LineRendererInput::Line> const& lines, size_t numLines, size_t numLinesOffset) const;
-    void Render(GlContext const& gl, glm::mat4 const& camera) const;
+    void Render(GlContext& gl, glm::mat4 const& camera) const;
     void Dispose(GlContext const& gl) override;
 
 private:

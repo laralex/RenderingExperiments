@@ -57,7 +57,7 @@ ENGINE_EXPORT void LineRenderer::Dispose(GlContext const& gl) {
 
 }
 
-ENGINE_EXPORT void LineRenderer::Render(GlContext const& gl, glm::mat4 const& camera) const {
+ENGINE_EXPORT void LineRenderer::Render(GlContext& gl, glm::mat4 const& camera) const {
     auto programGuard = UniformCtx{*program_};
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(camera));
     RenderVao(vao_, GL_LINES);

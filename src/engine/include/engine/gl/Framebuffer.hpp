@@ -22,7 +22,7 @@ public:
 #undef Self
 
     static void BindBackbuffer();
-    static auto Allocate [[nodiscard]] (GlContext const& gl, std::string_view name = {}) -> Framebuffer;
+    static auto Allocate [[nodiscard]] (GlContext& gl, std::string_view name = {}) -> Framebuffer;
 
     auto Id [[nodiscard]] () const -> GLuint { return fbId_; }
     void BindDraw() const;
@@ -86,16 +86,16 @@ public:
     Self& operator=(Self&&)      = delete;
 #undef Self
     auto AttachTexture(
-        GlContext const& gl, GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
+        GlContext& gl, GLenum attachment, Texture const& tex, GLint texLevel = 0, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;
-    auto AttachRenderbuffer(GlContext const& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1) const
+    auto AttachRenderbuffer(GlContext& gl, GLenum attachment, Renderbuffer const& rb, GLint arrayIndex = -1) const
         -> FramebufferEditCtx const&;
     auto CommitDrawbuffers() const -> FramebufferEditCtx const&;
     auto SetReadbuffer(GLenum attachment) const -> FramebufferEditCtx const&;
     // auto SetDrawBuffers(CpuView<GLenum> attachments) const -> FramebufferEditCtx const&;
     // auto SetDrawBuffers(CpuView<GLenum> attachments) const -> FramebufferEditCtx const&;
 
-    auto IsComplete [[nodiscard]] (GlContext const& gl) const -> bool { return ctx_.IsComplete(gl); };
+    auto IsComplete [[nodiscard]] (GlContext& gl) const -> bool { return ctx_.IsComplete(gl); };
 
 private:
     Framebuffer& fb_;

@@ -51,7 +51,7 @@ ENGINE_EXPORT void Texture::Dispose() {
 }
 
 ENGINE_EXPORT auto Texture::Allocate2D(
-    GlContext const& gl, GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
+    GlContext& gl, GLenum textureType, glm::ivec2 size, GLenum internalFormat, std::string_view name) -> Texture {
     {
         GLenum t = textureType;
         assert(
@@ -107,7 +107,7 @@ ENGINE_EXPORT auto Texture::Allocate2D(
 }
 
 ENGINE_EXPORT auto Texture::AllocateZS(
-    GlContext const& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
+    GlContext& gl, glm::ivec2 size, GLenum internalFormat, bool sampleStencilOnly, std::string_view name)
     -> Texture {
     {
         GLenum f = internalFormat;

@@ -158,16 +158,13 @@ ENGINE_EXPORT auto BoxRenderer::Allocate(GlContext& gl) -> BoxRenderer {
 
 ENGINE_EXPORT void BoxRenderer::Dispose(GlContext const& gl) { }
 
-ENGINE_EXPORT void BoxRenderer::Render(GlContext const& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {
+ENGINE_EXPORT void BoxRenderer::Render(GlContext& gl, glm::mat4 const& centerMvp, glm::vec4 color) const {
     auto programGuard = gl::UniformCtx(*program_);
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(centerMvp));
     programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));
 
-    GLCALL(glDisable(GL_CULL_FACE));
-    GLCALL(glEnable(GL_DEPTH_TEST));
-    GLCALL(glDepthMask(GL_TRUE));
-    GLCALL(glDepthFunc(GL_LEQUAL));
-
+    gl.RenderState().CullNone();
+    gl.RenderState().DepthTestWrite();
     RenderVao(vao_);
 }
 

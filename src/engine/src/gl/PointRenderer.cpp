@@ -2,7 +2,7 @@
 
 // #include "engine/IcosphereMesh.hpp"
 #include "engine/BoxMesh.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 
@@ -124,7 +124,7 @@ ENGINE_EXPORT void PointRenderer::Dispose(GlContext const& gl) {
 }
 
 ENGINE_EXPORT void PointRenderer::Render(
-    GlContext const& gl, glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
+    GlContext& gl, glm::mat4 const& camera, int32_t firstInstance, int32_t numInstances) const {
     if (lastInstance_ <= 0 || firstInstance >= lastInstance_) {
         // XLOGW("Limit of points is <= 0 in PointRenderer");
         return;

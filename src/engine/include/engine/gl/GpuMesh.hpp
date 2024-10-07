@@ -2,7 +2,7 @@
 
 #include "engine/BoxMesh.hpp"
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Vao.hpp"
 
 namespace engine::gl {

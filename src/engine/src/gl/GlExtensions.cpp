@@ -1,4 +1,4 @@
-#include "engine/gl/Extensions.hpp"
+#include "engine/gl/GlExtensions.hpp"
 #include "engine/Precompiled.hpp"
 #include "engine_private/Prelude.hpp"
 

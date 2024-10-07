@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 
 namespace engine::gl {
 
@@ -29,7 +29,7 @@ public:
         GLuint instanceDivisor = 0U;
     };
 
-    static auto Allocate [[nodiscard]] (GlContext const& gl, std::string_view name = {}) -> Vao;
+    static auto Allocate [[nodiscard]] (GlContext& gl, std::string_view name = {}) -> Vao;
     auto Id [[nodiscard]] () const -> GLuint { return vaoId_; }
     auto IsInitialized [[nodiscard]] () const -> bool;
     auto IsIndexed [[nodiscard]] () const -> bool { return indexBufferDataType_ != GL_NONE; }

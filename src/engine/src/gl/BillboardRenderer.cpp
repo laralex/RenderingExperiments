@@ -1,7 +1,7 @@
 
 #include "engine/gl/BillboardRenderer.hpp"
 #include "engine/Assets.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Framebuffer.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
@@ -58,7 +58,7 @@ ENGINE_EXPORT auto BillboardRenderer::Allocate(GlContext& gl, GLuint fragmentSha
 
 ENGINE_EXPORT void BillboardRenderer::Dispose(GlContext const& gl) { }
 
-ENGINE_EXPORT void BillboardRenderer::Render(GlContext const& gl, BillboardRenderArgs const& args) const {
+ENGINE_EXPORT void BillboardRenderer::Render(GlContext& gl, BillboardRenderArgs const& args) const {
     auto const& program = args.isCustomVao ? customVaoProgram_ : quadVaoProgram_;
     auto programGuard         = gl::UniformCtx(*program);
 
@@ -66,11 +66,7 @@ ENGINE_EXPORT void BillboardRenderer::Render(GlContext const& gl, BillboardRende
     GLCALL(glBindBufferBase(GL_UNIFORM_BUFFER, UBO_CONTEXT_BINDING, ubo_.Id()));
     // programGuard.SetUbo(uboLocation_, UBO_CONTEXT_BINDING);
 
-    GLCALL(glEnable(GL_CULL_FACE));
-    GLCALL(glEnable(GL_DEPTH_TEST));
-    GLCALL(glDepthMask(GL_TRUE));
-    GLCALL(glDepthFunc(GL_LEQUAL));
-
+    gl.RenderState().DepthTest();
     RenderVao(args.vao, args.drawPrimitive);
 }
 

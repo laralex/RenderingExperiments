@@ -165,7 +165,7 @@ ENGINE_EXPORT void AxesRenderer::Dispose(GlContext const& gl) {
 
 }
 
-ENGINE_EXPORT void AxesRenderer::Render(GlContext const& gl, glm::mat4 const& mvp, float scale) const {
+ENGINE_EXPORT void AxesRenderer::Render(GlContext& gl, glm::mat4 const& mvp, float scale) const {
     bool isCustom            = scale != 1.0f;
     auto const& program = isCustom ? *customizedProgram_ : *defaultProgram_;
 
@@ -173,11 +173,7 @@ ENGINE_EXPORT void AxesRenderer::Render(GlContext const& gl, glm::mat4 const& mv
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(mvp));
     if (isCustom) { programGuard.SetUniformValue3(UNIFORM_SCALE_LOCATION, scale, scale, scale); }
 
-    GLCALL(glDisable(GL_CULL_FACE));
-    GLCALL(glEnable(GL_DEPTH_TEST));
-    GLCALL(glDepthMask(GL_TRUE));
-    GLCALL(glDepthFunc(GL_LEQUAL));
-
+    gl.RenderState().DepthTestWrite();
     RenderVao(vao_);
 }
 

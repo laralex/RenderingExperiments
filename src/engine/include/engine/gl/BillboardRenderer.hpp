@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 #include "engine/gl/GpuProgram.hpp"
@@ -30,7 +30,7 @@ public:
     // If not given, a plain texture is rendered bound to texture slot
     // BillboardRenderer::DEFAULT_UNIFORM_TEXTURE_LOCATION
     static auto Allocate [[nodiscard]] (GlContext& gl, GLuint fragmentShader = GL_NONE) -> BillboardRenderer;
-    void Render(GlContext const& gl, BillboardRenderArgs const& args) const;
+    void Render(GlContext& gl, BillboardRenderArgs const& args) const;
     void Dispose(GlContext const& gl) override;
 
 private:

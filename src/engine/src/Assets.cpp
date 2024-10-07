@@ -105,7 +105,7 @@ ENGINE_EXPORT auto ImageLoader::Load(CpuMemory<uint8_t> encodedImageData, int32_
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args)
+ENGINE_EXPORT auto LoadTexture [[nodiscard]] (GlContext& gl, LoadTextureArgs const& args)
 -> std::optional<Texture> {
     auto cpuImageInfo = args.loader.Load(args.filepath, args.numChannels);
     if (!cpuImageInfo) {

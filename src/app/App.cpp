@@ -6,10 +6,10 @@
 #include "engine/PlaneMesh.hpp"
 #include "engine/Unprojection.hpp"
 #include "engine/UvSphereMesh.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
 #include "engine/gl/GpuProgramRegistry.hpp"
-#include "engine/gl/Sampler.hpp"
+#include "engine/gl/GpuSampler.hpp"
 #include "engine/gl/Shader.hpp"
 #include "engine/gl/Uniform.hpp"
 #include "engine/gl/Vao.hpp"
@@ -263,11 +263,10 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
         glm::mat4 mvp = camera * model;
 
-        GLCALL(glEnable(GL_CULL_FACE));
-        GLCALL(glEnable(GL_DEPTH_TEST));
-        GLCALL(glDepthMask(GL_TRUE));
+        app->gl.RenderState().CullBack();
+        app->gl.RenderState().DepthTestWrite();
         GLCALL(glFrontFace(GL_CCW));
-        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)); // TODO: state registry
 
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.4f, ColorCode::CYAN);
 
@@ -322,11 +321,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         app->commonRenderers.RenderAxes(app->gl, camera * lightModel, 0.2f, ColorCode::YELLOW);
 
         gl::GpuMesh const& mesh = app->sphereMesh;
-        GLCALL(glEnable(GL_CULL_FACE));
-        GLCALL(glEnable(GL_DEPTH_TEST));
-        GLCALL(glFrontFace(mesh.FrontFace()));
-        GLCALL(glDepthMask(GL_TRUE));
-        GLCALL(glDepthFunc(GL_LEQUAL));
+        app->gl.RenderState().CullBack();
+        app->gl.RenderState().DepthTestWrite();
+        GLCALL(glFrontFace(mesh.FrontFace())); // TODO: render state registry
 
         glm::vec3 lightColor{0.2f};
         app->flatRenderer.Render(
@@ -396,7 +393,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
                 });
         }
 
-        GLCALL(glDisable(GL_DEPTH_TEST));
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.5f, ColorCode::WHITE);
 
         gl::RenderVao(app->gl.VaoDatalessQuad(), GL_POINTS);
@@ -417,10 +413,8 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
     }
 
     {
-        GLCALL(glEnable(GL_CULL_FACE));
-        GLCALL(glEnable(GL_DEPTH_TEST));
-        GLCALL(glDepthMask(GL_TRUE));
-        GLCALL(glDepthFunc(GL_LEQUAL));
+        app->gl.RenderState().CullBack();
+        app->gl.RenderState().DepthTestWrite();
 
         auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Debug lines/points pass");
         if (app->debugLines.IsDataDirty()) {

@@ -81,7 +81,7 @@ ENGINE_EXPORT auto FlatRenderer::Allocate(GlContext& gl) -> FlatRenderer {
 
 ENGINE_EXPORT void FlatRenderer::Dispose(GlContext const& gl) { }
 
-ENGINE_EXPORT void FlatRenderer::Render(GlContext const& gl, FlatRenderArgs const& args) const {
+ENGINE_EXPORT void FlatRenderer::Render(GlContext& gl, FlatRenderArgs const& args) const {
     glm::mat3x4 normalToWorld = glm::transpose(glm::inverse(args.modelToWorld));
 
     UboData data{

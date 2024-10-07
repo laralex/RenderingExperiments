@@ -28,7 +28,7 @@ public:
     };
 
     static auto Allocate(
-        GlContext const& gl, GLenum targetType, Access access, CpuMemory<GLvoid const> data, std::string_view name = {})
+        GlContext& gl, GLenum targetType, Access access, CpuMemory<GLvoid const> data, std::string_view name = {})
         -> GpuBuffer;
     auto Id [[nodiscard]] () const -> GLuint { return bufferId_; }
     void Fill(CpuMemory<GLvoid const> cpuData, GLintptr gpuByteOffset = 0) const;

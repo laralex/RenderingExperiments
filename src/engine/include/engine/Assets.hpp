@@ -78,6 +78,6 @@ struct LoadTextureArgs final {
     std::string_view name           = {};
     bool withMips                   = false;
 };
-auto LoadTexture [[nodiscard]] (GlContext const& gl, LoadTextureArgs const& args) -> std::optional<Texture>;
+auto LoadTexture [[nodiscard]] (GlContext& gl, LoadTextureArgs const& args) -> std::optional<Texture>;
 
 } // namespace engine::gl

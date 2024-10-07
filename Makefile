@@ -100,7 +100,7 @@ src_engine_ = \
 	gl/AxesRenderer.cpp \
 	gl/BoxRenderer.cpp gl/ProceduralMeshes.cpp \
 	gl/BillboardRenderer.cpp \
-	gl/Buffer.cpp gl/Capabilities.cpp \
+	gl/GpuBuffer.cpp gl/GlCapabilities.cpp \
 	gl/Context.cpp \
 	gl/Common.cpp gl/CommonRenderers.cpp \
 	gl/PointRenderer.cpp \
@@ -108,10 +108,11 @@ src_engine_ = \
 	gl/FlatRenderer.cpp \
 	gl/FrustumRenderer.cpp gl/Guard.cpp \
 	gl/LineRenderer.cpp \
-	gl/Extensions.cpp gl/Framebuffer.cpp \
+	gl/GlExtensions.cpp gl/Framebuffer.cpp \
 	gl/GpuProgram.cpp gl/GpuProgramRegistry.cpp \
 	gl/Renderbuffer.cpp \
-	gl/Sampler.cpp gl/SamplersCache.cpp \
+	gl/GlRenderStateRegistry.cpp \
+	gl/GpuSampler.cpp gl/SamplersCache.cpp \
 	gl/Shader.cpp gl/Texture.cpp \
 	gl/TextureUnits.cpp gl/Uniform.cpp \
 	gl/Vao.cpp

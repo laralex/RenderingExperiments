@@ -193,7 +193,7 @@ ENGINE_EXPORT void FrustumRenderer::Dispose(GlContext const& gl) {
 }
 
 ENGINE_EXPORT void FrustumRenderer::Render(
-    GlContext const& gl, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
+    GlContext& gl, glm::mat4 const& originMvp, Frustum const& frustum, glm::vec4 color, float thickness) const {
     auto programGuard = gl::UniformCtx(*program_);
     UboData data{
         .leftRightBottomTop = {frustum.left, frustum.right, frustum.bottom, frustum.top},
@@ -206,10 +206,8 @@ ENGINE_EXPORT void FrustumRenderer::Render(
     programGuard.SetUniformValue4(UNIFORM_COLOR_LOCATION, glm::value_ptr(color));
     programGuard.SetUniformMatrix4x4(UNIFORM_MVP_LOCATION, glm::value_ptr(originMvp));
 
-    GLCALL(glDisable(GL_CULL_FACE));
-    GLCALL(glEnable(GL_DEPTH_TEST));
-    GLCALL(glDepthMask(GL_TRUE));
-    GLCALL(glDepthFunc(GL_LEQUAL));
+    gl.RenderState().CullNone();
+    gl.RenderState().DepthTestWrite();
 
     RenderVao(vao_);
 }

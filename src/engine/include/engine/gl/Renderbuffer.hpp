@@ -19,7 +19,7 @@ public:
 #undef Self
 
     static auto Allocate2D [[nodiscard]] (
-        GlContext const& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples = 0,
+        GlContext& gl, glm::ivec2 size, GLenum internalFormat, int32_t msaaSamples = 0,
         std::string_view name = {}) -> Renderbuffer;
 
     auto Id [[nodiscard]] () const -> GLuint { return renderbufferId_; }

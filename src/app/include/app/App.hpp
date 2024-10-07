@@ -3,7 +3,7 @@
 #include "engine/Assets.hpp"
 #include "engine/EngineLoop.hpp"
 #include "engine/FirstPersonLocomotion.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/FlatRenderer.hpp"

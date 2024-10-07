@@ -23,10 +23,10 @@
 #include "engine/gl/Common.hpp"
 
 #include "engine/Log.hpp"
-#include "engine/gl/Capabilities.hpp"
+#include "engine/gl/GlCapabilities.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/Debug.hpp"
-#include "engine/gl/Extensions.hpp"
+#include "engine/gl/GlExtensions.hpp"
 #include "engine/gl/GpuProgramRegistry.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 

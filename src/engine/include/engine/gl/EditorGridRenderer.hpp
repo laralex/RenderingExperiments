@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/Precompiled.hpp"
-#include "engine/gl/Buffer.hpp"
+#include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/Context.hpp"
 #include "engine/gl/IGlDisposable.hpp"
 #include "engine/gl/GpuProgram.hpp"
@@ -30,7 +30,7 @@ public:
     };
 
     static auto Allocate [[nodiscard]] (GlContext& gl) -> EditorGridRenderer;
-    void Render(GlContext const& gl, RenderArgs const&) const;
+    void Render(GlContext& gl, RenderArgs const&) const;
     void Dispose(GlContext const& gl) override;
 
 private:

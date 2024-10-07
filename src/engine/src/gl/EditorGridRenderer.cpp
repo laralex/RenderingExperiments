@@ -42,7 +42,7 @@ ENGINE_EXPORT auto EditorGridRenderer::Allocate(GlContext& gl) -> EditorGridRend
 
 ENGINE_EXPORT void EditorGridRenderer::Dispose(GlContext const& gl) { }
 
-ENGINE_EXPORT void EditorGridRenderer::Render(GlContext const& gl, EditorGridRenderer::RenderArgs const& args) const {
+ENGINE_EXPORT void EditorGridRenderer::Render(GlContext& gl, EditorGridRenderer::RenderArgs const& args) const {
     UboData data{
         .thickColor = args.thickColor,
         .thinColor = args.thinColor,
