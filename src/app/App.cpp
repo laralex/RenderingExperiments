@@ -396,6 +396,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
                 });
         }
 
+        GLCALL(glDisable(GL_DEPTH_TEST));
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.5f, ColorCode::WHITE);
 
         gl::RenderVao(app->gl.VaoDatalessQuad(), GL_POINTS);

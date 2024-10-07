@@ -57,6 +57,13 @@ struct ShaderCreateInfo {
         : source(id)
         , compilationStage(SourceType::GL_ID)
         , shaderType(shaderType) {}
+
+    void Dispose() {
+        if (compilationStage != GL_ID || !std::holds_alternative<GLuint>(source)) { return; }
+        glDeleteShader(std::get<GLuint>(source));
+        source = GLuint{0U};
+    }
+
     enum SourceType {
         CODE,
         FILEPATH,
@@ -76,26 +83,20 @@ struct GlContext;
 struct GpuProgram;
 struct Vao;
 
-auto CompileShader [[nodiscard]] (GLenum shaderType, std::string_view code, bool logFail) -> GLuint;
+auto CompileGlShader [[nodiscard]] (GLenum shaderType, std::string_view code, bool logFail) -> GLuint;
 void CompileShader(engine::gl::shader::ShaderCreateInfo& info, engine::CpuView<engine::ShaderDefine const> defines, bool logCode);
 
 auto LinkProgram [[nodiscard]] (
-    GlContext& gl, shader::ShaderCreateInfo vertexShader, shader::ShaderCreateInfo fragmentShader,
-    std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
-auto LinkProgram [[nodiscard]] (
-    GlContext& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
-    std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
+    GlContext& gl, shader::ShaderCreateInfo vertex, shader::ShaderCreateInfo fragment,
+    engine::CpuView<engine::ShaderDefine const> defines, std::string_view name = {}, bool logCode = false) -> std::optional<GpuProgram>;
 auto LinkProgramFromFiles [[nodiscard]](
     GlContext& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     std::vector<ShaderDefine>&& defines, std::string_view name, bool logCode = false)
 -> std::optional<std::shared_ptr<GpuProgram>>;
 
-auto RelinkProgram [[nodiscard]] (
-    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
-    GpuProgram const& oldProgram, bool logCode) -> bool;
-auto RelinkProgramFromFiles [[nodiscard]] (
-    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<ShaderDefine const> defines, GpuProgram const& oldProgram, bool logCode) -> bool;
+auto RelinkProgram [[nodiscard]](
+    GlContext const& gl, shader::ShaderCreateInfo vertex, shader::ShaderCreateInfo fragment,
+    GpuProgram const& oldProgram, CpuView<ShaderDefine const> defines, bool logCode) -> bool;
 
 void RenderVao(Vao const&, GLenum primitive = GL_TRIANGLES);
 void RenderVaoInstanced(Vao const& vao, GLuint firstInstance, GLsizei numInstances, GLenum primitive = GL_TRIANGLES);

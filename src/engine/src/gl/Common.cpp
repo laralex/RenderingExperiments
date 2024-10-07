@@ -6,6 +6,7 @@
 #include "engine/gl/Vao.hpp"
 
 #include "engine_private/Prelude.hpp"
+#include <memory>
 
 namespace {
 
@@ -21,8 +22,8 @@ auto AllocateGraphicalShaders
     -> std::pair<GLuint, GLuint> {
     LogShaderCode("Compiling shader", vertexShaderCode, engine::gl::shader::ShaderType::VERTEX, logCode);
     LogShaderCode("Compiling shader", fragmentShaderCode, engine::gl::shader::ShaderType::FRAGMENT, logCode);
-    GLuint vertexShader   = engine::gl::CompileShader(GL_VERTEX_SHADER, vertexShaderCode, logCode);
-    GLuint fragmentShader = engine::gl::CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode, logCode);
+    GLuint vertexShader   = engine::gl::CompileGlShader(GL_VERTEX_SHADER, vertexShaderCode, logCode);
+    GLuint fragmentShader = engine::gl::CompileGlShader(GL_FRAGMENT_SHADER, fragmentShaderCode, logCode);
     return {vertexShader, fragmentShader};
 }
 
@@ -30,7 +31,7 @@ auto AllocateGraphicalShaders
 
 namespace engine::gl {
 
-ENGINE_EXPORT auto CompileShader(GLenum shaderType, std::string_view code, bool logFail) -> GLuint {
+ENGINE_EXPORT auto CompileGlShader(GLenum shaderType, std::string_view code, bool logFail) -> GLuint {
     GLenum shader;
     GLCALL(shader = glCreateShader(shaderType));
 
@@ -65,7 +66,7 @@ ENGINE_EXPORT void CompileShader(shader::ShaderCreateInfo& info, CpuView<ShaderD
             CompileShader(info, defines, logCode);
             break;
         case ShaderCreateInfo::CODE:
-            shader_id = CompileShader(static_cast<GLenum>(info.shaderType), std::get<std::string>(info.source), logCode);
+            shader_id = CompileGlShader(static_cast<GLenum>(info.shaderType), std::get<std::string>(info.source), logCode);
             assert(shader_id > 0);
             info.compilationStage = ShaderCreateInfo::GL_ID;
             info.source = shader_id;
@@ -77,59 +78,50 @@ ENGINE_EXPORT void CompileShader(shader::ShaderCreateInfo& info, CpuView<ShaderD
     }
 }
 
+ENGINE_EXPORT auto LinkProgram(GlContext& gl, shader::ShaderCreateInfo vertex, shader::ShaderCreateInfo fragment,
+    engine::CpuView<engine::ShaderDefine const> defines, std::string_view name, bool logCode)
+    -> std::optional<GpuProgram> {
 
-ENGINE_EXPORT auto LinkProgram(
-    GlContext& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode, std::string_view name,
-    bool logCode) -> std::optional<GpuProgram> {
+    CompileShader(vertex, defines, logCode);
+    CompileShader(fragment, defines, logCode);
 
-    auto [vertexShader, fragmentShader] = AllocateGraphicalShaders(vertexShaderCode, fragmentShaderCode, logCode);
-    auto maybeProgram                   = GpuProgram::Allocate(gl, vertexShader, fragmentShader, name);
+    auto vertGl = std::get<GLuint>(vertex.source);
+    auto fragGl = std::get<GLuint>(fragment.source);
+    auto maybeProgram = GpuProgram::Allocate(gl, vertGl, fragGl, name);
+    if (!maybeProgram) { return std::nullopt; }
 
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
-
-    return maybeProgram;
+    return std::optional{std::move(*maybeProgram)};
 }
 
 ENGINE_EXPORT auto LinkProgramFromFiles(
     GlContext& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
     std::vector<ShaderDefine>&& defines, std::string_view name, bool logCode) -> std::optional<std::shared_ptr<GpuProgram>> {
-    auto definesView = CpuView{defines.data(), std::size(defines)};
     auto vert = shader::ShaderCreateInfo(vertexFilepath, shader::ShaderType::VERTEX);
     auto frag = shader::ShaderCreateInfo(fragmentFilepath, shader::ShaderType::FRAGMENT);
-    CompileShader(vert, definesView, logCode);
-    CompileShader(frag, definesView, logCode);
-    auto maybeProgram = GpuProgram::Allocate(gl, std::get<GLuint>(vert.source), std::get<GLuint>(frag.source), name);
-    if (!maybeProgram) { return std::nullopt; }
-
+    auto definesView = CpuView{defines.data(), std::size(defines)};
+    auto maybeProgram = LinkProgram(gl, vert, frag, definesView, name, logCode);
+    vert.Dispose();
+    frag.Dispose();
+    if (!maybeProgram) {
+        return std::nullopt;
+    }
     auto program = std::make_shared<GpuProgram>(std::move(*maybeProgram));
     gl.Programs()->RegisterProgram(program, vertexFilepath, fragmentFilepath, std::move(defines));
     return std::optional{program};
 }
 
 ENGINE_EXPORT auto RelinkProgram(
-    GlContext const& gl, std::string_view vertexShaderCode, std::string_view fragmentShaderCode,
-    GpuProgram const& oldProgram, bool logCode) -> bool {
-    auto [vertexShader, fragmentShader] = AllocateGraphicalShaders(vertexShaderCode, fragmentShaderCode, logCode);
-    // TODO: also fail if any shader didn't compile
-    if (vertexShader <= 0 || fragmentShader <= 0) {
-        GLCALL(glDeleteShader(vertexShader));
-        GLCALL(glDeleteShader(fragmentShader));
+    GlContext const& gl, shader::ShaderCreateInfo vertex, shader::ShaderCreateInfo fragment,
+    GpuProgram const& oldProgram, CpuView<ShaderDefine const> defines, bool logCode) -> bool {
+    CompileShader(vertex, defines, logCode);
+    CompileShader(fragment, defines, logCode);
+    auto vertGl = std::get<GLuint>(vertex.source);
+    auto fragGl = std::get<GLuint>(fragment.source);
+    if (vertGl <= 0 || fragGl <= 0) {
         return false;
     }
     constexpr bool isRecompile = true;
-    bool ok                    = oldProgram.LinkGraphical(vertexShader, fragmentShader, isRecompile);
-    GLCALL(glDeleteShader(vertexShader));
-    GLCALL(glDeleteShader(fragmentShader));
-    return ok;
-}
-
-ENGINE_EXPORT auto RelinkProgramFromFiles(
-    GlContext const& gl, std::string_view vertexFilepath, std::string_view fragmentFilepath,
-    CpuView<ShaderDefine const> defines, GpuProgram const& oldProgram, bool logCode) -> bool {
-    std::string vertexShaderCode   = LoadShaderCode(vertexFilepath, shader::ShaderType::VERTEX, defines);
-    std::string fragmentShaderCode = LoadShaderCode(fragmentFilepath, shader::ShaderType::FRAGMENT, defines);
-    return RelinkProgram(gl, vertexShaderCode, fragmentShaderCode, oldProgram, logCode);
+    return oldProgram.LinkGraphical(vertGl, fragGl, isRecompile);
 }
 
 ENGINE_EXPORT void RenderVao(Vao const& vao, GLenum primitive) {

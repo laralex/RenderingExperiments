@@ -95,9 +95,13 @@ void GpuProgramRegistry::HotReloadPrograms(GlContext const& gl) {
         auto program = payload.program.lock();
         auto programType = program->Type();
         if (programType == GpuProgramType::GRAPHICAL) {
-            ok = RelinkProgramFromFiles(
-                gl, payload.shadersFilepaths[0], payload.shadersFilepaths[1],
-                CpuView{payload.defines.data(), payload.defines.size()}, *program, false);
+            auto vert = shader::ShaderCreateInfo(payload.shadersFilepaths[0], shader::ShaderType::VERTEX);
+            auto frag = shader::ShaderCreateInfo(payload.shadersFilepaths[1], shader::ShaderType::VERTEX);
+            ok = RelinkProgram(
+                gl, vert, frag,
+                *program, CpuView{payload.defines.data(), payload.defines.size()}, false);
+            vert.Dispose();
+            frag.Dispose();
         } else if (programType == GpuProgramType::COMPUTE) {
             assert(false && "GpuProgramRegistry::OnFileChanged not implemented for compute shaders");
         }
