@@ -68,17 +68,17 @@ COMPILE_FLAGS += -std=c++20 \
 	-Wno-unknown-attributes \
 #-Weverything \
 
-INCLUDE_DIR+=-I src/engine/include
+INCLUDE_DIR+=-I./src/engine/include
 # root of 3rd party, because for imgui, cr and concurrentqueue have headers in their root
-INCLUDE_DIR+=-I third_party/imgui
-INCLUDE_DIR+=-I third_party/imgui/backends
-INCLUDE_DIR+=-I third_party/cr
-INCLUDE_DIR+=-I third_party/concurrentqueue
-INCLUDE_DIR+=-I third_party/spdlog/include
-INCLUDE_DIR+=-I third_party/glad/include
-INCLUDE_DIR+=-I third_party/glm/
-INCLUDE_DIR+=-I third_party/stb/
-INCLUDE_DIR+=-I data
+INCLUDE_DIR+=-I./third_party/imgui
+INCLUDE_DIR+=-I./third_party/imgui/backends
+INCLUDE_DIR+=-I./third_party/cr
+INCLUDE_DIR+=-I./third_party/concurrentqueue
+INCLUDE_DIR+=-I./third_party/spdlog/include
+INCLUDE_DIR+=-I./third_party/glad/include
+INCLUDE_DIR+=-I./third_party/glm/
+INCLUDE_DIR+=-I./third_party/stb/
+INCLUDE_DIR+=-I./data
 LDFLAGS+=-pthread -ldl -lGL
 CLANG_FORMAT=clang-format-17
 
@@ -147,7 +147,8 @@ init_repo:
 # `bear` must be installed by you (e.g. apt-get install bear)
 .PHONY: intellisense
 intellisense: rm
-	$(if ${USE_CLANGD},bear -a make -j16 DEBUG=${DEBUG})
+	-rm compile_commands.json
+	$(if ${USE_CLANGD},bear -- make -j16 DEBUG=${DEBUG})
 
 ccache:
 	wget https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz \
@@ -287,3 +288,6 @@ ${BUILD_DIR}/third_party/stb/stb_image.o:
 
 ${outdirs_engine} ${outdirs_app} ${INSTALL_DIR}:
 	mkdir -p $@
+
+test.hpp.pch:
+	clang++ -std=c++20 -g -c -o test.hpp.pch -xc++-header test.hpp

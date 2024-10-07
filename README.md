@@ -46,8 +46,7 @@ Now you can choose to install prerequisites automatically, or manually
         ```bash
         sudo apt install cmake
         ```
-    * (Optional) [Bear](https://github.com/rizsotto/Bear) tool (tested version `2.4.3`)
-    
+    * (Optional) [Bear](https://github.com/rizsotto/Bear) tool (tested version `3.1.5`)
         Needed if you prefer to use `clangd` as development tool. `bear` simply dumps `clang` build commands into `compile_commands.json` file required by `clangd`.
         ```bash
         # to install
@@ -82,7 +81,7 @@ Internal dependencies (you don't need to do anything to install):
     >
     > Changing of the options (except for `DEBUG`) would require a clean build (remove `build/debug` or `build/release` directory)
     > ```make
-    > # For maximum logging, and debugger support (unoptimized code!)
+    > # For lot of logs, and debugger support (unoptimized code!)
     > DEBUG?=1
     >
     > # Start the application right after successful build
@@ -102,6 +101,12 @@ Internal dependencies (you don't need to do anything to install):
     >
     > # For code completion (aka intellisense) in IDE. Uses Bear tool to generate `compile_commands.json` file
     > USE_CLANGD?=1
+    >
+    > # For maximum log (slow and a LOT of messages)
+    > USE_VERBOSE_LOG?=1
+    >
+    > # For compiling and running to check memory allocations and valid usage 
+    > USE_SANITIZER?=1
     >
     > # if ON,  link engine code dynamically into the application
     > # if OFF, link engine code statically into the application
