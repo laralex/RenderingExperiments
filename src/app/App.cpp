@@ -6,6 +6,7 @@
 #include "engine/PlaneMesh.hpp"
 #include "engine/Unprojection.hpp"
 #include "engine/UvSphereMesh.hpp"
+#include "engine/gl/Common.hpp"
 #include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/ProceduralMeshes.hpp"
 #include "engine/gl/GpuProgramRegistry.hpp"
@@ -174,6 +175,22 @@ static void ConfigureApplication(
         if (it->size() == 0) { continue; }
         assert(app->fileNotifier.SubscribeWatcher(shaderWatcher, *it));
     }
+
+    app->defaultRenderState = app->gl.RenderState().AddStateSetter("defaultState", [](){
+        GLCALL(glDisable(GL_BLEND));
+
+        GLCALL(glEnable(GL_DEPTH_TEST));
+        GLCALL(glDepthFunc(GL_LEQUAL));
+        GLCALL(glDepthMask(GL_TRUE));
+
+        GLCALL(glEnable(GL_CULL_FACE));
+        GLCALL(glCullFace(GL_BACK));
+        GLCALL(glFrontFace(GL_CCW));
+
+        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    });
 }
 
 static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& windowCtx, void* appData) {
@@ -247,6 +264,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     float rotationSpeed = ctx.timeSec * 0.5f;
 
+    app->gl.RenderState().SetTo(app->defaultRenderState);
     auto fbGuard = gl::FramebufferDrawCtx{app->outputFramebuffer};
     {
         // textured box
@@ -262,11 +280,6 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         auto debugGroupGuard = gl::DebugGroupCtx(app->gl, "Main pass");
 
         glm::mat4 mvp = camera * model;
-
-        app->gl.RenderState().CullBack();
-        app->gl.RenderState().DepthTestWrite();
-        GLCALL(glFrontFace(GL_CCW));
-        GLCALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)); // TODO: state registry
 
         app->commonRenderers.RenderAxes(app->gl, mvp, 0.4f, ColorCode::CYAN);
 
@@ -398,9 +411,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
         gl::RenderVao(app->gl.VaoDatalessQuad(), GL_POINTS);
 
         app->commonRenderers.RenderEditorGrid(app->gl, cameraMovement.Position(), camera);
-        GLCALL(glDisable(GL_BLEND));
     }
 
+    app->gl.RenderState().SetTo(app->defaultRenderState);
     fbGuard.GuardAnother(0U);
     {
         // present
@@ -432,6 +445,7 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 
     app->commonRenderers.OnFrameEnd();
     app->gl.TextureUnits().RestoreState();
+
     if (ctx.frameIdx % 100 == 0) {
         bool filesChanged = app->fileNotifier.PollChanges();
         if (filesChanged) { app->gl.Programs()->HotReloadPrograms(app->gl); }

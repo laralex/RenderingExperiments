@@ -3,6 +3,7 @@
 #include "engine/Assets.hpp"
 #include "engine/EngineLoop.hpp"
 #include "engine/FirstPersonLocomotion.hpp"
+#include "engine/gl/GlRenderStateRegistry.hpp"
 #include "engine/gl/GpuBuffer.hpp"
 #include "engine/gl/CommonRenderers.hpp"
 #include "engine/gl/Context.hpp"
@@ -70,7 +71,7 @@ struct Application final {
     engine::PointRendererInput debugPoints                 = engine::PointRendererInput{};
     engine::ImageLoader imageLoader                        = engine::ImageLoader{};
     AppDebugMode debugMode                                 = AppDebugMode::NONE;
-
+    engine::gl::RenderStateHandle defaultRenderState = {};
     engine::platform::FileChangeNotifier fileNotifier = engine::platform::FileChangeNotifier{};
     bool isInitialized                                = false;
 };
