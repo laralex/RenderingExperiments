@@ -13,6 +13,7 @@
 #include <memory>
 #include <queue>
 #include <vector>
+#include <thread>
 
 namespace engine {
 
@@ -34,6 +35,7 @@ struct EnginePersistentData {
 
     moodycamel::ConcurrentQueue<UserAction> actionQueues[static_cast<size_t>(UserActionType::NUM_TYPES)];
     bool isInitialized = false;
+    std::thread renderThread {};
 };
 
 struct EngineCtx {

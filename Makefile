@@ -1,6 +1,6 @@
 DEBUG?=1
 RUN_AFTER_BUILD?=1
-# USE_HOT_RELOADING?=1
+USE_HOT_RELOADING?=1
 USE_DEP_FILES?=1
 USE_PCH?=1
 USE_CCACHE?=1
@@ -36,12 +36,12 @@ ENGINE_LIB=$(if ${USE_DYNLIB_ENGINE},${BUILD_DIR}/engine/libengine.so,${BUILD_DI
 PRECOMPILED_HEADER=${BUILD_DIR}/engine/Precompiled.hpp.pch
 
 THIRD_PARTY_DEPS=\
+	${BUILD_DIR}/third_party/imgui/libimgui.a \
 	${BUILD_DIR}/third_party/spdlog/libspdlog.a \
 	${BUILD_DIR}/third_party/glfw/src/libglfw.so \
 	${BUILD_DIR}/third_party/glad/gl.o \
 	${BUILD_DIR}/third_party/glm/glm/libglm.a \
 	${BUILD_DIR}/third_party/stb/stb_image.o \
-	${BUILD_DIR}/third_party/imgui/libimgui.a
 
 APP_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},,${THIRD_PARTY_DEPS})
 ENGINE_THIRD_PARTY_DEPS=$(if ${USE_DYNLIB_ENGINE},${THIRD_PARTY_DEPS},)
@@ -218,7 +218,7 @@ ${APP_LIB}: ${APP_THIRD_PARTY_DEPS} ${obj_app} ${ENGINE_LIB}
 	$(info > Linking dynamic $@)
 	${CXX} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
 
-${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS} ${APP_LIB}
+${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${APP_LIB} ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS}
 	$(info > Linking executable $@)
 	${CXX} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
@@ -255,8 +255,6 @@ imgui_obj = $(addprefix ${BUILD_DIR}/${imgui_dir}/, ${imgui_obj_})
 ${BUILD_DIR}/third_party/imgui/%.o: third_party/imgui/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
-# ${BUILD_DIR}/third_party/imgui/ImguiExport.o: src/third_party/ImguiExport.cpp
-# 	$(CXX) ${COMPILE_FLAGS} -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
 
 ${BUILD_DIR}/third_party/imgui/libimgui.a: $(imgui_obj)
 	ar r $@ ${imgui_obj}

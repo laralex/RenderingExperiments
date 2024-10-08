@@ -9,4 +9,3 @@
 * compute shaders
 * libktx
 * fastgltf
-* IGlDisposable implementors allow slicing (need to delete copy/move)

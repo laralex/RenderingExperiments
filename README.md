@@ -131,7 +131,7 @@ Internal dependencies (you don't need to do anything to install):
 
 5. If the application is running, and you want to recompile it without stopping the application, you can use
     ```bash
-    make hot
+    make hot -j16
     ```
     After compilation completes, the application will apply the newly compiled code automatically. It has limitations though, some code changes might crash the program, because of incompatible binary data (e.g. if you change the definitions of `class`/`struct` fields)
 
