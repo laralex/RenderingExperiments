@@ -59,7 +59,7 @@ using ActionQueue            = moodycamel::ConcurrentQueue<engine::UserAction>;
 constexpr size_t MAX_ENGINES = 16U;
 
 ENGINE_STATIC int64_t g_numEngineInstances = 0;
-ENGINE_STATIC std::array<std::optional<engine::EngineCtx>, MAX_ENGINES> g_engines{};
+std::array<std::optional<engine::EngineCtx>, MAX_ENGINES> g_engines{};
 
 // TODO: encapsulate them somewhere, e.g. window context
 ENGINE_STATIC GLFWcursorenterfun g_externalCursorEnterCallback;
@@ -286,6 +286,7 @@ ENGINE_EXPORT auto HotStartEngine(engine::EngineHandle engine, std::shared_ptr<e
     -> engine::EngineResult {
     if (engine == engine::ENGINE_HANDLE_NULL) { return engine::EngineResult::ERROR_ENGINE_NULL; }
     engine->persistent = data;
+    engine->persistent->renderCallback = nullptr;
     // NOTE: I suppose, resettings the callbacks is not necessary for hot start
     // cr.h library loads the dynamic libraries to the same addresses
     return engine::EngineResult::SUCCESS;
@@ -334,7 +335,9 @@ ENGINE_EXPORT auto TickEngine(engine::EngineHandle engine) -> engine::EngineResu
         ImGui_ImplGlfw_Sleep(10);
         return EngineResult::SUCCESS;
     }
-    engineData.renderCallback(renderCtx, windowCtx, engineData.applicationData);
+    if (engineData.renderCallback) {
+        engineData.renderCallback(renderCtx, windowCtx, engineData.applicationData);
+    }
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();

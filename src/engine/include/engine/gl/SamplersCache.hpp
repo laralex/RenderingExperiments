@@ -31,10 +31,10 @@ public:
 
 private:
     // TODO(a.larionov): std::unordered_map doens't support std::string_view lookup
-    std::map<std::string, CacheKey, std::less<>> nameToId_;
-    std::vector<GpuSampler> idToSampler_;
+    std::map<std::string, CacheKey, std::less<>> nameToId_ = {};
+    std::vector<GpuSampler> idToSampler_ = {};
 
-    ENGINE_STATIC static const GpuSampler nullSampler_;
+    GpuSampler const nullSampler_ {};
 };
 
 } // namespace engine::gl

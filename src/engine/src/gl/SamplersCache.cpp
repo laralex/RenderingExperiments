@@ -4,8 +4,6 @@
 
 namespace engine::gl {
 
-ENGINE_STATIC GpuSampler const SamplersCache::nullSampler_{};
-
 ENGINE_EXPORT auto SamplersCache::FindSampler(std::string_view name) const -> GpuSampler const& {
     auto findId = nameToId_.find(name);
     if (findId == nameToId_.end()) {

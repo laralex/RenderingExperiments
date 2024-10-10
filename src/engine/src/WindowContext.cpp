@@ -24,7 +24,7 @@ ENGINE_EXPORT void WindowCtx::GlfwWindowDeleter::operator()(GLFWwindow* window) 
 
 ENGINE_EXPORT auto WindowCtx::SetKeyboardCallback(GlfwKey keyboardKey, ButtonCallback callback) -> ButtonCallback {
     auto found = keys_.find(keyboardKey);
-    if (found == keys_.cend()) {
+    if (found == std::cend(keys_)) {
         keys_[keyboardKey] = callback;
         return nullptr;
     }

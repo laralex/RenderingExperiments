@@ -67,6 +67,7 @@ COMPILE_FLAGS += -std=c++20 \
 	-Wno-padded \
 	-Wno-unknown-attributes \
 #-Weverything \
+#-rdynamic
 
 INCLUDE_DIR+=-I./src/engine/include
 # root of 3rd party, because for imgui, cr and concurrentqueue have headers in their root
@@ -82,7 +83,7 @@ INCLUDE_DIR+=-I./data
 LDFLAGS+=-pthread -ldl -lGL
 CLANG_FORMAT=clang-format-17
 
-src_app_ = App.cpp Main.cpp
+src_app_ = App.cpp
 outpaths_app = $(addprefix ${BUILD_DIR}/app/, ${src_app_})
 outdirs_app = $(sort $(dir ${outpaths_app}) ${BUILD_DIR}/app)
 obj_app = ${outpaths_app:.cpp=.o}
@@ -162,18 +163,20 @@ ccache:
 .PHONY: hot
 hot: ${APP_LIB} ${outdirs_app}
 	-cp ${ENGINE_LIB} ${INSTALL_DIR}
-	rm ${INSTALL_DIR}/$(notdir ${APP_LIB})
+	-rm ${INSTALL_DIR}/$(notdir ${APP_LIB})
 	-cp ${APP_LIB} ${INSTALL_DIR}
 
 .PHONY: wtf
 wtf:
 	$(info > ${outpaths_engine})
-	$(info > ${outpaths_app})
+	$(info > ${APP_LIB})
 
+# NOTE: for hot-reloaded applicatoin, first argument is the full path to the dynamic library
 .PHONY: run
 run: ${INSTALL_DIR}/app
 	@echo "====== RUN ======"
-	@cd ${INSTALL_DIR} && LD_LIBRARY_PATH=. ./app
+	cd ${INSTALL_DIR} && LD_LIBRARY_PATH=. ./app $(shell realpath ${INSTALL_DIR}/libapp.so)
+#$(if ${USE_HOT_RELOADING} ${MAKEFILE_DIR}/${APP_LIB},)
 
 .PHONY: prettify
 prettify:
@@ -210,13 +213,13 @@ ${INSTALL_DIR}/app: ${INSTALL_DIR} ${APP_EXE}
 	cp ${APP_EXE} $@
 
 # linking app
-${APP_MAIN_EXE}: ${obj_app} ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS}
-	$(info > Linking executable $@)
-	${CXX} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
-
-${APP_LIB}: ${APP_THIRD_PARTY_DEPS} ${obj_app} ${ENGINE_LIB}
+${APP_LIB}: ${obj_app} ${obj_engine} ${APP_THIRD_PARTY_DEPS}
 	$(info > Linking dynamic $@)
 	${CXX} -shared $^ -o $@ -Wl,-soname,$(notdir $@)
+
+${APP_MAIN_EXE}: ${BUILD_DIR}/app/Main.o ${obj_app} ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS}
+	$(info > Linking executable $@)
+	${CXX} ${COMPILE_FLAGS} $^ ${LDFLAGS} -o $@
 
 ${APP_HOTRELOAD_EXE}: ${BUILD_DIR}/app/MainHotreload.o ${APP_LIB} ${ENGINE_LIB} ${APP_THIRD_PARTY_DEPS}
 	$(info > Linking executable $@)
@@ -254,7 +257,7 @@ imgui_obj = $(addprefix ${BUILD_DIR}/${imgui_dir}/, ${imgui_obj_})
 
 ${BUILD_DIR}/third_party/imgui/%.o: third_party/imgui/%.cpp
 	mkdir -p $(dir $@)
-	$(CXX) -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
+	$(CXX) $(if ${USE_HOT_RELOADING},-fPIC,) -I $(imgui_dir) -I $(imgui_dir)/backends -c $< -o $@
 
 ${BUILD_DIR}/third_party/imgui/libimgui.a: $(imgui_obj)
 	ar r $@ ${imgui_obj}
@@ -287,6 +290,3 @@ ${BUILD_DIR}/third_party/stb/stb_image.o:
 
 ${outdirs_engine} ${outdirs_app} ${INSTALL_DIR}:
 	mkdir -p $@
-
-test.hpp.pch:
-	clang++ -std=c++20 -g -c -o test.hpp.pch -xc++-header test.hpp

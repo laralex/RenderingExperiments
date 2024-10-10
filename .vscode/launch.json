@@ -8,9 +8,9 @@
          "type": "lldb",
          "request": "launch",
          "name": "make debug & run",
-         //[],
          "preLaunchTask": "make debug",
          "program": "${workspaceFolder}/build/debug/install/app",
+         "args": ["${workspaceFolder}/build/debug/install/libapp.so"],
          "env": {"LD_LIBRARY_PATH": "${workspaceFolder}/build/debug/install"}
        }
    ],

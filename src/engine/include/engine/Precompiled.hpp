@@ -15,7 +15,8 @@
 #pragma clang diagnostic ignored "-Weverything"
 #include <cr.h>
 #pragma clang diagnostic pop
-#define ENGINE_STATIC CR_STATE
+// #define ENGINE_STATIC CR_STATE
+#define ENGINE_STATIC
 
 #include <concurrentqueue.h>
 

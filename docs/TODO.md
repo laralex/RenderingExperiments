@@ -1,4 +1,4 @@
-* hot reload dll - engine updates not propagated
+* hot reload dll - engine updates not propagated (crashes in debugger, maybe need dynamic linking on stdlib?)
 * camera (projection, quaternion rotation, faster view matrix from 3 vectors)
 * text rendering
 * render utils (billboard)

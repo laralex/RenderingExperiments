@@ -455,7 +455,9 @@ static void Render(engine::RenderCtx const& ctx, engine::WindowCtx const& window
 static auto ConfigureWindow(engine::EngineHandle engine) {
     auto& windowCtx    = engine::GetWindowContext(engine);
     using KeyModFlags  = engine::WindowCtx::KeyModFlags;
-    auto& app          = *static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
+    auto* pApp          = static_cast<std::unique_ptr<Application>*>(engine::GetApplicationData(engine));
+    assert(pApp != nullptr && "Invalid engine state");
+    auto& app = *pApp;
     std::ignore        = windowCtx.SetKeyboardCallback(GLFW_KEY_W, [&](bool pressed, bool released, KeyModFlags mods) {
         app->keyboardWasdPressed.x += static_cast<float>(pressed) - static_cast<float>(released);
     });
@@ -551,8 +553,6 @@ static auto ConfigureWindow(engine::EngineHandle engine) {
 
 auto HotStartApplication [[nodiscard]] (app::ApplicationState& destination) -> engine::EngineResult {
     XLOGW("HotStartApplication {}", (void*)app::Render);
-    ConfigureWindow(destination.engine);
-
     return engine::EngineResult::SUCCESS;
 }
 
@@ -574,6 +574,7 @@ auto ColdStartApplication [[nodiscard]] (app::ApplicationState& destination) -> 
     });
 
     std::ignore = engine::SetRenderCallback(destination.engine, app::Render);
+    ConfigureWindow(destination.engine);
 
     return HotStartApplication(destination);
 }

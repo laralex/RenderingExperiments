@@ -186,7 +186,7 @@ ENGINE_EXPORT void CommonRenderers::RenderEditorGrid(GlContext& gl, glm::vec3 ca
         .cameraWorldPosition = cameraWorldPosition,
         .viewProjection = camera,
     };
-    editorGridRenderer_.Render(gl, args);
+    // editorGridRenderer_.Render(gl, args);
 }
 
 ENGINE_EXPORT void CommonRenderers::Blit2D(GlContext& gl, GLuint srcTexture, glm::vec2 uvScale) const {

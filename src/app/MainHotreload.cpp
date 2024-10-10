@@ -1,8 +1,8 @@
 
 #include "engine/Log.hpp"
 
-#define CR_HOST CR_UNSAFE // required in the host only and before including cr.h
-// #define CR_HOST CR_SAFEST
+// #define CR_HOST CR_UNSAFE // required in the host only and before including cr.h
+#define CR_HOST CR_SAFEST
 
 #ifdef XDEBUG
 #define CR_DEBUG
@@ -17,17 +17,10 @@
 
 constexpr int32_t HOT_RELOAD_AFTER_FRAME = 50;
 
-// must be full absolute path
-constexpr char const* HOT_RELOAD_LIBRARY_PATH =
-#ifdef XDEBUG
-    "/home/alex/sidework/game-dev/learnopengl/build/debug/install/libapp.so";
-#else
-    "/home/alex/sidework/game-dev/learnopengl/build/release/install/libapp.so";
-#endif
-
+// first argument - full path to application dynamic library
 auto main(int argc, char* argv[]) -> int {
     cr_plugin hotReloader{};
-    assert(cr_plugin_open(hotReloader, HOT_RELOAD_LIBRARY_PATH)); // the full path to library
+    assert(cr_plugin_open(hotReloader, argv[1])); // the full path to library
 
     int64_t numUpdates = 0;
     while (true) {
